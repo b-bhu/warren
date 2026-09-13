@@ -9,8 +9,7 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.stocklana.app",
-      "usesAppleSignIn": true
+      "bundleIdentifier": "com.stocklana.app"
     },
     "android": {
       "package": "com.stocklana.app",
@@ -37,7 +36,6 @@
         }
       ],
       "expo-secure-store",
-      "expo-apple-authentication",
       "expo-web-browser"
     ],
     "experiments": {

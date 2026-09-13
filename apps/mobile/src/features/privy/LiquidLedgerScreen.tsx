@@ -5,11 +5,11 @@ import {
   AccessibilityInfo,
   ActivityIndicator,
   Animated,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,11 +27,24 @@ export type LiquidLedgerMode =
   | 'missing-config'
   | 'web-preview';
 
-type Provider = 'apple' | 'google';
+type Provider = 'email' | 'google';
+
+type EmailAuth = {
+  code: string;
+  codeSent: boolean;
+  email: string;
+  message?: string | null;
+  onCodeChange?: (code: string) => void;
+  onEmailChange?: (email: string) => void;
+  onReset?: () => void;
+  onSendCode?: () => void;
+  onVerifyCode?: () => void;
+};
 
 type LiquidLedgerScreenProps = {
   mode: LiquidLedgerMode;
   activeProvider?: Provider | null;
+  emailAuth?: EmailAuth;
   evmAddress?: string | null;
   message?: string | null;
   onLogin?: (provider: Provider) => void;
@@ -53,6 +66,7 @@ const palette = {
 export function LiquidLedgerScreen({
   mode,
   activeProvider,
+  emailAuth,
   evmAddress,
   message,
   onLogin,
@@ -76,6 +90,7 @@ export function LiquidLedgerScreen({
         <ScrollView
           alwaysBounceVertical={false}
           contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
           <View style={styles.shell}>
             <Header status={copy.status} />
@@ -111,13 +126,17 @@ export function LiquidLedgerScreen({
 
               {showSignIn ? (
                 <>
-                  <ProviderButton
-                    disabled={isBusy}
-                    glyph={Platform.OS === 'android' ? 'A' : ''}
-                    label={activeProvider === 'apple' ? 'Opening Apple…' : 'Continue with Apple'}
-                    onPress={() => onLogin?.('apple')}
-                    primary
-                  />
+                  {emailAuth ? (
+                    <EmailAuthForm auth={emailAuth} disabled={isBusy} />
+                  ) : (
+                    <ProviderButton
+                      disabled={isBusy}
+                      glyph="@"
+                      label="Continue with email"
+                      onPress={() => onLogin?.('email')}
+                      primary
+                    />
+                  )}
                   <ProviderButton
                     disabled={isBusy}
                     glyph="G"
@@ -178,6 +197,77 @@ export function LiquidLedgerScreen({
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
+  );
+}
+
+function EmailAuthForm({ auth, disabled }: { auth: EmailAuth; disabled: boolean }) {
+  if (auth.codeSent) {
+    return (
+      <View style={styles.emailForm}>
+        <Text style={styles.emailHint}>Code sent to {auth.email}</Text>
+        <TextInput
+          accessibilityLabel="Six-digit email code"
+          autoComplete="one-time-code"
+          editable={!disabled}
+          inputMode="numeric"
+          keyboardType="number-pad"
+          maxLength={6}
+          onChangeText={auth.onCodeChange}
+          onSubmitEditing={auth.onVerifyCode}
+          placeholder="6-digit code"
+          placeholderTextColor="rgba(243, 240, 232, 0.38)"
+          returnKeyType="done"
+          style={styles.emailInput}
+          textContentType="oneTimeCode"
+          value={auth.code}
+        />
+        {auth.message ? <Text style={styles.emailError}>{auth.message}</Text> : null}
+        <ProviderButton
+          disabled={disabled}
+          glyph="→"
+          label="Verify email"
+          onPress={auth.onVerifyCode}
+          primary
+        />
+        <Pressable
+          accessibilityRole="button"
+          disabled={disabled || !auth.onReset}
+          onPress={auth.onReset}
+          style={styles.emailReset}>
+          <Text style={styles.emailResetText}>Use a different email</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.emailForm}>
+      <TextInput
+        accessibilityLabel="Email address"
+        autoCapitalize="none"
+        autoComplete="email"
+        autoCorrect={false}
+        editable={!disabled}
+        inputMode="email"
+        keyboardType="email-address"
+        onChangeText={auth.onEmailChange}
+        onSubmitEditing={auth.onSendCode}
+        placeholder="Email address"
+        placeholderTextColor="rgba(243, 240, 232, 0.38)"
+        returnKeyType="send"
+        style={styles.emailInput}
+        textContentType="emailAddress"
+        value={auth.email}
+      />
+      {auth.message ? <Text style={styles.emailError}>{auth.message}</Text> : null}
+      <ProviderButton
+        disabled={disabled}
+        glyph="@"
+        label="Continue with email"
+        onPress={auth.onSendCode}
+        primary
+      />
+    </View>
   );
 }
 
@@ -492,7 +582,7 @@ function shortenAddress(address: string) {
 }
 
 function providerName(provider: Provider) {
-  return provider === 'apple' ? 'Apple' : 'Google';
+  return provider === 'email' ? 'email' : 'Google';
 }
 
 const styles = StyleSheet.create({
@@ -783,6 +873,45 @@ const styles = StyleSheet.create({
   actions: {
     gap: 10,
     marginTop: 'auto',
+  },
+  emailForm: {
+    gap: 8,
+  },
+  emailHint: {
+    color: 'rgba(243, 240, 232, 0.66)',
+    fontFamily: Fonts.sans,
+    fontSize: 12,
+    marginHorizontal: 4,
+  },
+  emailInput: {
+    backgroundColor: 'rgba(243, 240, 232, 0.055)',
+    borderColor: 'rgba(243, 240, 232, 0.17)',
+    borderRadius: 18,
+    borderWidth: 1,
+    color: palette.pearl,
+    fontFamily: Fonts.sans,
+    fontSize: 15,
+    height: 54,
+    paddingHorizontal: 18,
+    width: '100%',
+  },
+  emailError: {
+    color: '#E7B8A9',
+    fontFamily: Fonts.sans,
+    fontSize: 12,
+    lineHeight: 17,
+    marginHorizontal: 4,
+  },
+  emailReset: {
+    alignSelf: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  emailResetText: {
+    color: 'rgba(243, 240, 232, 0.68)',
+    fontFamily: Fonts.sans,
+    fontSize: 12,
+    textDecorationLine: 'underline',
   },
   button: {
     alignItems: 'center',

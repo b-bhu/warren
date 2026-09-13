@@ -4,6 +4,7 @@ import {
   needsRecovery,
   useEmbeddedEthereumWallet,
   useEmbeddedSolanaWallet,
+  useLoginWithEmail,
   useLoginWithOAuth,
   usePrivy,
 } from '@privy-io/expo';
@@ -12,7 +13,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { LiquidLedgerScreen } from './LiquidLedgerScreen';
 import { usePrivyRuntimeStatus } from './config';
 
-type Provider = 'apple' | 'google';
+type Provider = 'email' | 'google';
 
 const CANCELLED_AUTH = /plugin closed|user rejected|user denied|request rejected|cancell?ed/i;
 const SESSION_RECONCILIATION_TIMEOUT_MS = 12_000;
@@ -31,10 +32,15 @@ export function PrivyEntry() {
 function ConfiguredPrivyEntry() {
   const { error: initializationError, isReady, logout, refreshUser, user } = usePrivy();
   const { login } = useLoginWithOAuth();
+  const { loginWithCode, sendCode } = useLoginWithEmail();
   const ethereumWallet = useEmbeddedEthereumWallet();
   const solanaWallet = useEmbeddedSolanaWallet();
   const [activeProvider, setActiveProvider] = useState<Provider | null>(null);
   const [awaitingSession, setAwaitingSession] = useState(false);
+  const [email, setEmail] = useState('');
+  const [emailCode, setEmailCode] = useState('');
+  const [emailCodeSent, setEmailCodeSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [sessionTimedOut, setSessionTimedOut] = useState(false);
   const [timedOutUserId, setTimedOutUserId] = useState<string | null>(null);
@@ -70,26 +76,91 @@ function ConfiguredPrivyEntry() {
     return () => clearTimeout(timeout);
   }, [user, walletsReady]);
 
-  const loginWithProvider = useCallback(async (provider: Provider) => {
+  const loginWithGoogle = useCallback(async () => {
     setLocalError(null);
+    setEmailError(null);
     setAwaitingSession(false);
     setSessionTimedOut(false);
     setTimedOutUserId(null);
-    setActiveProvider(provider);
+    setActiveProvider('google');
 
     try {
-      const authenticatedUser = await login({ provider });
+      const authenticatedUser = await login({ provider: 'google' });
       setAwaitingSession(Boolean(authenticatedUser));
     } catch (error) {
       const message = errorMessage(error);
-      if (!CANCELLED_AUTH.test(message)) setLocalError(friendlyAuthError(message));
+      logDevelopmentAuthError('Google OAuth', message);
+      if (!CANCELLED_AUTH.test(message)) {
+        setLocalError(friendlyAuthError(message, 'Google'));
+      }
     } finally {
       setActiveProvider(null);
     }
   }, [login]);
 
+  const requestEmailCode = useCallback(async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    setEmailError(null);
+    setLocalError(null);
+
+    if (!isValidEmail(normalizedEmail)) {
+      setEmailError('Enter a valid email address.');
+      return;
+    }
+
+    setActiveProvider('email');
+    try {
+      await sendCode({ email: normalizedEmail });
+      setEmail(normalizedEmail);
+      setEmailCode('');
+      setEmailCodeSent(true);
+    } catch (error) {
+      const message = errorMessage(error);
+      logDevelopmentAuthError('email code request', message);
+      setEmailError(friendlyAuthError(message, 'Email'));
+    } finally {
+      setActiveProvider(null);
+    }
+  }, [email, sendCode]);
+
+  const verifyEmailCode = useCallback(async () => {
+    const normalizedCode = emailCode.replace(/\D/g, '');
+    setEmailError(null);
+    setLocalError(null);
+
+    if (normalizedCode.length !== 6) {
+      setEmailError('Enter the 6-digit code sent to your email.');
+      return;
+    }
+
+    setAwaitingSession(false);
+    setSessionTimedOut(false);
+    setTimedOutUserId(null);
+    setActiveProvider('email');
+    try {
+      const authenticatedUser = await loginWithCode({
+        code: normalizedCode,
+        email,
+      });
+      setAwaitingSession(Boolean(authenticatedUser));
+    } catch (error) {
+      const message = errorMessage(error);
+      logDevelopmentAuthError('email code verification', message);
+      setEmailError(friendlyAuthError(message, 'Email'));
+    } finally {
+      setActiveProvider(null);
+    }
+  }, [email, emailCode, loginWithCode]);
+
+  const resetEmail = useCallback(() => {
+    setEmailCode('');
+    setEmailCodeSent(false);
+    setEmailError(null);
+  }, []);
+
   const retry = useCallback(async () => {
     setLocalError(null);
+    setEmailError(null);
     setAwaitingSession(false);
     setSessionTimedOut(false);
     setTimedOutUserId(null);
@@ -104,9 +175,13 @@ function ConfiguredPrivyEntry() {
 
   const signOut = useCallback(async () => {
     setLocalError(null);
+    setEmailError(null);
     setAwaitingSession(false);
     setSessionTimedOut(false);
     setTimedOutUserId(null);
+    setEmail('');
+    setEmailCode('');
+    setEmailCodeSent(false);
     try {
       await logout();
     } catch (error) {
@@ -178,9 +253,20 @@ function ConfiguredPrivyEntry() {
   return (
     <LiquidLedgerScreen
       activeProvider={activeProvider}
+      emailAuth={{
+        code: emailCode,
+        codeSent: emailCodeSent,
+        email,
+        message: emailError,
+        onCodeChange: (value) => setEmailCode(value.replace(/\D/g, '').slice(0, 6)),
+        onEmailChange: setEmail,
+        onReset: resetEmail,
+        onSendCode: canBeginLogin() ? () => void requestEmailCode() : undefined,
+        onVerifyCode: canBeginLogin() ? () => void verifyEmailCode() : undefined,
+      }}
       message={legalConfigurationMessage()}
       mode="sign-in"
-      onLogin={canBeginLogin() ? (provider) => void loginWithProvider(provider) : undefined}
+      onLogin={canBeginLogin() ? () => void loginWithGoogle() : undefined}
     />
   );
 }
@@ -190,11 +276,33 @@ function errorMessage(error: unknown) {
   return typeof error === 'string' ? error : 'Unknown Privy error';
 }
 
-function friendlyAuthError(message: string) {
+function friendlyAuthError(message: string, method?: 'Email' | 'Google') {
   if (/network|fetch|offline|internet/i.test(message)) {
     return 'Stocklana could not reach Privy. Check your connection and try again.';
   }
+  if (/not enabled|disabled|not configured|unsupported.*(?:login|oauth|provider)/i.test(message)) {
+    return `${method ?? 'This'} sign-in is not enabled in the Privy dashboard.`;
+  }
+  if (/client|identifier|origin|redirect|scheme|unauthori[sz]ed/i.test(message)) {
+    return 'Privy rejected this mobile client. Check its Android app identifier and URL scheme.';
+  }
+  if (/code|otp|expired|invalid/i.test(message) && method === 'Email') {
+    return 'That email code is incorrect or expired. Request a new code and try again.';
+  }
+  if (/rate|too many/i.test(message)) {
+    return 'Too many sign-in attempts. Wait a few minutes and try again.';
+  }
   return 'Sign-in could not be completed. Please try again.';
+}
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function logDevelopmentAuthError(flow: string, message: string) {
+  if (typeof __DEV__ !== 'undefined' && __DEV__) {
+    console.warn(`[Privy ${flow}] ${message}`);
+  }
 }
 
 function findEmbeddedWalletAddress(
