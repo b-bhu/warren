@@ -1,0 +1,15 @@
+{
+  "name": "@stocklana/test-wallet-provider",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": { "typecheck": "tsc --noEmit", "lint": "tsc --noEmit" },
+  "dependencies": {
+    "@stocklana/provider-contract": "workspace:*",
+    "bs58": "6.0.0",
+    "tweetnacl": "1.0.3",
+    "viem": "2.56.3"
+  },
+  "devDependencies": { "@types/node": "24.10.1", "typescript": "6.0.3" }
+}

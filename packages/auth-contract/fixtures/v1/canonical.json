@@ -1,0 +1,21 @@
+{
+  "input": {
+    "domain": "stocklana.test",
+    "uri": "https://stocklana.test",
+    "address": "0x8e4a6f513A4D837d2B8C27F3A2f5F8A456cF4B34",
+    "nonce": "Abc123Def456",
+    "issuedAt": "2026-09-12T00:00:00.000Z",
+    "expiresAt": "2026-09-12T00:15:00.000Z",
+    "requestId": "018f70f2-84dd-7cc8-bb9d-a70b5cd8f99a",
+    "chainContext": "1",
+    "statement": "Sign in to Stocklana. This is free and will not move funds."
+  },
+  "evm": {
+    "message": "stocklana.test wants you to sign in with your Ethereum account:\n0x8e4a6f513A4D837d2B8C27F3A2f5F8A456cF4B34\n\nSign in to Stocklana. This is free and will not move funds.\n\nURI: https://stocklana.test\nVersion: 1\nChain ID: 1\nNonce: Abc123Def456\nIssued At: 2026-09-12T00:00:00.000Z\nExpiration Time: 2026-09-12T00:15:00.000Z\nRequest ID: 018f70f2-84dd-7cc8-bb9d-a70b5cd8f99a",
+    "sha256": "5f1ed7d6f130c2d5046e5835f5c462625342c36c6c0426db638f608f7a98c0e2"
+  },
+  "solana": {
+    "message": "stocklana.test wants you to sign in with your Solana account:\n0x8e4a6f513A4D837d2B8C27F3A2f5F8A456cF4B34\n\nSign in to Stocklana. This is free and will not move funds.\n\nURI: https://stocklana.test\nVersion: 1\nChain ID: 1\nNonce: Abc123Def456\nIssued At: 2026-09-12T00:00:00.000Z\nExpiration Time: 2026-09-12T00:15:00.000Z\nRequest ID: 018f70f2-84dd-7cc8-bb9d-a70b5cd8f99a",
+    "sha256": "482b78b874a0631cd252f6bdec28a859c4c7a934bb6e3497fb0259f4754a3cae"
+  }
+}

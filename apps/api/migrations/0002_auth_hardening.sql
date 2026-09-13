@@ -1,0 +1,10 @@
+ALTER TABLE auth_attempts ADD COLUMN initiating_session_family_id TEXT REFERENCES session_families(id);
+ALTER TABLE sign_challenges ADD COLUMN credential_ref TEXT;
+ALTER TABLE provider_requests ADD COLUMN idempotency_digest TEXT;
+ALTER TABLE provider_requests ADD COLUMN completed_at TEXT;
+ALTER TABLE provider_requests ADD COLUMN profile_id TEXT REFERENCES profiles(id);
+ALTER TABLE refresh_tokens ADD COLUMN used_idempotency_digest TEXT;
+DROP INDEX IF EXISTS wallets_canonical_active;
+CREATE UNIQUE INDEX IF NOT EXISTS wallets_evm_canonical_active ON wallets(chain_id, address_normalized) WHERE family = 'evm' AND revoked_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS wallets_solana_canonical_active ON wallets(cluster, address_normalized) WHERE family = 'solana' AND revoked_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS provider_requests_idempotency ON provider_requests(attempt_id, idempotency_digest);

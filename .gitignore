@@ -6,3 +6,6 @@ node_modules/
 .turbo/
 dist/
 coverage/
+*.db
+*.db-shm
+*.db-wal

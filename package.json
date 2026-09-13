@@ -2,12 +2,18 @@
   "name": "stocklana",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "packageManager": "pnpm@10.28.0",
   "scripts": {
-    "dev": "pnpm --filter mobile start",
+    "dev": "EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-http://localhost:3000} pnpm --parallel --filter @stocklana/api --filter mobile run start",
+    "dev:api": "pnpm --filter @stocklana/api dev",
+    "dev:mobile": "EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-http://localhost:3000} pnpm --filter mobile start",
+    "test:api": "pnpm --filter @stocklana/api test",
     "android": "pnpm --filter mobile android",
     "ios": "pnpm --filter mobile ios",
-    "web": "pnpm --filter mobile web",
+    "web": "EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-http://localhost:3000} pnpm --filter mobile web",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck"
   }

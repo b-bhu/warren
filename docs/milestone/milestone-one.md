@@ -21,7 +21,7 @@ The user should not need to find token addresses, choose a trading venue, or und
 - Mobile-first stock discovery
 - Search and browsing for a small, verified set of tokenized stocks
 - A clear stock detail view explaining the asset and what the user receives
-- Solana wallet connection
+- Automatic creation of a default embedded Solana wallet
 - A simple spot-buy flow with an understandable review step
 - Clear purchase progress, success, and failure states
 - A basic portfolio view confirming the completed purchase
@@ -33,10 +33,10 @@ Milestone 1 will be explored and delivered through three bounded phases:
 0. **Theme and design foundation** — establish the visual direction, design tokens,
    reusable mobile components, interaction patterns, and product voice used by the
    rest of the milestone.
-1. **[User onboarding](../modules/user-onboarding/README.md)** — let a user connect
-   a supported EVM or Solana wallet, prove ownership with a clear message signature,
-   and enter an authenticated Stocklana session. The product must support and test
-   both chain families; an individual user is not required to connect both.
+1. **[User onboarding](../modules/user-onboarding/README.md)** — let a user authenticate
+   with an approved social identity and automatically receive user-owned default EVM
+   and Solana wallets through the embedded-wallet provider. Restore the same profile
+   and wallets across devices; external wallet linking is optional.
 2. **Spot experience and profile** — let the authenticated user discover a supported
    tokenized stock, review and complete a simple spot purchase, and see the resulting
    position and connected-wallet context in a basic profile/portfolio experience.

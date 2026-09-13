@@ -2,12 +2,18 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Draft for exploration |
+| Status | Development prototype in progress; external release gated |
 | Parent | [Milestone 1: Discover and Buy Tokenized Stocks](../../milestone/milestone-one.md) |
 | Phase | 1, after the Phase 0 theme and design foundation |
 | Product surface | Expo mobile app, iOS and Android |
 | Last updated | 2026-09-12 |
-| Review | Independent product/UX/security/feasibility audit integrated; ready for exploration, not implementation until DG-01 through DG-06 are resolved |
+| Review | Independent product/UX/security/feasibility audit integrated; local provider-neutral implementation approved, production integration/release blocked on DG-01 through DG-06 |
+
+> **Direction update (2026-09-13):** This connection-first PRD documents the existing
+> provider-neutral prototype. The agreed production direction is social authentication
+> with automatically provisioned Privy EVM and Solana wallets, defined in
+> [`wallet_privy_prd`](./wallet_privy_prd.md). Its implementation begins after the Phase
+> 0 theme is finalized.
 
 ## 1. Summary
 
@@ -24,7 +30,8 @@ user attempts a Solana purchase in Phase 2.
 
 [Paybox](https://docs.paybox.sh/) is a candidate connection and signing provider, not
 yet a committed dependency. Its fit must be proven through the validation spike in
-Section 16 before implementation architecture is locked.
+Section 16 before a production provider architecture is locked. A provider-neutral
+local implementation may proceed behind a deterministic development-only adapter.
 
 ## 2. Problem
 
@@ -126,8 +133,9 @@ acceptance criteria, not only implementation notes.
 
 ### 7.1 Pre-implementation decision gates
 
-Exploration may continue with these open, but implementation cannot be committed until
-the accountable product, mobile, backend, and security owners record the decisions:
+Exploration and a fail-closed local prototype may continue with these open, but no real
+provider may be enabled and no external release may be claimed until the accountable
+product, mobile, backend, and security owners record the decisions:
 
 - **DG-01 — Network scope:** supported EVM chain ID(s), supported Solana cluster(s), and
   how the chosen network appears in connection, challenge, storage, and Phase 2 gating.

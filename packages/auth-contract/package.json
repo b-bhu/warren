@@ -1,0 +1,10 @@
+{
+  "name": "@stocklana/auth-contract",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": { "typecheck": "tsc --noEmit", "lint": "tsc --noEmit" },
+  "dependencies": { "zod": "4.1.12" },
+  "devDependencies": { "typescript": "6.0.3" }
+}

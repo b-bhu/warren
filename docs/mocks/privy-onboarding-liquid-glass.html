@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07131A" />
+    <title>Stocklana — Liquid Ledger onboarding mock</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --harbour: #07131a;
+        --depth: #0b1c24;
+        --slate: #122630;
+        --pearl: #f3f0e8;
+        --pearl-soft: rgba(243, 240, 232, 0.72);
+        --pearl-faint: rgba(243, 240, 232, 0.1);
+        --sea-glass: #a9d8c6;
+        --ice: #9ac9da;
+        --gold: #c8ad82;
+        --display: "Bodoni 72", Didot, "Iowan Old Style", Georgia, serif;
+        --body: "Avenir Next", Avenir, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --utility: "SFMono-Regular", "SF Mono", ui-monospace, Menlo, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+        margin: 0;
+        background: var(--harbour);
+      }
+
+      body {
+        color: var(--pearl);
+        font-family: var(--body);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      .stage {
+        min-height: 100svh;
+        overflow: hidden;
+        position: relative;
+        isolation: isolate;
+        background:
+          radial-gradient(circle at 102% 8%, rgba(154, 201, 218, 0.16), transparent 31%),
+          radial-gradient(circle at -6% 61%, rgba(169, 216, 198, 0.1), transparent 37%),
+          linear-gradient(162deg, #07131a 0%, #091820 54%, #061117 100%);
+      }
+
+      .stage::before {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        inset: 0;
+        opacity: 0.2;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E");
+        mix-blend-mode: soft-light;
+        pointer-events: none;
+      }
+
+      .shell {
+        width: min(100%, 430px);
+        min-height: 100svh;
+        margin: 0 auto;
+        padding:
+          max(22px, env(safe-area-inset-top))
+          22px
+          max(22px, env(safe-area-inset-bottom));
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .topbar {
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--display);
+        font-size: 18px;
+        letter-spacing: 0.01em;
+      }
+
+      .brand-mark {
+        width: 27px;
+        aspect-ratio: 1;
+        position: relative;
+        border: 1px solid rgba(243, 240, 232, 0.42);
+        border-radius: 51% 49% 58% 42% / 44% 56% 44% 56%;
+        background: rgba(243, 240, 232, 0.06);
+        box-shadow: inset 0 0 12px rgba(243, 240, 232, 0.08);
+        transform: rotate(-12deg);
+      }
+
+      .brand-mark::after {
+        content: "S";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: var(--sea-glass);
+        font: 14px/1 var(--display);
+        transform: rotate(12deg);
+      }
+
+      .status {
+        color: var(--pearl-soft);
+        font: 10px/1 var(--utility);
+        letter-spacing: 0.17em;
+        text-transform: uppercase;
+        padding: 7px 10px 6px;
+        border: 1px solid rgba(243, 240, 232, 0.12);
+        border-radius: 999px;
+      }
+
+      .hero {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 13px 0 18px;
+      }
+
+      .lens-field {
+        height: 286px;
+        position: relative;
+        margin: 1px -5px 12px;
+      }
+
+      .orbit {
+        position: absolute;
+        inset: 28px 42px 26px;
+        border: 1px solid rgba(243, 240, 232, 0.08);
+        border-radius: 50%;
+        transform: rotate(-9deg);
+      }
+
+      .orbit::before,
+      .orbit::after {
+        content: "";
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--gold);
+        box-shadow: 0 0 14px rgba(200, 173, 130, 0.7);
+      }
+
+      .orbit::before {
+        top: 9%;
+        right: 19%;
+      }
+
+      .orbit::after {
+        bottom: 10%;
+        left: 18%;
+      }
+
+      .liquid-lens {
+        width: 258px;
+        height: 238px;
+        position: absolute;
+        left: 50%;
+        top: 21px;
+        transform: translateX(-50%) rotate(-2deg);
+        border-radius: 46% 54% 58% 42% / 42% 48% 52% 58%;
+        border: 1px solid rgba(243, 240, 232, 0.26);
+        background:
+          radial-gradient(circle at 29% 21%, rgba(255, 255, 255, 0.2), transparent 22%),
+          linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(154, 201, 218, 0.05) 44%, rgba(169, 216, 198, 0.1));
+        box-shadow:
+          inset 18px 20px 36px rgba(255, 255, 255, 0.04),
+          inset -22px -24px 40px rgba(4, 13, 18, 0.28),
+          0 28px 70px rgba(1, 8, 12, 0.5),
+          0 0 55px rgba(154, 201, 218, 0.08);
+        backdrop-filter: blur(18px) saturate(135%);
+        -webkit-backdrop-filter: blur(18px) saturate(135%);
+        animation: breathe 8s ease-in-out infinite;
+      }
+
+      .liquid-lens::before {
+        content: "";
+        position: absolute;
+        inset: 8px 13px 15px 8px;
+        border: 1px solid rgba(243, 240, 232, 0.09);
+        border-radius: inherit;
+        filter: blur(0.2px);
+      }
+
+      .wallet-card {
+        width: 183px;
+        min-height: 77px;
+        position: absolute;
+        left: 50%;
+        padding: 13px 14px 12px;
+        border-radius: 17px;
+        border: 1px solid rgba(243, 240, 232, 0.17);
+        background: linear-gradient(135deg, rgba(243, 240, 232, 0.13), rgba(243, 240, 232, 0.045));
+        box-shadow: 0 14px 26px rgba(2, 10, 14, 0.26);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+      }
+
+      .wallet-card.solana {
+        top: 56px;
+        transform: translateX(-57%) rotate(-5deg);
+      }
+
+      .wallet-card.evm {
+        top: 145px;
+        transform: translateX(-43%) rotate(4deg);
+      }
+
+      .wallet-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .chain {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--pearl);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .chain-glyph {
+        width: 20px;
+        height: 20px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        font: 8px/1 var(--utility);
+        color: var(--harbour);
+      }
+
+      .solana .chain-glyph {
+        background: var(--sea-glass);
+      }
+
+      .evm .chain-glyph {
+        background: var(--ice);
+      }
+
+      .default {
+        color: var(--pearl-soft);
+        font: 10px/1 var(--utility);
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .address {
+        margin-top: 12px;
+        color: rgba(243, 240, 232, 0.58);
+        font: 12px/1.2 var(--utility);
+        letter-spacing: 0.04em;
+      }
+
+      .custody-seal {
+        position: absolute;
+        z-index: 2;
+        right: 30px;
+        bottom: 13px;
+        width: 60px;
+        height: 60px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        border: 1px solid rgba(200, 173, 130, 0.43);
+        background: rgba(7, 19, 26, 0.66);
+        box-shadow: 0 12px 28px rgba(1, 7, 10, 0.35);
+        color: var(--gold);
+        font: 8px/1.35 var(--utility);
+        letter-spacing: 0.1em;
+        text-align: center;
+        text-transform: uppercase;
+        transform: rotate(7deg);
+      }
+
+      .eyebrow {
+        margin: 0 0 11px;
+        color: var(--sea-glass);
+        font: 9px/1 var(--utility);
+        letter-spacing: 0.19em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 370px;
+        margin: 0;
+        font-family: var(--display);
+        font-size: clamp(42px, 11.5vw, 51px);
+        font-weight: 400;
+        line-height: 0.91;
+        letter-spacing: -0.045em;
+      }
+
+      h1 em {
+        color: var(--sea-glass);
+        font-weight: 400;
+      }
+
+      .intro {
+        max-width: 350px;
+        margin: 17px 0 0;
+        color: var(--pearl-soft);
+        font-size: 13px;
+        line-height: 1.55;
+        letter-spacing: 0.002em;
+      }
+
+      .actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      .button {
+        width: 100%;
+        height: 54px;
+        border: 0;
+        border-radius: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+      }
+
+      .button:active {
+        transform: translateY(1px) scale(0.995);
+      }
+
+      .button:focus-visible {
+        outline: 2px solid var(--sea-glass);
+        outline-offset: 3px;
+      }
+
+      .button.primary {
+        color: #07131a;
+        background: var(--pearl);
+        box-shadow: 0 13px 36px rgba(1, 7, 10, 0.28);
+      }
+
+      .button.secondary {
+        color: var(--pearl);
+        border: 1px solid rgba(243, 240, 232, 0.17);
+        background: rgba(243, 240, 232, 0.055);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+
+      .provider-glyph {
+        width: 18px;
+        height: 18px;
+        display: grid;
+        place-items: center;
+        font-family: var(--body);
+        font-size: 17px;
+        font-weight: 600;
+      }
+
+      .assurance {
+        margin: 12px 0 0;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 7px;
+        color: rgba(243, 240, 232, 0.5);
+        font-size: 12px;
+        line-height: 1.45;
+        text-align: center;
+      }
+
+      .assurance span:first-child {
+        color: var(--gold);
+      }
+
+      .consent {
+        margin: 2px 14px 0;
+        color: rgba(243, 240, 232, 0.52);
+        font-size: 11px;
+        line-height: 1.45;
+        text-align: center;
+      }
+
+      .consent a {
+        color: rgba(243, 240, 232, 0.78);
+        text-underline-offset: 2px;
+      }
+
+      .consent a:focus-visible {
+        outline: 2px solid var(--sea-glass);
+        outline-offset: 2px;
+        border-radius: 2px;
+      }
+
+      @keyframes breathe {
+        0%, 100% {
+          border-radius: 46% 54% 58% 42% / 42% 48% 52% 58%;
+          transform: translateX(-50%) rotate(-2deg) scale(1);
+        }
+        50% {
+          border-radius: 52% 48% 44% 56% / 48% 55% 45% 52%;
+          transform: translateX(-50%) rotate(0deg) scale(1.012);
+        }
+      }
+
+      @media (min-width: 700px) {
+        body {
+          padding: 28px;
+          background: #030a0e;
+        }
+
+        .stage {
+          width: 430px;
+          min-height: 900px;
+          margin: 0 auto;
+          border: 1px solid rgba(243, 240, 232, 0.13);
+          border-radius: 42px;
+          box-shadow: 0 40px 110px rgba(0, 0, 0, 0.64);
+        }
+
+        .shell {
+          min-height: 900px;
+        }
+      }
+
+      @media (max-height: 780px) {
+        .lens-field {
+          height: 229px;
+          transform: scale(0.84);
+          transform-origin: center center;
+          margin: -17px -5px 0;
+        }
+
+        .hero {
+          padding-top: 0;
+        }
+
+        h1 {
+          font-size: 40px;
+        }
+
+        .intro {
+          margin-top: 12px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage" aria-label="Stocklana onboarding concept">
+      <div class="shell">
+        <header class="topbar">
+          <div class="brand"><span class="brand-mark" aria-hidden="true"></span>Stocklana</div>
+          <span class="status">Private beta</span>
+        </header>
+
+        <section class="hero">
+          <div class="lens-field" aria-hidden="true">
+            <div class="orbit" aria-hidden="true"></div>
+            <div class="liquid-lens" aria-hidden="true">
+              <article class="wallet-card solana">
+                <div class="wallet-line">
+                  <span class="chain"><span class="chain-glyph">S</span>Solana wallet</span>
+                  <span class="default">Included</span>
+                </div>
+                <div class="address">Created after sign-in</div>
+              </article>
+              <article class="wallet-card evm">
+                <div class="wallet-line">
+                  <span class="chain"><span class="chain-glyph">E</span>EVM wallet</span>
+                  <span class="default">Included</span>
+                </div>
+                <div class="address">Created after sign-in</div>
+              </article>
+            </div>
+            <div class="custody-seal" aria-hidden="true">Yours<br />to keep</div>
+          </div>
+
+          <p class="eyebrow">Your private market account</p>
+          <h1>One sign-in.<br />Two wallets.<br /><em>Yours.</em></h1>
+          <p class="intro">
+            Continue once and Stocklana prepares secure Solana and EVM wallets for you.
+            Both appear automatically inside your account.
+          </p>
+        </section>
+
+        <footer class="actions">
+          <button class="button primary" type="button">
+            <span class="provider-glyph" aria-hidden="true"></span>
+            Continue with Apple
+          </button>
+          <button class="button secondary" type="button">
+            <span class="provider-glyph" aria-hidden="true">G</span>
+            Continue with Google
+          </button>
+          <p class="consent">
+            By continuing, you agree to the <a href="#terms">Terms</a> and acknowledge
+            the <a href="#privacy">Privacy Notice</a>. Two embedded wallets will be created automatically.
+          </p>
+          <p class="assurance"><span aria-hidden="true">◇</span><span>Stocklana does not store your wallet keys.</span></p>
+        </footer>
+      </div>
+    </main>
+  </body>
+</html>
