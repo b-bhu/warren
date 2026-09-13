@@ -5,19 +5,27 @@ import {
   useEmbeddedEthereumWallet,
   useEmbeddedSolanaWallet,
   useLoginWithEmail,
-  useLoginWithOAuth,
+  useLoginWithSiws,
   usePrivy,
 } from '@privy-io/expo';
-import { useCallback, useEffect, useState } from 'react';
+import {
+  useBackpackDeeplinkWalletConnector,
+  usePhantomDeeplinkWalletConnector,
+} from '@privy-io/expo/connectors';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { LiquidLedgerScreen } from './LiquidLedgerScreen';
 import { usePrivyRuntimeStatus } from './config';
 
-type Provider = 'email' | 'google';
+type Provider = 'email' | 'external-wallet';
+type ExternalWalletProvider = 'backpack' | 'phantom';
 
 const CANCELLED_AUTH = /plugin closed|user rejected|user denied|request rejected|cancell?ed/i;
 const SESSION_RECONCILIATION_TIMEOUT_MS = 12_000;
 const WALLET_PREPARATION_TIMEOUT_MS = 25_000;
+const EXTERNAL_WALLET_TIMEOUT_MS = 90_000;
+const DEFAULT_DEVELOPMENT_APP_URL = 'https://stocklana.test';
+const walletIdentity = readWalletIdentityConfig();
 
 export function PrivyEntry() {
   const runtimeStatus = usePrivyRuntimeStatus();
@@ -31,11 +39,21 @@ export function PrivyEntry() {
 
 function ConfiguredPrivyEntry() {
   const { error: initializationError, isReady, logout, refreshUser, user } = usePrivy();
-  const { login } = useLoginWithOAuth();
   const { loginWithCode, sendCode } = useLoginWithEmail();
+  const { generateMessage, login: loginWithSiws } = useLoginWithSiws();
+  const phantom = usePhantomDeeplinkWalletConnector({
+    appUrl: walletIdentity.appUrl,
+    redirectUri: '/',
+  });
+  const backpack = useBackpackDeeplinkWalletConnector({
+    appUrl: walletIdentity.appUrl,
+    redirectUri: '/',
+  });
   const ethereumWallet = useEmbeddedEthereumWallet();
   const solanaWallet = useEmbeddedSolanaWallet();
   const [activeProvider, setActiveProvider] = useState<Provider | null>(null);
+  const [pendingExternalWallet, setPendingExternalWallet] =
+    useState<ExternalWalletProvider | null>(null);
   const [awaitingSession, setAwaitingSession] = useState(false);
   const [email, setEmail] = useState('');
   const [emailCode, setEmailCode] = useState('');
@@ -44,6 +62,7 @@ function ConfiguredPrivyEntry() {
   const [localError, setLocalError] = useState<string | null>(null);
   const [sessionTimedOut, setSessionTimedOut] = useState(false);
   const [timedOutUserId, setTimedOutUserId] = useState<string | null>(null);
+  const walletLoginInFlight = useRef(false);
 
   const evmAddress = ethereumWallet.wallets[0]?.address ?? null;
   const solanaAddress = isConnected(solanaWallet)
@@ -76,27 +95,86 @@ function ConfiguredPrivyEntry() {
     return () => clearTimeout(timeout);
   }, [user, walletsReady]);
 
-  const loginWithGoogle = useCallback(async () => {
+  useEffect(() => {
+    if (!pendingExternalWallet) return;
+
+    const timeout = setTimeout(() => {
+      if (walletLoginInFlight.current) return;
+      setPendingExternalWallet(null);
+      setActiveProvider(null);
+      setLocalError('The wallet did not return to Stocklana. Try connecting again.');
+    }, EXTERNAL_WALLET_TIMEOUT_MS);
+
+    return () => clearTimeout(timeout);
+  }, [pendingExternalWallet]);
+
+  const beginExternalWalletLogin = useCallback(async (
+    provider: ExternalWalletProvider,
+  ) => {
     setLocalError(null);
     setEmailError(null);
     setAwaitingSession(false);
     setSessionTimedOut(false);
     setTimedOutUserId(null);
-    setActiveProvider('google');
+    setPendingExternalWallet(provider);
+    setActiveProvider('external-wallet');
 
     try {
-      const authenticatedUser = await login({ provider: 'google' });
-      setAwaitingSession(Boolean(authenticatedUser));
+      const connector = provider === 'phantom' ? phantom : backpack;
+      if (!connector.isConnected || !connector.address) {
+        await connector.connect();
+      }
     } catch (error) {
       const message = errorMessage(error);
-      logDevelopmentAuthError('Google OAuth', message);
+      logDevelopmentAuthError(`${provider} connection`, message);
       if (!CANCELLED_AUTH.test(message)) {
-        setLocalError(friendlyAuthError(message, 'Google'));
+        setLocalError(friendlyAuthError(message, 'Wallet'));
       }
-    } finally {
+      setPendingExternalWallet(null);
       setActiveProvider(null);
     }
-  }, [login]);
+  }, [backpack, phantom]);
+
+  useEffect(() => {
+    if (!pendingExternalWallet || walletLoginInFlight.current) return;
+
+    const connector = pendingExternalWallet === 'phantom' ? phantom : backpack;
+    const externalAddress = connector.address;
+    if (!connector.isConnected || !externalAddress) return;
+
+    walletLoginInFlight.current = true;
+    void (async () => {
+      try {
+        const { message } = await generateMessage({
+          from: {
+            domain: walletIdentity.domain,
+            uri: walletIdentity.appUrl,
+          },
+          wallet: { address: externalAddress },
+        });
+        const { signature } = await connector.signMessage(message);
+        const authenticatedUser = await loginWithSiws({
+          message,
+          signature,
+          wallet: {
+            connectorType: 'deeplink',
+            walletClientType: pendingExternalWallet,
+          },
+        });
+        setAwaitingSession(Boolean(authenticatedUser));
+      } catch (error) {
+        const message = errorMessage(error);
+        logDevelopmentAuthError(`${pendingExternalWallet} SIWS`, message);
+        if (!CANCELLED_AUTH.test(message)) {
+          setLocalError(friendlyAuthError(message, 'Wallet'));
+        }
+      } finally {
+        walletLoginInFlight.current = false;
+        setPendingExternalWallet(null);
+        setActiveProvider(null);
+      }
+    })();
+  }, [backpack, generateMessage, loginWithSiws, pendingExternalWallet, phantom]);
 
   const requestEmailCode = useCallback(async () => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -161,6 +239,7 @@ function ConfiguredPrivyEntry() {
   const retry = useCallback(async () => {
     setLocalError(null);
     setEmailError(null);
+    setPendingExternalWallet(null);
     setAwaitingSession(false);
     setSessionTimedOut(false);
     setTimedOutUserId(null);
@@ -176,6 +255,7 @@ function ConfiguredPrivyEntry() {
   const signOut = useCallback(async () => {
     setLocalError(null);
     setEmailError(null);
+    setPendingExternalWallet(null);
     setAwaitingSession(false);
     setSessionTimedOut(false);
     setTimedOutUserId(null);
@@ -266,7 +346,14 @@ function ConfiguredPrivyEntry() {
       }}
       message={legalConfigurationMessage()}
       mode="sign-in"
-      onLogin={canBeginLogin() ? () => void loginWithGoogle() : undefined}
+      walletAuth={{
+        onBackpack: canBeginLogin()
+          ? () => void beginExternalWalletLogin('backpack')
+          : undefined,
+        onPhantom: canBeginLogin()
+          ? () => void beginExternalWalletLogin('phantom')
+          : undefined,
+      }}
     />
   );
 }
@@ -276,7 +363,7 @@ function errorMessage(error: unknown) {
   return typeof error === 'string' ? error : 'Unknown Privy error';
 }
 
-function friendlyAuthError(message: string, method?: 'Email' | 'Google') {
+function friendlyAuthError(message: string, method?: 'Email' | 'Wallet') {
   if (/network|fetch|offline|internet/i.test(message)) {
     return 'Stocklana could not reach Privy. Check your connection and try again.';
   }
@@ -293,6 +380,22 @@ function friendlyAuthError(message: string, method?: 'Email' | 'Google') {
     return 'Too many sign-in attempts. Wait a few minutes and try again.';
   }
   return 'Sign-in could not be completed. Please try again.';
+}
+
+function readWalletIdentityConfig() {
+  const appUrl = process.env.EXPO_PUBLIC_APP_URL?.trim()
+    || DEFAULT_DEVELOPMENT_APP_URL;
+
+  try {
+    const parsed = new URL(appUrl);
+    if (parsed.protocol !== 'https:' || !parsed.host) throw new Error('Invalid URL');
+    return { appUrl: parsed.toString().replace(/\/$/, ''), domain: parsed.host };
+  } catch {
+    return {
+      appUrl: DEFAULT_DEVELOPMENT_APP_URL,
+      domain: 'stocklana.test',
+    };
+  }
 }
 
 function isValidEmail(email: string) {

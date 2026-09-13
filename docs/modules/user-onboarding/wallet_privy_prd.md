@@ -11,14 +11,16 @@
 
 ## 1. Decision
 
-Stocklana will explore Privy as the embedded identity and wallet infrastructure for
-the production onboarding flow. A user signs in with a familiar social method, and
-Stocklana automatically provisions one user-owned EVM wallet and one user-owned Solana
-wallet. Both wallets are available inside Stocklana and become the defaults for their
-chain families.
+Stocklana will explore Privy as the identity and wallet infrastructure for the
+production onboarding flow. The initial authentication methods are email OTP and an
+external Solana wallet. External-wallet authentication uses Sign-In With Solana (SIWS)
+so the user proves ownership without transferring funds or exposing a private key.
 
-An external wallet is optional. It may be linked later for deposits, withdrawals, or
-power-user workflows, but it is not required to create or recover a Stocklana account.
+After either authentication path succeeds, Stocklana automatically provisions one
+user-owned EVM wallet and one user-owned Solana wallet through Privy. These managed
+wallets are available inside Stocklana and become the defaults for their chain
+families. An external identity wallet never silently replaces a managed trading
+wallet.
 
 Agent access is supported as a separate, explicit delegation. An agent never receives
 the wallet private key or becomes the wallet owner. It may act only as a revocable
@@ -28,11 +30,12 @@ signer within policies approved by the user.
 
 | Concept | Role |
 | --- | --- |
-| Social identity | Creates and restores the Stocklana account across devices. |
+| Email identity | Creates and restores the Stocklana account using a verified OTP. |
+| External Solana wallet | Creates or restores an account through a fresh SIWS ownership proof. |
 | Stocklana profile | Stable internal user record, independent of a device. |
 | Embedded Solana wallet | Automatically created default wallet for Solana activity. |
 | Embedded EVM wallet | Automatically created default wallet for supported EVM networks. |
-| External wallet | Optional linked wallet controlled outside Stocklana. |
+| Additional external wallet | Optional linked wallet controlled outside Stocklana. |
 | Stocklana agent | Optional additional signer with narrow, policy-limited permissions. |
 
 “Managed wallet” in this document means provisioned and operated through Privy inside
@@ -40,31 +43,34 @@ Stocklana. It does not mean Stocklana receives or stores the user's private key.
 
 ## 3. First-time experience
 
-1. The user selects **Continue with Apple**, **Continue with Google**, or another
-   approved identity method.
-2. Stocklana creates or restores the profile associated with that authenticated
+1. The user selects **Continue with email** or **Continue with external wallet**.
+2. Email users verify a one-time code. External-wallet users connect a supported
+   Solana wallet and approve a SIWS message that does not move funds.
+3. Stocklana creates or restores the profile associated with that authenticated
    identity.
-3. If the profile has no embedded wallets, provisioning creates one Solana wallet and
+4. If the profile has no embedded wallets, provisioning creates one Solana wallet and
    one EVM wallet idempotently.
-4. Stocklana records their public addresses and Privy wallet references and marks them
+5. Stocklana records their public addresses and Privy wallet references and marks them
    as the defaults for their chain families.
-5. The user sees a clear confirmation that both wallets are ready and enters the app.
-6. The user may later link an external wallet; this never silently replaces a default
-   wallet or merges another profile.
+6. The user sees a clear confirmation that both wallets are ready and enters the app.
+7. The user may later link another external wallet; this never silently replaces a
+   default wallet or merges another profile.
 
-The user is not asked to understand chains, create seed phrases, install a separate
-wallet, or visit Privy during normal onboarding.
+The user is not asked to understand chains, create seed phrases, or visit Privy.
+Email onboarding requires no separate wallet app. External-wallet onboarding clearly
+hands off to the selected wallet app and returns to the same Stocklana flow.
 
 ## 4. Returning user and new-device recovery
 
-The user signs in with the same linked social identity. Stocklana restores the same
-profile, queries its existing Privy wallet references, and shows the same EVM and
-Solana addresses. It must never create replacement wallets merely because the device
-or local app installation changed.
+The user verifies the same email address or signs a fresh SIWS message with the same
+external Solana wallet. Stocklana restores the same profile, queries its existing
+Privy wallet references, and shows the same EVM and Solana addresses. It must never
+create replacement wallets merely because the device or local app installation changed.
 
-Account recovery and wallet-key export are different operations. Social recovery
-restores access to the Stocklana profile; wallet export lets the user take an embedded
-wallet to another compatible client. Both capabilities require dedicated security UX.
+Account recovery and wallet-key export are different operations. Email or external-
+wallet authentication restores access to the Stocklana profile; wallet export lets
+the user take an embedded wallet to another compatible client. Both capabilities
+require dedicated security UX.
 
 ## 5. Ownership, storage, and signing
 
@@ -110,7 +116,7 @@ the key, change ownership, add other signers, or weaken its own policies.
 
 ## 7. Functional requirements
 
-- **FR-01:** Support at least Apple and Google sign-in on both iOS and Android.
+- **FR-01:** Support email OTP and external Solana wallet sign-in on both iOS and Android.
 - **FR-02:** Map every authenticated identity to one stable Stocklana profile.
 - **FR-03:** Automatically create exactly one initial EVM and one initial Solana wallet
   when the profile has neither.
@@ -122,8 +128,8 @@ the key, change ownership, add other signers, or weaken its own policies.
   an external wallet the default silently.
 - **FR-08:** Restore the same profile and wallets after a device change.
 - **FR-09:** Provide a protected wallet-export path for both EVM and Solana.
-- **FR-10:** Allow an authenticated user to link an external wallet through a fresh
-  ownership proof.
+- **FR-10:** Allow an authenticated user to link an additional external wallet through
+  a fresh ownership proof.
 - **FR-11:** Require explicit user consent before adding an agent signer.
 - **FR-12:** Enforce agent permissions in wallet-level policies, not only in Stocklana
   UI or API code.
@@ -138,21 +144,23 @@ the key, change ownership, add other signers, or weaken its own policies.
 ### Implementation baseline (2026-09-13)
 
 The Phase 0 Liquid Ledger direction is approved. The Expo app now contains the native
-Privy provider boundary, Apple and Google OAuth entry points, automatic embedded EVM
-and Solana wallet creation, wallet preparation/error states, and a wallet-ready state
-that displays both default addresses. This slice does not yet implement Stocklana API
+Privy provider boundary, email OTP and external Solana wallet entry points, automatic
+embedded EVM and Solana wallet creation, wallet preparation/error states, and a
+wallet-ready state that displays both default addresses. This slice does not yet implement Stocklana API
 profile binding, a protected cross-device recovery ceremony, or the mobile-to-web key
 export handoff. Privy dashboard configuration and physical-device validation are still
-required before this foundation is considered releasable.
+required before this foundation is considered releasable. Phantom and Backpack are
+the first connector targets; Privy's mobile deeplink connectors are experimental and
+remain behind this release gate.
 
 ### Wallet foundation delivery
 
-- Social authentication and cross-device session restoration
+- Email OTP and external-wallet authentication with cross-device session restoration
 - Automatic EVM and Solana embedded-wallet provisioning
 - Default-wallet assignment
 - Minimal wallet/profile display
 - Protected export entry point
-- Optional external-wallet linking boundary
+- Optional additional-wallet linking boundary
 
 ### Prepared now, activated later
 
@@ -175,8 +183,9 @@ user experience, risk limits, and operational controls require their own release
 
 ## 10. Acceptance criteria
 
-- A new user signs in once and receives one EVM and one Solana wallet without leaving
-  Stocklana or creating either wallet manually.
+- A new user signs in once and receives one EVM and one Solana wallet without creating
+  either managed wallet manually. Email remains in Stocklana; external-wallet login
+  returns automatically after wallet consent.
 - Retrying onboarding cannot create duplicate default wallets.
 - Signing in on another device restores the same profile and wallet addresses.
 - The user can intentionally export both wallet types through an authenticated flow.
@@ -190,7 +199,8 @@ user experience, risk limits, and operational controls require their own release
 
 ## 11. Decisions required before development
 
-1. Approved social sign-in methods and account-linking/conflict rules.
+1. Account-linking and conflict rules for the approved email OTP and external Solana
+   wallet sign-in methods.
 2. Privy user-owned wallet configuration and whether any server co-signature/quorum is
    required for sensitive actions.
 3. Supported EVM networks and Solana cluster at launch.
@@ -204,6 +214,7 @@ user experience, risk limits, and operational controls require their own release
 ## 12. Reference material
 
 - [Privy React Native automatic wallet creation](https://docs.privy.io/basics/react-native/advanced/automatic-wallet-creation)
+- [Privy React Native Solana wallet deeplinking](https://docs.privy.io/recipes/react-native/deeplinking-wallets)
 - [Privy wallet export](https://docs.privy.io/wallets/wallets/export)
 - [Privy owners and signers](https://docs.privy.io/controls/authorization-keys/owners/overview)
 - [Privy delegated permissions](https://docs.privy.io/controls/common-use-cases/delegation)

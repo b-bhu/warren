@@ -34,9 +34,10 @@ Milestone 1 will be explored and delivered through three bounded phases:
    reusable mobile components, interaction patterns, and product voice used by the
    rest of the milestone.
 1. **[User onboarding](../modules/user-onboarding/README.md)** — let a user authenticate
-   with an approved social identity and automatically receive user-owned default EVM
-   and Solana wallets through the embedded-wallet provider. Restore the same profile
-   and wallets across devices; external wallet linking is optional.
+   with email OTP or an external Solana wallet and automatically receive user-owned
+   default EVM and Solana wallets through the embedded-wallet provider. Restore the
+   same profile and wallets across devices without making an external identity wallet
+   a trading default.
 2. **Spot experience and profile** — let the authenticated user discover a supported
    tokenized stock, review and complete a simple spot purchase, and see the resulting
    position and connected-wallet context in a basic profile/portfolio experience.

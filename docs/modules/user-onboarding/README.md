@@ -5,10 +5,10 @@ User Onboarding is Phase 1 of
 
 ## Module Outcome
 
-A new or returning user can authenticate with an approved social identity and receive
-the same user-owned, embedded EVM and Solana wallets on every device. Both wallets are
-created automatically and become the defaults for their chain families. External
-wallet linking remains optional.
+A new or returning user can authenticate with email OTP or an external Solana wallet
+and receive the same user-owned, embedded EVM and Solana wallets on every device. Both
+managed wallets are created automatically and become the defaults for their chain
+families. An external identity wallet never silently becomes a trading default.
 
 The earlier connection-and-signature flow remains implemented as a provider-neutral
 development prototype and security reference; it is not the agreed production
@@ -17,8 +17,8 @@ onboarding experience.
 ## Place in Milestone 1
 
 - **Before this module — Phase 0:** theme and design foundation
-- **This module — Phase 1:** social identity, embedded-wallet provisioning, recovery,
-  and session creation
+- **This module — Phase 1:** email/external-wallet identity, embedded-wallet
+  provisioning, recovery, and session creation
 - **After this module — Phase 2:** simple spot experience and profile/portfolio
 
 ## Documents
@@ -33,7 +33,8 @@ onboarding experience.
 ## Current Delivery Boundary
 
 The approved Liquid Ledger screen is now connected to Privy's native Expo SDK for
-Apple/Google identity and automatic user-owned EVM and Solana wallet provisioning.
+email OTP and external Solana wallet identity plus automatic user-owned EVM and Solana
+wallet provisioning.
 The browser keeps a visual-only preview because Privy's Expo SDK is native-only. The
 earlier provider-neutral deterministic flow remains as a test and security reference,
 but it is no longer the app entry point. Privy dashboard configuration, API profile

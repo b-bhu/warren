@@ -10,8 +10,8 @@
 | Review | Independent product/UX/security/feasibility audit integrated; local provider-neutral implementation approved, production integration/release blocked on DG-01 through DG-06 |
 
 > **Direction update (2026-09-13):** This connection-first PRD documents the existing
-> provider-neutral prototype. The agreed production direction is social authentication
-> with automatically provisioned Privy EVM and Solana wallets, defined in
+> provider-neutral prototype. The agreed production direction is email OTP or external
+> Solana wallet authentication with automatically provisioned Privy EVM and Solana wallets, defined in
 > [`wallet_privy_prd`](./wallet_privy_prd.md). Its implementation begins after the Phase
 > 0 theme is finalized.
 

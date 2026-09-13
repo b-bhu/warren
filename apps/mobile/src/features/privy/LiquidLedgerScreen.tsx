@@ -27,7 +27,7 @@ export type LiquidLedgerMode =
   | 'missing-config'
   | 'web-preview';
 
-type Provider = 'email' | 'google';
+type Provider = 'email' | 'external-wallet';
 
 type EmailAuth = {
   code: string;
@@ -41,6 +41,11 @@ type EmailAuth = {
   onVerifyCode?: () => void;
 };
 
+type WalletAuth = {
+  onBackpack?: () => void;
+  onPhantom?: () => void;
+};
+
 type LiquidLedgerScreenProps = {
   mode: LiquidLedgerMode;
   activeProvider?: Provider | null;
@@ -51,6 +56,7 @@ type LiquidLedgerScreenProps = {
   onRetry?: () => void;
   onSignOut?: () => void;
   solanaAddress?: string | null;
+  walletAuth?: WalletAuth;
 };
 
 const palette = {
@@ -73,6 +79,7 @@ export function LiquidLedgerScreen({
   onRetry,
   onSignOut,
   solanaAddress,
+  walletAuth,
 }: LiquidLedgerScreenProps) {
   const copy = useMemo(() => screenCopy(mode), [mode]);
   const isBusy = mode === 'preparing' || Boolean(activeProvider);
@@ -137,12 +144,16 @@ export function LiquidLedgerScreen({
                       primary
                     />
                   )}
-                  <ProviderButton
-                    disabled={isBusy}
-                    glyph="G"
-                    label={activeProvider === 'google' ? 'Opening Google…' : 'Continue with Google'}
-                    onPress={() => onLogin?.('google')}
-                  />
+                  {walletAuth ? (
+                    <ExternalWalletAuth auth={walletAuth} disabled={isBusy} />
+                  ) : (
+                    <ProviderButton
+                      disabled={isBusy}
+                      glyph="◇"
+                      label="Continue with external wallet"
+                      onPress={() => onLogin?.('external-wallet')}
+                    />
+                  )}
                   <LegalNotice />
                   {mode === 'sign-in' && message ? <Notice>{message}</Notice> : null}
                 </>
@@ -157,7 +168,7 @@ export function LiquidLedgerScreen({
 
               {mode === 'web-preview' ? (
                 <Notice message={message ?? undefined}>
-                  Social sign-in runs in the Stocklana iOS or Android development build.
+                  Email and external-wallet sign-in run in the Stocklana native development build.
                 </Notice>
               ) : null}
 
@@ -197,6 +208,46 @@ export function LiquidLedgerScreen({
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
+  );
+}
+
+function ExternalWalletAuth({ auth, disabled }: { auth: WalletAuth; disabled: boolean }) {
+  const [showWallets, setShowWallets] = useState(false);
+
+  if (!showWallets) {
+    return (
+      <ProviderButton
+        disabled={disabled}
+        glyph="◇"
+        label="Continue with external wallet"
+        onPress={() => setShowWallets(true)}
+      />
+    );
+  }
+
+  return (
+    <View style={styles.walletChoices}>
+      <Text style={styles.walletChoiceLabel}>Choose your Solana identity wallet</Text>
+      <ProviderButton
+        disabled={disabled}
+        glyph="P"
+        label="Phantom"
+        onPress={auth.onPhantom}
+      />
+      <ProviderButton
+        disabled={disabled}
+        glyph="B"
+        label="Backpack"
+        onPress={auth.onBackpack}
+      />
+      <Pressable
+        accessibilityRole="button"
+        disabled={disabled}
+        onPress={() => setShowWallets(false)}
+        style={styles.emailReset}>
+        <Text style={styles.emailResetText}>Back to sign-in</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -582,7 +633,7 @@ function shortenAddress(address: string) {
 }
 
 function providerName(provider: Provider) {
-  return provider === 'email' ? 'email' : 'Google';
+  return provider === 'email' ? 'email' : 'wallet';
 }
 
 const styles = StyleSheet.create({
@@ -912,6 +963,15 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sans,
     fontSize: 12,
     textDecorationLine: 'underline',
+  },
+  walletChoices: {
+    gap: 8,
+  },
+  walletChoiceLabel: {
+    color: 'rgba(243, 240, 232, 0.66)',
+    fontFamily: Fonts.sans,
+    fontSize: 12,
+    marginHorizontal: 4,
   },
   button: {
     alignItems: 'center',
