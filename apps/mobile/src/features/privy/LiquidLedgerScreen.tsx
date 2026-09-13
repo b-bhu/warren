@@ -42,8 +42,7 @@ type EmailAuth = {
 };
 
 type WalletAuth = {
-  onBackpack?: () => void;
-  onPhantom?: () => void;
+  onConnect?: () => void;
 };
 
 type LiquidLedgerScreenProps = {
@@ -212,42 +211,13 @@ export function LiquidLedgerScreen({
 }
 
 function ExternalWalletAuth({ auth, disabled }: { auth: WalletAuth; disabled: boolean }) {
-  const [showWallets, setShowWallets] = useState(false);
-
-  if (!showWallets) {
-    return (
-      <ProviderButton
-        disabled={disabled}
-        glyph="◇"
-        label="Continue with external wallet"
-        onPress={() => setShowWallets(true)}
-      />
-    );
-  }
-
   return (
-    <View style={styles.walletChoices}>
-      <Text style={styles.walletChoiceLabel}>Choose your Solana identity wallet</Text>
-      <ProviderButton
-        disabled={disabled}
-        glyph="P"
-        label="Phantom"
-        onPress={auth.onPhantom}
-      />
-      <ProviderButton
-        disabled={disabled}
-        glyph="B"
-        label="Backpack"
-        onPress={auth.onBackpack}
-      />
-      <Pressable
-        accessibilityRole="button"
-        disabled={disabled}
-        onPress={() => setShowWallets(false)}
-        style={styles.emailReset}>
-        <Text style={styles.emailResetText}>Back to sign-in</Text>
-      </Pressable>
-    </View>
+    <ProviderButton
+      disabled={disabled}
+      glyph="◇"
+      label="Continue with Solana wallet"
+      onPress={auth.onConnect}
+    />
   );
 }
 
@@ -963,15 +933,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sans,
     fontSize: 12,
     textDecorationLine: 'underline',
-  },
-  walletChoices: {
-    gap: 8,
-  },
-  walletChoiceLabel: {
-    color: 'rgba(243, 240, 232, 0.66)',
-    fontFamily: Fonts.sans,
-    fontSize: 12,
-    marginHorizontal: 4,
   },
   button: {
     alignItems: 'center',

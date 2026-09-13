@@ -6,7 +6,7 @@
 | Parent | [Milestone 1: Discover and Buy Tokenized Stocks](../../milestone/milestone-one.md) |
 | Working name | `wallet_privy_prd` |
 | Dependency | Phase 0 Liquid Ledger direction approved |
-| Product surface | Stocklana mobile app on iOS and Android |
+| Product surface | Stocklana mobile app; Android is the primary Milestone 1 target |
 | Last updated | 2026-09-13 |
 
 ## 1. Decision
@@ -43,9 +43,10 @@ Stocklana. It does not mean Stocklana receives or stores the user's private key.
 
 ## 3. First-time experience
 
-1. The user selects **Continue with email** or **Continue with external wallet**.
-2. Email users verify a one-time code. External-wallet users connect a supported
-   Solana wallet and approve a SIWS message that does not move funds.
+1. The user selects **Continue with email** or **Continue with Solana wallet**.
+2. Email users verify a one-time code. On Android, external-wallet users choose any
+   installed Mobile Wallet Adapter-compatible Solana wallet in the native system
+   picker and approve a SIWS message that does not move funds.
 3. Stocklana creates or restores the profile associated with that authenticated
    identity.
 4. If the profile has no embedded wallets, provisioning creates one Solana wallet and
@@ -58,7 +59,8 @@ Stocklana. It does not mean Stocklana receives or stores the user's private key.
 
 The user is not asked to understand chains, create seed phrases, or visit Privy.
 Email onboarding requires no separate wallet app. External-wallet onboarding clearly
-hands off to the selected wallet app and returns to the same Stocklana flow.
+hands off through Android's native wallet picker and returns to the same Stocklana
+flow after approval.
 
 ## 4. Returning user and new-device recovery
 
@@ -116,7 +118,9 @@ the key, change ownership, add other signers, or weaken its own policies.
 
 ## 7. Functional requirements
 
-- **FR-01:** Support email OTP and external Solana wallet sign-in on both iOS and Android.
+- **FR-01:** Support email OTP on iOS and Android, and external Solana wallet sign-in
+  through Mobile Wallet Adapter on Android. An iOS external-wallet transport is a
+  separate post-Milestone 1 decision.
 - **FR-02:** Map every authenticated identity to one stable Stocklana profile.
 - **FR-03:** Automatically create exactly one initial EVM and one initial Solana wallet
   when the profile has neither.
@@ -144,14 +148,15 @@ the key, change ownership, add other signers, or weaken its own policies.
 ### Implementation baseline (2026-09-13)
 
 The Phase 0 Liquid Ledger direction is approved. The Expo app now contains the native
-Privy provider boundary, email OTP and external Solana wallet entry points, automatic
-embedded EVM and Solana wallet creation, wallet preparation/error states, and a
-wallet-ready state that displays both default addresses. This slice does not yet implement Stocklana API
+Privy provider boundary, email OTP and an Android Mobile Wallet Adapter entry point,
+automatic embedded EVM and Solana wallet creation, wallet preparation/error states,
+and a wallet-ready state that displays both default addresses. The MWA entry point
+invokes Android's installed-wallet picker instead of naming individual wallet brands.
+This slice does not yet implement Stocklana API
 profile binding, a protected cross-device recovery ceremony, or the mobile-to-web key
 export handoff. Privy dashboard configuration and physical-device validation are still
-required before this foundation is considered releasable. Phantom and Backpack are
-the first connector targets; Privy's mobile deeplink connectors are experimental and
-remain behind this release gate.
+required before this foundation is considered releasable. Only installed wallets that
+implement Mobile Wallet Adapter can appear in Android's picker.
 
 ### Wallet foundation delivery
 
@@ -194,8 +199,9 @@ user experience, risk limits, and operational controls require their own release
 - A delegated agent can perform only policy-allowed actions and cannot withdraw,
   export, change ownership, or expand its own access.
 - Revocation prevents new agent operations and appears in the audit history.
-- All supported iOS/Android login, provisioning, signing, export, interruption, and
-  recovery paths pass physical-device testing.
+- All supported Android login, provisioning, signing, interruption, and recovery paths
+  pass physical-device testing. Email also passes on iOS; iOS wallet transport and the
+  export handoff retain separate release gates.
 
 ## 11. Decisions required before development
 
@@ -214,7 +220,9 @@ user experience, risk limits, and operational controls require their own release
 ## 12. Reference material
 
 - [Privy React Native automatic wallet creation](https://docs.privy.io/basics/react-native/advanced/automatic-wallet-creation)
-- [Privy React Native Solana wallet deeplinking](https://docs.privy.io/recipes/react-native/deeplinking-wallets)
+- [Solana Mobile Wallet Adapter](https://github.com/solana-mobile/mobile-wallet-adapter)
+- [Privy Mobile Wallet Adapter integration](https://docs.privy.io/recipes/solana/adding-solana-mwa)
+- [Solana Mobile + Privy integration](https://github.com/solana-mobile/solana-mobile-skills/blob/main/skills/integration-privy/SKILL.md)
 - [Privy wallet export](https://docs.privy.io/wallets/wallets/export)
 - [Privy owners and signers](https://docs.privy.io/controls/authorization-keys/owners/overview)
 - [Privy delegated permissions](https://docs.privy.io/controls/common-use-cases/delegation)

@@ -9,23 +9,29 @@ import {
   usePrivy,
 } from '@privy-io/expo';
 import {
-  useBackpackDeeplinkWalletConnector,
-  usePhantomDeeplinkWalletConnector,
-} from '@privy-io/expo/connectors';
-import { useCallback, useEffect, useRef, useState } from 'react';
+  SolanaMobileWalletAdapterErrorCode,
+  transact,
+  type AppIdentity,
+} from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { base64FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
+import { getAddressCodec, getBase64Encoder } from '@solana/kit';
+import { useCallback, useEffect, useState } from 'react';
 
 import { LiquidLedgerScreen } from './LiquidLedgerScreen';
 import { usePrivyRuntimeStatus } from './config';
 
 type Provider = 'email' | 'external-wallet';
-type ExternalWalletProvider = 'backpack' | 'phantom';
 
-const CANCELLED_AUTH = /plugin closed|user rejected|user denied|request rejected|cancell?ed/i;
+const CANCELLED_AUTH = /association cancelled|plugin closed|user rejected|user denied|request rejected|cancell?ed/i;
 const SESSION_RECONCILIATION_TIMEOUT_MS = 12_000;
 const WALLET_PREPARATION_TIMEOUT_MS = 25_000;
-const EXTERNAL_WALLET_TIMEOUT_MS = 90_000;
 const DEFAULT_DEVELOPMENT_APP_URL = 'https://stocklana.test';
+const STOCKLANA_LOGIN_URI = 'stocklana://privy-login';
 const walletIdentity = readWalletIdentityConfig();
+const mobileWalletIdentity: AppIdentity = {
+  name: 'Stocklana',
+  uri: walletIdentity.mobileWalletUri,
+};
 
 export function PrivyEntry() {
   const runtimeStatus = usePrivyRuntimeStatus();
@@ -41,19 +47,9 @@ function ConfiguredPrivyEntry() {
   const { error: initializationError, isReady, logout, refreshUser, user } = usePrivy();
   const { loginWithCode, sendCode } = useLoginWithEmail();
   const { generateMessage, login: loginWithSiws } = useLoginWithSiws();
-  const phantom = usePhantomDeeplinkWalletConnector({
-    appUrl: walletIdentity.appUrl,
-    redirectUri: '/',
-  });
-  const backpack = useBackpackDeeplinkWalletConnector({
-    appUrl: walletIdentity.appUrl,
-    redirectUri: '/',
-  });
   const ethereumWallet = useEmbeddedEthereumWallet();
   const solanaWallet = useEmbeddedSolanaWallet();
   const [activeProvider, setActiveProvider] = useState<Provider | null>(null);
-  const [pendingExternalWallet, setPendingExternalWallet] =
-    useState<ExternalWalletProvider | null>(null);
   const [awaitingSession, setAwaitingSession] = useState(false);
   const [email, setEmail] = useState('');
   const [emailCode, setEmailCode] = useState('');
@@ -62,7 +58,6 @@ function ConfiguredPrivyEntry() {
   const [localError, setLocalError] = useState<string | null>(null);
   const [sessionTimedOut, setSessionTimedOut] = useState(false);
   const [timedOutUserId, setTimedOutUserId] = useState<string | null>(null);
-  const walletLoginInFlight = useRef(false);
 
   const evmAddress = ethereumWallet.wallets[0]?.address ?? null;
   const solanaAddress = isConnected(solanaWallet)
@@ -95,86 +90,54 @@ function ConfiguredPrivyEntry() {
     return () => clearTimeout(timeout);
   }, [user, walletsReady]);
 
-  useEffect(() => {
-    if (!pendingExternalWallet) return;
-
-    const timeout = setTimeout(() => {
-      if (walletLoginInFlight.current) return;
-      setPendingExternalWallet(null);
-      setActiveProvider(null);
-      setLocalError('The wallet did not return to Stocklana. Try connecting again.');
-    }, EXTERNAL_WALLET_TIMEOUT_MS);
-
-    return () => clearTimeout(timeout);
-  }, [pendingExternalWallet]);
-
-  const beginExternalWalletLogin = useCallback(async (
-    provider: ExternalWalletProvider,
-  ) => {
+  const beginExternalWalletLogin = useCallback(async () => {
     setLocalError(null);
     setEmailError(null);
     setAwaitingSession(false);
     setSessionTimedOut(false);
     setTimedOutUserId(null);
-    setPendingExternalWallet(provider);
     setActiveProvider('external-wallet');
 
     try {
-      const connector = provider === 'phantom' ? phantom : backpack;
-      if (!connector.isConnected || !connector.address) {
-        await connector.connect();
-      }
-    } catch (error) {
-      const message = errorMessage(error);
-      logDevelopmentAuthError(`${provider} connection`, message);
-      if (!CANCELLED_AUTH.test(message)) {
-        setLocalError(friendlyAuthError(message, 'Wallet'));
-      }
-      setPendingExternalWallet(null);
-      setActiveProvider(null);
-    }
-  }, [backpack, phantom]);
+      const authenticatedUser = await transact(async (wallet) => {
+        const authorization = await wallet.authorize({
+          chain: 'solana:mainnet',
+          identity: mobileWalletIdentity,
+        });
+        const account = authorization.accounts[0];
+        if (!account) throw new Error('The wallet did not return a Solana account.');
 
-  useEffect(() => {
-    if (!pendingExternalWallet || walletLoginInFlight.current) return;
-
-    const connector = pendingExternalWallet === 'phantom' ? phantom : backpack;
-    const externalAddress = connector.address;
-    if (!connector.isConnected || !externalAddress) return;
-
-    walletLoginInFlight.current = true;
-    void (async () => {
-      try {
+        const externalAddress = decodeSolanaAddress(account.address);
         const { message } = await generateMessage({
           from: {
             domain: walletIdentity.domain,
-            uri: walletIdentity.appUrl,
+            uri: STOCKLANA_LOGIN_URI,
           },
           wallet: { address: externalAddress },
         });
-        const { signature } = await connector.signMessage(message);
-        const authenticatedUser = await loginWithSiws({
+        const { signed_payloads: signedPayloads } = await wallet.signMessages({
+          addresses: [account.address],
+          payloads: [base64FromUint8Array(new TextEncoder().encode(message))],
+        });
+        const signature = signedPayloads[0];
+        if (!signature) throw new Error('The wallet did not return a signed message.');
+
+        return loginWithSiws({
           message,
           signature,
-          wallet: {
-            connectorType: 'deeplink',
-            walletClientType: pendingExternalWallet,
-          },
         });
-        setAwaitingSession(Boolean(authenticatedUser));
-      } catch (error) {
-        const message = errorMessage(error);
-        logDevelopmentAuthError(`${pendingExternalWallet} SIWS`, message);
-        if (!CANCELLED_AUTH.test(message)) {
-          setLocalError(friendlyAuthError(message, 'Wallet'));
-        }
-      } finally {
-        walletLoginInFlight.current = false;
-        setPendingExternalWallet(null);
-        setActiveProvider(null);
+      });
+      setAwaitingSession(Boolean(authenticatedUser));
+    } catch (error) {
+      const message = errorMessage(error);
+      logDevelopmentAuthError('mobile wallet adapter SIWS', message);
+      if (!isCancelledWalletAuth(error, message)) {
+        setLocalError(friendlyAuthError(message, 'Wallet', errorCode(error)));
       }
-    })();
-  }, [backpack, generateMessage, loginWithSiws, pendingExternalWallet, phantom]);
+    } finally {
+      setActiveProvider(null);
+    }
+  }, [generateMessage, loginWithSiws]);
 
   const requestEmailCode = useCallback(async () => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -239,7 +202,6 @@ function ConfiguredPrivyEntry() {
   const retry = useCallback(async () => {
     setLocalError(null);
     setEmailError(null);
-    setPendingExternalWallet(null);
     setAwaitingSession(false);
     setSessionTimedOut(false);
     setTimedOutUserId(null);
@@ -255,7 +217,6 @@ function ConfiguredPrivyEntry() {
   const signOut = useCallback(async () => {
     setLocalError(null);
     setEmailError(null);
-    setPendingExternalWallet(null);
     setAwaitingSession(false);
     setSessionTimedOut(false);
     setTimedOutUserId(null);
@@ -347,12 +308,7 @@ function ConfiguredPrivyEntry() {
       message={legalConfigurationMessage()}
       mode="sign-in"
       walletAuth={{
-        onBackpack: canBeginLogin()
-          ? () => void beginExternalWalletLogin('backpack')
-          : undefined,
-        onPhantom: canBeginLogin()
-          ? () => void beginExternalWalletLogin('phantom')
-          : undefined,
+        onConnect: canBeginLogin() ? () => void beginExternalWalletLogin() : undefined,
       }}
     />
   );
@@ -363,7 +319,14 @@ function errorMessage(error: unknown) {
   return typeof error === 'string' ? error : 'Unknown Privy error';
 }
 
-function friendlyAuthError(message: string, method?: 'Email' | 'Wallet') {
+function friendlyAuthError(
+  message: string,
+  method?: 'Email' | 'Wallet',
+  code?: string,
+) {
+  if (code === SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND) {
+    return 'No compatible Solana wallet was found. Install an MWA-compatible wallet and try again.';
+  }
   if (/network|fetch|offline|internet/i.test(message)) {
     return 'Stocklana could not reach Privy. Check your connection and try again.';
   }
@@ -383,19 +346,39 @@ function friendlyAuthError(message: string, method?: 'Email' | 'Wallet') {
 }
 
 function readWalletIdentityConfig() {
-  const appUrl = process.env.EXPO_PUBLIC_APP_URL?.trim()
-    || DEFAULT_DEVELOPMENT_APP_URL;
+  const configuredAppUrl = process.env.EXPO_PUBLIC_APP_URL?.trim();
+  const appUrl = configuredAppUrl || DEFAULT_DEVELOPMENT_APP_URL;
 
   try {
     const parsed = new URL(appUrl);
     if (parsed.protocol !== 'https:' || !parsed.host) throw new Error('Invalid URL');
-    return { appUrl: parsed.toString().replace(/\/$/, ''), domain: parsed.host };
+    const normalizedAppUrl = parsed.toString().replace(/\/$/, '');
+    return {
+      domain: parsed.host,
+      mobileWalletUri: configuredAppUrl ? normalizedAppUrl : STOCKLANA_LOGIN_URI,
+    };
   } catch {
     return {
-      appUrl: DEFAULT_DEVELOPMENT_APP_URL,
       domain: 'stocklana.test',
+      mobileWalletUri: STOCKLANA_LOGIN_URI,
     };
   }
+}
+
+function decodeSolanaAddress(encodedAddress: string) {
+  const addressBytes = getBase64Encoder().encode(encodedAddress);
+  return getAddressCodec().decode(addressBytes).toString();
+}
+
+function errorCode(error: unknown) {
+  if (!error || typeof error !== 'object' || !('code' in error)) return undefined;
+  const code = (error as { code?: unknown }).code;
+  return typeof code === 'string' ? code : undefined;
+}
+
+function isCancelledWalletAuth(error: unknown, message: string) {
+  return errorCode(error) === SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED
+    || CANCELLED_AUTH.test(message);
 }
 
 function isValidEmail(email: string) {
