@@ -1,56 +1,11 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
+/** React Native-facing theme exports. Shared values live in design-tokens.ts. */
 
 import '@/global.css';
 
 import { Platform } from 'react-native';
 
-export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-    /** Phase 0: The Ownership Register semantic color roles. */
-    canvas: '#F3F5F2',
-    surface: '#FFFFFF',
-    ink: '#17211F',
-    muted: '#53625E',
-    proof: '#0B5C78',
-    caution: '#A63632',
-    onProof: '#FFFFFF',
-    outline: '#B9C3BF',
-    proofWash: '#DDEDF2',
-    cautionWash: '#F9E4E1',
-    disabledSurface: '#DDE3DF',
-    disabledInk: '#43514D',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-    /** Phase 0: The Ownership Register semantic color roles. */
-    canvas: '#131918',
-    surface: '#1C2523',
-    ink: '#F2F5F1',
-    muted: '#B8C4BF',
-    proof: '#74C7DF',
-    caution: '#FFAAA2',
-    onProof: '#131918',
-    outline: '#51615C',
-    proofWash: '#163640',
-    cautionWash: '#42201F',
-    disabledSurface: '#2B3633',
-    disabledInk: '#D5DEDA',
-  },
-} as const;
-
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export { Colors, Radii, Spacing } from '@/constants/design-tokens';
+export type { ThemeColor } from '@/constants/design-tokens';
 
 export const Fonts = Platform.select({
   ios: {
@@ -76,16 +31,6 @@ export const Fonts = Platform.select({
     mono: 'var(--font-mono)',
   },
 });
-
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
-} as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;

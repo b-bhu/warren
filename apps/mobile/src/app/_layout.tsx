@@ -2,9 +2,12 @@ import { DarkTheme, Slot, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useColorScheme } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TamaguiProvider } from 'tamagui';
 
 import { PrivyRuntimeProvider } from '@/features/privy';
+import { tamaguiConfig } from '../../tamagui.config';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -19,16 +22,32 @@ const warrenTheme = {
   },
 };
 
-export default function TabLayout() {
+function AppProviders() {
+  const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
+
   useEffect(() => { void SplashScreen.hideAsync(); }, []);
+
   return (
-    <ThemeProvider value={warrenTheme}>
-      <SafeAreaProvider>
+    <TamaguiProvider
+      config={tamaguiConfig}
+      defaultTheme={colorScheme === 'light' ? 'light' : 'dark'}
+      insets={insets}
+    >
+      <ThemeProvider value={warrenTheme}>
         <PrivyRuntimeProvider>
           <StatusBar style="light" />
           <Slot />
         </PrivyRuntimeProvider>
-      </SafeAreaProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </TamaguiProvider>
+  );
+}
+
+export default function TabLayout() {
+  return (
+    <SafeAreaProvider>
+      <AppProviders />
+    </SafeAreaProvider>
   );
 }
