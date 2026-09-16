@@ -90,7 +90,7 @@ export function OnboardingFlowView({ controller, onCopyAddress, availableFamilie
       contentStyle={styles.content}
       actionDock={<Dock controller={controller} onContinue={onContinue} />}>
       <RegisterHeader {...headerFor(state, controller)} />
-      {developmentOnly ? <InlineNotice variant="information">Development-only deterministic wallet flow. It cannot sign in to a production Stocklana environment.</InlineNotice> : null}
+      {developmentOnly ? <InlineNotice variant="information">Development-only deterministic wallet flow. It cannot sign in to a production Warren environment.</InlineNotice> : null}
       <Body controller={controller} onCopyAddress={onCopyAddress} availableFamilies={availableFamilies} />
       {copyWallet || copyError ? (
         <DetailsDisclosure
@@ -128,8 +128,8 @@ function Body({ controller, onCopyAddress, availableFamilies }: { controller: On
     case 'connecting':
       return <View style={styles.section}>
         <ProofThread steps={{ domain: 'confirmed', wallet: 'waiting', signature: 'open' }} walletLabel="Waiting for wallet" />
-        <StatusPanel variant="pending" heading={`Choose a wallet in ${state.attempt.providerId}`} announce={false}>You’ll leave Stocklana to choose a wallet, then return here. Keep this screen open when you return.</StatusPanel>
-        <InlineNotice variant="information">Why am I leaving the app? Your wallet provider owns the connection step. Stocklana will ask you to review the wallet before signing in.</InlineNotice>
+        <StatusPanel variant="pending" heading={`Choose a wallet in ${state.attempt.providerId}`} announce={false}>You’ll leave Warren to choose a wallet, then return here. Keep this screen open when you return.</StatusPanel>
+        <InlineNotice variant="information">Why am I leaving the app? Your wallet provider owns the connection step. Warren will ask you to review the wallet before signing in.</InlineNotice>
       </View>;
     case 'connected_unverified':
       return <View style={styles.section}>
@@ -151,13 +151,13 @@ function Body({ controller, onCopyAddress, availableFamilies }: { controller: On
     case 'verifying':
       return <View style={styles.section}>
         <ProofThread steps={{ domain: 'confirmed', wallet: 'confirmed', signature: 'checking' }} walletLabel={chainLabel(state.wallet.family)} />
-        <StatusPanel variant="verifying" heading="Checking your signature with Stocklana." announce={false}>This may take a moment. Do not submit another signing request.</StatusPanel>
+        <StatusPanel variant="verifying" heading="Checking your signature with Warren." announce={false}>This may take a moment. Do not submit another signing request.</StatusPanel>
       </View>;
     case 'complete':
       return <View style={styles.section}>
         <ProofThread serverVerified steps={{ domain: 'confirmed', wallet: 'confirmed', signature: 'open' }} walletLabel={chainLabel(state.session.wallet.family)} />
-        <StatusPanel variant="verified" heading={state.session.source === 'development_demo' ? 'Development demo complete.' : state.purpose === 'link_wallet' ? 'Wallet added.' : 'Wallet verified.'}>{state.session.source === 'development_demo' ? 'No production authentication has occurred.' : 'Your Stocklana session is ready.'}</StatusPanel>
-        {state.session.source === 'development_demo' ? <InlineNotice variant="information">This deterministic adapter is for development only. It cannot sign in to Stocklana.</InlineNotice> : null}
+        <StatusPanel variant="verified" heading={state.session.source === 'development_demo' ? 'Development demo complete.' : state.purpose === 'link_wallet' ? 'Wallet added.' : 'Wallet verified.'}>{state.session.source === 'development_demo' ? 'No production authentication has occurred.' : 'Your Warren session is ready.'}</StatusPanel>
+        {state.session.source === 'development_demo' ? <InlineNotice variant="information">This deterministic adapter is for development only. It cannot sign in to Warren.</InlineNotice> : null}
         <WalletEvidenceCard chain={chainLabel(state.session.wallet.family)} address={state.session.wallet.address} shortenedAddress={state.session.wallet.addressDisplay} network={state.session.wallet.context} onCopyAddress={onCopyAddress} />
       </View>;
     case 'recoverable_error':
@@ -209,7 +209,7 @@ function headerFor(state: OnboardingState, controller: OnboardingController) {
     case 'connecting': return { title: 'Choose your wallet', status: 'Waiting for wallet approval', onBack: controller.cancel, backLabel: 'Cancel' };
     case 'connected_unverified': return { title: state.view === 'pre_sign' ? 'Review your sign-in.' : 'Wallet connected. Prove it’s yours.', onBack: state.view === 'pre_sign' ? controller.back : undefined };
     case 'awaiting_signature': return { title: 'Approve the sign-in in your wallet.', status: 'Waiting for approval', onBack: controller.cancel, backLabel: 'Cancel' };
-    case 'verifying': return { title: 'Checking your signature with Stocklana.', status: 'Checking verification' };
+    case 'verifying': return { title: 'Checking your signature with Warren.', status: 'Checking verification' };
     case 'complete': return { title: state.session.source === 'development_demo' ? 'Development demo complete.' : state.purpose === 'link_wallet' ? 'Wallet added.' : 'Wallet verified.' };
     case 'recoverable_error': return { title: errorHeading(state.error), status: 'A safe recovery action is available.', onBack: controller.changeWallet, backLabel: 'Choose wallet' };
     case 'blocked': return { title: 'Cannot verify this wallet.', status: 'Choose another wallet to continue.', onBack: controller.changeWallet, backLabel: 'Choose wallet' };
@@ -245,8 +245,8 @@ function announcementFor(state: OnboardingState): string | null {
     case 'connecting': return 'Waiting for wallet approval.';
     case 'connected_unverified': return state.view === 'pre_sign' ? 'Review your sign-in.' : 'Wallet connected. Ownership is not verified yet.';
     case 'awaiting_signature': return 'Approve the sign-in in your wallet.';
-    case 'verifying': return 'Checking your signature with Stocklana.';
-    case 'complete': return state.session.source === 'development_demo' ? 'Development demo complete. No production authentication has occurred.' : 'Wallet verified. Your Stocklana session is ready.';
+    case 'verifying': return 'Checking your signature with Warren.';
+    case 'complete': return state.session.source === 'development_demo' ? 'Development demo complete. No production authentication has occurred.' : 'Wallet verified. Your Warren session is ready.';
     case 'recoverable_error': return `${errorHeading(state.error)} ${state.error.message}`;
     case 'blocked': return `Cannot verify this wallet. ${state.error.message}`;
     default: return assertNever(state);

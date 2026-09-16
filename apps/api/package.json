@@ -1,5 +1,5 @@
 {
-  "name": "@stocklana/api",
+  "name": "@warren/api",
   "version": "0.1.0",
   "private": true,
   "engines": { "node": ">=22" },
@@ -12,9 +12,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@stocklana/auth-contract": "workspace:*",
-    "@stocklana/provider-contract": "workspace:*",
-    "@stocklana/test-wallet-provider": "workspace:*",
+    "@warren/auth-contract": "workspace:*",
+    "@warren/provider-contract": "workspace:*",
+    "@warren/test-wallet-provider": "workspace:*",
     "@fastify/cors": "11.2.0",
     "better-sqlite3": "13.0.3",
     "bs58": "6.0.0",

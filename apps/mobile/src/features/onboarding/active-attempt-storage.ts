@@ -3,10 +3,10 @@ import * as SecureStore from 'expo-secure-store';
 
 import { shortenAddress, type ChallengePreview, type OnboardingPurpose, type OnboardingState, type PersistedOnboardingAttempt, type RestorableOnboardingState } from './types';
 
-const STORAGE_PREFIX = 'com.stocklana.onboarding.v1.';
+const STORAGE_PREFIX = 'com.warren.onboarding.v1.';
 const secureStoreOptions: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-  keychainService: 'com.stocklana.onboarding.v1',
+  keychainService: 'com.warren.onboarding.v1',
 };
 
 /** Converts live state into the narrow recovery record permitted to leave memory. */

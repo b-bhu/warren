@@ -1,4 +1,4 @@
-# Stocklana visual mocks
+# Warren visual mocks
 
 These files are exploratory design artifacts, not production UI.
 

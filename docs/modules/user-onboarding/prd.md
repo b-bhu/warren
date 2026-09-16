@@ -17,10 +17,10 @@
 
 ## 1. Summary
 
-Stocklana needs a trustworthy first-run experience before it can offer tokenized-stock
+Warren needs a trustworthy first-run experience before it can offer tokenized-stock
 trading. This module lets a user connect a supported EVM or Solana wallet, prove that
 they control its address by signing a clear, off-chain challenge, and enter an
-authenticated Stocklana session.
+authenticated Warren session.
 
 The product capability covers both EVM and Solana. The default product assumption is
 that a person needs to verify only one wallet to finish onboarding; they can link one
@@ -40,21 +40,21 @@ approve future actions. Wallet onboarding often fails because people do not unde
 why an app wants a signature, leave the app during a wallet handoff, reject an opaque
 message, select the wrong account or network, or cannot recover when a session expires.
 
-Stocklana needs one understandable mobile flow that establishes wallet ownership
+Warren needs one understandable mobile flow that establishes wallet ownership
 without asking for a seed phrase, moving funds, or making the user understand wallet
 protocol details.
 
 ## 3. Outcome
 
 A new or returning user can connect an EVM or Solana wallet, knowingly sign a
-Stocklana login challenge, and reach the authenticated product experience with the
+Warren login challenge, and reach the authenticated product experience with the
 verified address associated with the correct profile.
 
 ## 4. Goals
 
 - Support wallet connection and ownership verification for both EVM and Solana.
 - Explain what connecting and signing do before every wallet handoff.
-- Create or resume the correct Stocklana profile only after server-side verification.
+- Create or resume the correct Warren profile only after server-side verification.
 - Let a signed-in user link and separately verify one wallet from the other chain
   family without creating an accidental duplicate profile.
 - Recover safely from cancellation, backgrounding, expiry, network loss, provider
@@ -75,13 +75,13 @@ verified address associated with the correct profile.
 - Cross-chain transfers, swaps, agent-controlled actions, or delegated trading.
 - Supporting every EVM network, wallet provider, smart-contract wallet, or Solana
   wallet in the first release.
-- A Stocklana-native email/password recovery system unless later research selects one.
+- A Warren-native email/password recovery system unless later research selects one.
 
 ## 6. Users and Jobs
 
 ### New user with a wallet
 
-> I want to connect the wallet I already use so I can enter Stocklana without making
+> I want to connect the wallet I already use so I can enter Warren without making
 > another password-based account.
 
 ### New user without the required wallet family
@@ -89,7 +89,7 @@ verified address associated with the correct profile.
 > I want to understand what I need and get a safe path forward without believing that
 > my account or money is lost.
 
-Wallet creation is not assumed to be available inside Stocklana in this phase. If the
+Wallet creation is not assumed to be available inside Warren in this phase. If the
 selected provider owns wallet creation, the handoff must say that clearly and return
 the user to the same onboarding step afterward.
 
@@ -116,7 +116,7 @@ acceptance criteria, not only implementation notes.
    should not cost a network fee.
 4. **The server is the source of truth.** The mobile app never declares ownership or
    creates an authenticated session based only on a client-side result.
-5. **One canonical wallet identity maps to one Stocklana profile.** Chain namespace,
+5. **One canonical wallet identity maps to one Warren profile.** Chain namespace,
    network/cluster, canonical address, wallet type, and provider credential ID are stored
    as separate concepts. The final identity key is a pre-implementation decision because
    EVM contract accounts can be network-specific while EVM externally owned accounts
@@ -127,9 +127,9 @@ acceptance criteria, not only implementation notes.
    wallet/chain concepts rather than exposing provider-specific internals.
 8. **Conflicts fail closed.** The initial release never auto-merges profiles, reassigns a
    wallet, or reveals whether the conflicting profile has other wallets or activity.
-9. **Provider authorization is not Stocklana authentication.** Receiving an OAuth token,
-   wallet grant, address, or provider success status never creates a Stocklana session;
-   only Stocklana's verification of its own challenge can do that.
+9. **Provider authorization is not Warren authentication.** Receiving an OAuth token,
+   wallet grant, address, or provider success status never creates a Warren session;
+   only Warren's verification of its own challenge can do that.
 
 ### 7.1 Pre-implementation decision gates
 
@@ -142,7 +142,7 @@ product, mobile, backend, and security owners record the decisions:
 - **DG-02 — Identity key:** canonical address normalization and uniqueness rules for EVM
   externally owned accounts, EVM contract accounts, and Solana accounts across networks.
 - **DG-03 — Launch matrix:** exact provider/wallet, iOS/Android version, device, and wallet
-  type combinations that Stocklana claims to support.
+  type combinations that Warren claims to support.
 - **DG-04 — Contract wallets:** support ERC-1271 with chain-aware verification or mark
   EVM contract accounts unsupported with a tested, explicit error.
 - **DG-05 — Provider token architecture:** native public client or backend-for-frontend;
@@ -170,19 +170,19 @@ product, mobile, backend, and security owners record the decisions:
 
 ### 9.1 New user verifies the first wallet
 
-1. The user sees Stocklana's short value proposition and selects **Get started**.
+1. The user sees Warren's short value proposition and selects **Get started**.
 2. The app explains that a wallet is used for sign-in now and trading approval later.
 3. The user chooses **EVM** or **Solana**.
 4. The app shows the available supported connection path and explains any external
    provider handoff.
 5. The user connects or grants access to one wallet address.
-6. Stocklana shows the shortened address and asks the backend for a single-use sign-in
+6. Warren shows the shortened address and asks the backend for a single-use sign-in
    challenge bound to that address, chain context, app domain, and attempt.
 7. Before the signing handoff, the app says: **This is free. It will not move funds or
    approve a trade.**
 8. The wallet presents the human-readable challenge and the user approves it.
 9. The backend verifies the exact challenge and signature, consumes the challenge, and
-   creates or resumes the matching Stocklana profile.
+   creates or resumes the matching Warren profile.
 10. The app confirms the verified wallet and enters the authenticated experience.
 
 ### 9.2 Existing user links the other chain family
@@ -196,7 +196,7 @@ product, mobile, backend, and security owners record the decisions:
 
 ### 9.3 Returning user
 
-- If a valid Stocklana session exists, the app resumes without asking for an unnecessary
+- If a valid Warren session exists, the app resumes without asking for an unnecessary
   signature.
 - If the session has expired, the app explains that the user needs to sign in again,
   reconnects the known wallet if necessary, and requests a fresh challenge.
@@ -223,7 +223,7 @@ product, mobile, backend, and security owners record the decisions:
 | `connecting` | Provider/wallet handoff is active | Cancel, resume |
 | `connected_unverified` | Address is known but ownership is not proven | Sign, change wallet |
 | `awaiting_signature` | A single request is awaiting user action | Open approval, cancel |
-| `verifying` | Stocklana is checking the returned proof | Wait; no duplicate submit |
+| `verifying` | Warren is checking the returned proof | Wait; no duplicate submit |
 | `complete` | Verified profile and session are ready | Continue |
 | `recoverable_error` | The attempt can safely be retried | Retry, change wallet |
 | `blocked` | A conflict or unsupported condition needs a different path | Get help, change wallet |
@@ -238,7 +238,7 @@ sign-in.
 - **FR-01:** The user can deliberately select EVM or Solana before connection.
 - **FR-02:** The app lists only connection methods verified as supported on the current
   operating system and build.
-- **FR-03:** Before leaving Stocklana, the app names the external provider and describes
+- **FR-03:** Before leaving Warren, the app names the external provider and describes
   what the user will approve and how they return.
 - **FR-04:** On return, the app validates the pending attempt and rejects unsolicited,
   mismatched, expired, or replayed callbacks.
@@ -274,7 +274,7 @@ sign-in.
 
 ### Profile and session
 
-- **FR-13:** A first verified wallet creates one minimal Stocklana profile; the full
+- **FR-13:** A first verified wallet creates one minimal Warren profile; the full
   profile interface is deferred to Phase 2.
 - **FR-14:** A previously verified chain/address resumes the same profile.
 - **FR-15:** A signed-in user can link one verified EVM wallet and one verified Solana
@@ -282,7 +282,7 @@ sign-in.
 - **FR-16:** The app must not auto-merge profiles or move a wallet between profiles.
 - **FR-17:** Session credentials are stored using operating-system protected storage,
   are never logged, and are cleared on sign-out or confirmed revocation.
-- **FR-18:** Disconnecting a provider session and signing out of Stocklana are presented
+- **FR-18:** Disconnecting a provider session and signing out of Warren are presented
   as separate actions when they have different effects.
 
 ### Progress and errors
@@ -310,7 +310,7 @@ sign-in.
   available, Phase 1 states clearly that self-service recovery is unavailable and routes
   to the approved support policy without promising recovery.
 - **FR-27:** All provider access and refresh credentials follow DG-05 and remain separate
-  from Stocklana session credentials. Revoking either credential type has documented,
+  from Warren session credentials. Revoking either credential type has documented,
   independently tested effects.
 
 ### 11.1 Normative signing contract
@@ -325,10 +325,10 @@ fixture.
 | --- | --- | --- |
 | Standard | ERC-4361 over ERC-191 | Sign In With Solana-compatible plaintext over Ed25519 |
 | Required identity | Checksummed/canonical EVM address and decided EIP-155 chain ID | Canonical base58 public key and decided Solana cluster/chain identifier |
-| Required context | Stocklana domain, HTTPS URI, version, statement/purpose, nonce, issued-at, expiration, request/attempt ID | Stocklana domain, HTTPS URI, version, statement/purpose, nonce, issued-at, expiration, request/attempt ID, and cluster/chain context where supported by the standard/provider |
+| Required context | Warren domain, HTTPS URI, version, statement/purpose, nonce, issued-at, expiration, request/attempt ID | Warren domain, HTTPS URI, version, statement/purpose, nonce, issued-at, expiration, request/attempt ID, and cluster/chain context where supported by the standard/provider |
 | Message bytes | UTF-8 bytes of the canonical ERC-4361 message; the wallet applies the ERC-191 prefix | UTF-8 bytes of the canonical SIWS message; v1 uses printable ASCII fields where possible for wallet/hardware compatibility |
 | Signature input | Plain message, never an app-supplied pre-hashed digest | Plain message bytes, never a transaction or an app-supplied digest |
-| Signature output | At the Stocklana API boundary: 65-byte `r || s || v`, `0x`-prefixed hex. Preserve the original artifact, normalize accepted recovery-parity variants only during verification, and require EOA recovery to equal the claimed address | At the Stocklana API boundary: exactly 64 Ed25519 signature bytes encoded as lowercase hex. Verification must succeed for the claimed public key |
+| Signature output | At the Warren API boundary: 65-byte `r || s || v`, `0x`-prefixed hex. Preserve the original artifact, normalize accepted recovery-parity variants only during verification, and require EOA recovery to equal the claimed address | At the Warren API boundary: exactly 64 Ed25519 signature bytes encoded as lowercase hex. Verification must succeed for the claimed public key |
 | Time policy | Server time; reject expired/not-yet-valid messages, with at most 60 seconds of documented verification skew | Same |
 
 Before implementation, the backend/security owner must publish machine-readable positive
@@ -362,15 +362,15 @@ voice foundations used here. The onboarding design must include:
 
 Minimum pre-sign copy:
 
-> Sign in to Stocklana with **[short address]** on **[chain]**. This signature is free
+> Sign in to Warren with **[short address]** on **[chain]**. This signature is free
 > and cannot move funds or approve a trade.
 
-The signed challenge itself must also identify Stocklana's verified domain, address,
+The signed challenge itself must also identify Warren's verified domain, address,
 purpose, nonce, and validity window in the selected standard's format.
 
 ## 13. Security and Privacy Requirements
 
-- Stocklana never asks for, receives, stores, screenshots, or transmits a seed phrase or
+- Warren never asks for, receives, stores, screenshots, or transmits a seed phrase or
   private key.
 - All callbacks and deep/universal links use an attempt-bound state value. OAuth-based
   integrations also require PKCE S256 and exact redirect validation.
@@ -385,9 +385,9 @@ purpose, nonce, and validity window in the selected standard's format.
   authentication payloads distinguishable from transaction messages.
 - Session rotation, expiration, revocation, sign-out, and stolen-token response are
   documented before production rollout.
-- Provider OAuth/grant credentials and Stocklana session credentials are separately
+- Provider OAuth/grant credentials and Warren session credentials are separately
   scoped, stored, rotated, revoked, and observed. A provider token is never accepted as
-  proof of Stocklana identity.
+  proof of Warren identity.
 - Logs and analytics must not contain access/refresh tokens, provider keys, signatures,
   complete challenges, seed phrases, or full wallet addresses. Use internal attempt IDs
   and one-way pseudonymous identifiers where correlation is necessary.
@@ -448,7 +448,7 @@ baseline window and before broad rollout.
 ### EVM path
 
 - Given a supported EVM wallet, the user can connect, review an ERC-4361 message, sign
-  it, and enter a server-authenticated Stocklana session.
+  it, and enter a server-authenticated Warren session.
 - Changing the signed address, domain, chain ID, nonce, issued-at/expiration field, or
   signature causes verification to fail without creating a session.
 - Replaying an already consumed challenge fails.
@@ -456,7 +456,7 @@ baseline window and before broad rollout.
 ### Solana path
 
 - Given a supported Solana wallet, the user can connect, review a SIWS-compatible
-  message, sign it, and enter a server-authenticated Stocklana session.
+  message, sign it, and enter a server-authenticated Warren session.
 - Changing the signed public key, domain, nonce, validity field, message bytes, encoding,
   or signature causes verification to fail without creating a session.
 - Replaying an already consumed challenge fails.
@@ -492,38 +492,38 @@ baseline window and before broad rollout.
 
 Paybox is promising for a prototype because its public surface supports scoped wallet
 access and both required message-signing families. It is not yet proven as the mobile
-onboarding provider for Stocklana. It is being evaluated as an OAuth/MCP credential and
+onboarding provider for Warren. It is being evaluated as an OAuth/MCP credential and
 signing service—not assumed to be a WalletConnect-style native wallet connector.
 
 ### Relevant capabilities
 
 | Paybox capability | Product implication |
 | --- | --- |
-| [OAuth 2.1 authorization-code with PKCE](https://docs.paybox.sh/connect/oauth) for public clients | Stocklana may be able to obtain scoped access without holding a client secret. The documented exact HTTPS redirect rule must be validated with iOS Universal Links and Android App Links. |
-| [`list_credentials`](https://docs.paybox.sh/reference/mcp-tools#list_credentials) exposes granted wallet address and EVM/Solana family | Stocklana can distinguish granted chain families. EVM and Solana appear as separate wallet credentials, so dual-chain linking may require separate grants. |
-| [`request_wallet_sign`](https://docs.paybox.sh/reference/mcp-tools#request_wallet_sign) supports EIP-191 messages and `solanaMessage` | Both ownership proofs are represented, but standards-compatible challenge formatting and Stocklana server verification remain Stocklana responsibilities. |
-| [Request lifecycle](https://docs.paybox.sh/concepts/requests) separates approval, signature, and terminal success | The UI can model pending states accurately. Stocklana must submit once and poll the existing request instead of issuing duplicates. |
-| [Passkey step-up](https://docs.paybox.sh/concepts/approvals) protects sensitive signing | The user may see Paybox authentication/approval in addition to Stocklana screens; this friction and recovery model need usability testing. |
+| [OAuth 2.1 authorization-code with PKCE](https://docs.paybox.sh/connect/oauth) for public clients | Warren may be able to obtain scoped access without holding a client secret. The documented exact HTTPS redirect rule must be validated with iOS Universal Links and Android App Links. |
+| [`list_credentials`](https://docs.paybox.sh/reference/mcp-tools#list_credentials) exposes granted wallet address and EVM/Solana family | Warren can distinguish granted chain families. EVM and Solana appear as separate wallet credentials, so dual-chain linking may require separate grants. |
+| [`request_wallet_sign`](https://docs.paybox.sh/reference/mcp-tools#request_wallet_sign) supports EIP-191 messages and `solanaMessage` | Both ownership proofs are represented, but standards-compatible challenge formatting and Warren server verification remain Warren responsibilities. |
+| [Request lifecycle](https://docs.paybox.sh/concepts/requests) separates approval, signature, and terminal success | The UI can model pending states accurately. Warren must submit once and poll the existing request instead of issuing duplicates. |
+| [Passkey step-up](https://docs.paybox.sh/concepts/approvals) protects sensitive signing | The user may see Paybox authentication/approval in addition to Warren screens; this friction and recovery model need usability testing. |
 
 ### Constraints and unknowns
 
 - Paybox states that connecting/creating wallets and managing credentials happen inside
-  its first-party app and are **not a public API**. Stocklana therefore cannot assume an
-  embedded, Stocklana-owned wallet-creation flow.
+  its first-party app and are **not a public API**. Warren therefore cannot assume an
+  embedded, Warren-owned wallet-creation flow.
 - Its documented Node SDK/headless signing-key flow is not evidence of Expo/React Native
   compatibility. Do not select the SDK for the mobile runtime without a working spike.
-- MCP wallet signing relies on a signing-window UI resource. Stocklana must validate how
+- MCP wallet signing relies on a signing-window UI resource. Warren must validate how
   a native mobile client securely renders or hands off that experience.
 - OAuth documentation requires registered HTTPS redirects. Universal/App Link return,
   cancelled authorization, cold start, and installed/not-installed behavior need tests.
 - A user may need a Paybox account, email sign-in, passkey setup, wallet creation, and
-  credential grant before Stocklana can request a signature. The combined completion
+  credential grant before Warren can request a signature. The combined completion
   rate is unknown.
 - Access scopes are combined with per-credential grants. The consent screen must be
-  checked to ensure users understand the exact wallet and approval mode Stocklana gets.
-- Stocklana must decide whether the native app or a backend-for-frontend holds and refreshes
+  checked to ensure users understand the exact wallet and approval mode Warren gets.
+- Warren must decide whether the native app or a backend-for-frontend holds and refreshes
   Paybox OAuth credentials. Either design must keep Paybox authorization separate from the
-  Stocklana session and prove that only server verification creates that session.
+  Warren session and prove that only server verification creates that session.
 - Revocation, refresh-token rotation, profile-session invalidation, service availability,
   data processing, geographic availability, pricing, and production support require due
   diligence outside the happy-path prototype.
@@ -533,12 +533,12 @@ signing service—not assumed to be a WalletConnect-style native wallet connecto
 On physical iOS and Android devices, prove all of the following before committing:
 
 1. Start authorization from Expo, complete Paybox sign-in/consent, and return through a
-   verified HTTPS Universal/App Link on warm and cold app starts. Confirm Stocklana owns
+   verified HTTPS Universal/App Link on warm and cold app starts. Confirm Warren owns
    and can serve the production redirect domain and platform association files.
 2. Grant an existing EVM credential, list it, request exactly one human-readable sign-in
-   message, complete approval/signing, and verify the signature on the Stocklana server.
+   message, complete approval/signing, and verify the signature on the Warren server.
 3. Repeat independently with a Solana credential and Solana message.
-4. Link both verified credentials to one already authenticated Stocklana profile.
+4. Link both verified credentials to one already authenticated Warren profile.
 5. Resume a pending approval/signature after backgrounding without issuing a new request.
    Verify the exact native behavior and accessibility of both `approval_url` and the MCP
    wallet-sign UI resource rather than assuming an embedded wallet-connection screen.
@@ -598,8 +598,8 @@ user or security requirements.
 | Server verifier | Automated positive/negative fixtures for every normative field and signature encoding; replay and concurrent verification tests prove no more than one success | Backend + Security |
 | Declared launch matrix | Every DG-03 provider/wallet/OS/device/chain combination passes on physical devices; unsupported combinations are not shown | Mobile + QA |
 | App handoff | Warm return, cold return, cancel, reject, timeout, offline/reconnect, wrong address/network, provider revocation, and process death all reach the expected state without duplicate requests | Mobile + QA |
-| Identity/session | New profile, returning profile, second-wallet link, address conflict, sign-out, provider-token expiry/rotation/revocation, and Stocklana-session expiry/revocation pass independently | Backend + QA + Security |
-| Accessibility | VoiceOver and TalkBack, maximum text scale, focus restoration, state announcements, reduced motion, contrast, and touch targets pass for every Stocklana state and the end-to-end provider journey | Design + QA |
+| Identity/session | New profile, returning profile, second-wallet link, address conflict, sign-out, provider-token expiry/rotation/revocation, and Warren-session expiry/revocation pass independently | Backend + QA + Security |
+| Accessibility | VoiceOver and TalkBack, maximum text scale, focus restoration, state announcements, reduced motion, contrast, and touch targets pass for every Warren state and the end-to-end provider journey | Design + QA |
 | Sensitive data | Automated log/telemetry checks plus manual proxy/device-log inspection find none of the prohibited credentials or artifacts | Security + Analytics |
 
 Each owner records a dated pass/fail result and evidence link. All rows must pass for the

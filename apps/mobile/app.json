@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Stocklana",
-    "slug": "stocklana",
+    "name": "Warren",
+    "slug": "warren",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "stocklana",
+    "scheme": "warren",
     "userInterfaceStyle": "dark",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.stocklana.app"
+      "bundleIdentifier": "com.warren.app"
     },
     "android": {
-      "package": "com.stocklana.app",
+      "package": "com.warren.app",
       "adaptiveIcon": {
         "backgroundColor": "#07131A",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

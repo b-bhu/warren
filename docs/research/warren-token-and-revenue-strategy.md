@@ -1,16 +1,16 @@
-# Stocklana token and revenue strategy
+# Warren token and revenue strategy
 
 ## Executive decision
 
-Stocklana should not begin by issuing a token. It should begin by becoming the safest and easiest place on Solana to discover, buy, hold, and later use tokenized stocks.
+Warren should not begin by issuing a token. It should begin by becoming the safest and easiest place on Solana to discover, buy, hold, and later use tokenized stocks.
 
 The recommended sequence is:
 
 1. Ship the current spot product with verified stock tokens, transparent Jupiter routing, user-owned wallets, and a small execution fee.
-2. Add **Stocklana Themes** as one-click baskets that buy the individual stock tokens directly into the user's wallet. Do not issue a basket token yet.
-3. Add leverage later through a vetted external venue, with each position owned by the user. Do not put the Stocklana treasury into one perpetual trade.
-4. Only after Stocklana has users and repeat volume, consider a separate speculative launchpad built on Meteora DBC.
-5. If the company later wants a genuinely stock-backed basket token, make it a separate redeemable vault product—not the same token as the Stocklana utility/community token.
+2. Add **Warren Themes** as one-click baskets that buy the individual stock tokens directly into the user's wallet. Do not issue a basket token yet.
+3. Add leverage later through a vetted external venue, with each position owned by the user. Do not put the Warren treasury into one perpetual trade.
+4. Only after Warren has users and repeat volume, consider a separate speculative launchpad built on Meteora DBC.
+5. If the company later wants a genuinely stock-backed basket token, make it a separate redeemable vault product—not the same token as the Warren utility/community token.
 
 The short answer to “how much money is needed?” is:
 
@@ -18,9 +18,9 @@ The short answer to “how much money is needed?” is:
 |---|---:|---|
 | Technical DBC experiment | **0.25–0.5 SOL operating buffer** | Account rent, transactions, metadata, retries, and any configured creation fee. Exact cost must be simulated against the chosen config. |
 | Credible public community-token launch | **$20,000–$100,000** | Legal review, security review, operations, community support, and launch budget. This is a planning estimate, not a Meteora fee. |
-| Non-custodial Stocklana Themes MVP | **No company-funded stock reserve** | Users buy and own each stock token. Company costs are engineering, security, compliance, and support. |
+| Non-custodial Warren Themes MVP | **No company-funded stock reserve** | Users buy and own each stock token. Company costs are engineering, security, compliance, and support. |
 | Redeemable stock-basket token | **Reserve equal to 100% of token NAV**, plus roughly **$100,000–$350,000** in legal, security, issuer/custody, and operational setup | A $100,000 basket token needs approximately $100,000 of reserve assets before buffers and setup costs. |
-| New perpetuals venue | **$1 million+** is a more realistic starting conversation | Liquidity, insurance, oracles, audits, liquidators, operations, and legal work. Stocklana should integrate first instead. |
+| New perpetuals venue | **$1 million+** is a more realistic starting conversation | Liquidity, insurance, oracles, audits, liquidators, operations, and legal work. Warren should integrate first instead. |
 
 These figures deliberately separate the cheap act of creating a token from the expensive act of making it credible, useful, secure, liquid, and legally operable.
 
@@ -61,9 +61,9 @@ The key rule is:
 
 > A trading pair creates a price. A reserve plus enforceable redemption creates backing.
 
-## What Stocklana is currently building
+## What Warren is currently building
 
-The repository currently describes Stocklana as a mobile-first **spot-trading** product for tokenized stocks.[^1] Milestone 1 is deliberately narrow: users discover a small verified set of assets and buy them. It explicitly excludes leverage, perpetuals, short positions, agent trading, and lending.[^2]
+The repository currently describes Warren as a mobile-first **spot-trading** product for tokenized stocks.[^1] Milestone 1 is deliberately narrow: users discover a small verified set of assets and buy them. It explicitly excludes leverage, perpetuals, short positions, agent trading, and lending.[^2]
 
 The product language also emphasizes inspectable ownership: the interface should feel like an ownership register, with safety and proof taking priority over trading excitement.[^3] The wallet design points toward user-owned embedded EVM and Solana wallets rather than pooled company custody.
 
@@ -75,7 +75,7 @@ This is a good foundation. A native token, a creator launchpad, a basket securit
 
 Meteora Dynamic Bonding Curve is a permissionless Solana launch primitive. A creator sets a reusable launch configuration, creates a virtual pool, lets users buy along one or more constant-product curve segments, and migrates to DAMM v2 at a defined quote threshold.[^4][^6]
 
-What it gives Stocklana:
+What it gives Warren:
 
 - no requirement for the creator to seed the initial virtual pool;
 - configurable price discovery and migration threshold;
@@ -85,7 +85,7 @@ What it gives Stocklana:
 - automated DAMM v2 migration for supported threshold/config combinations; and
 - post-migration liquidity allocation that can be unlocked, permanently locked, or vested.[^5][^6][^7]
 
-What it does not give Stocklana:
+What it does not give Warren:
 
 - equity backing;
 - buyers;
@@ -97,13 +97,13 @@ What it does not give Stocklana:
 
 Meteora takes 20% of the DBC trading fee. The remaining 80% is split between the configured partner and creator. A referral can receive 20% of Meteora's protocol portion. The optional pool-creation fee is split 10% to Meteora and 90% to the partner, while DAMM v2 migration has a fixed 0.2% protocol liquidity migration fee.[^7]
 
-For stock-token quote pairs, operational details matter. Meteora documents support for certain “Stock Tokens,” but Token-2022 extensions such as a permanent delegate require an operator-created TokenBadge. A quote token's transfer fee must be zero, including any scheduled transfer fee.[^8] Stocklana must therefore maintain an explicit allowlist of quote mints and verify badge support before showing a launch button.
+For stock-token quote pairs, operational details matter. Meteora documents support for certain “Stock Tokens,” but Token-2022 extensions such as a permanent delegate require an operator-created TokenBadge. A quote token's transfer fee must be zero, including any scheduled transfer fee.[^8] Warren must therefore maintain an explicit allowlist of quote mints and verify badge support before showing a launch button.
 
 Meteora's public migration keeper will auto-migrate supported stock-token quote pools when the configured quote threshold is at least **$750 equivalent**. Buyers can collectively contribute that value through curve purchases; the founder only needs to supply it if the founder wants to force graduation personally.[^5]
 
-Security posture: Meteora publishes multiple DBC audits.[^9] In the 0.2.0 reviews, Offside Labs reported one high-severity issue that was fixed and one medium external transfer-hook risk that Meteora acknowledged; Zenith reported no critical, high, or medium findings and several lower-severity observations.[^10][^11] This supports using the audited program, but it does not audit Stocklana's configuration, front end, fee distributor, or any custom contracts. The acknowledged transfer-hook dependency is another reason not to add an experimental transfer hook to `$STOK`.
+Security posture: Meteora publishes multiple DBC audits.[^9] In the 0.2.0 reviews, Offside Labs reported one high-severity issue that was fixed and one medium external transfer-hook risk that Meteora acknowledged; Zenith reported no critical, high, or medium findings and several lower-severity observations.[^10][^11] This supports using the audited program, but it does not audit Warren's configuration, front end, fee distributor, or any custom contracts. The acknowledged transfer-hook dependency is another reason not to add an experimental transfer hook to `$STOK`.
 
-Decision: Meteora DBC is technically suitable for an optional Stocklana **community-token launchpad**. It is not, by itself, a suitable mechanism for creating a stock-backed basket.
+Decision: Meteora DBC is technically suitable for an optional Warren **community-token launchpad**. It is not, by itself, a suitable mechanism for creating a stock-backed basket.
 
 ### StockDotFun
 
@@ -120,7 +120,7 @@ Its economic loop is straightforward:
 
 The attractive idea is not “meme token equals stock.” It is: **speculative trading fees buy or accumulate a recognizable stock token, creating an observable reward stream.** That mechanism is understandable and revenue-linked.
 
-The weaknesses are equally important. StockDotFun says the pairing does not convey ownership of the paired stock, supported assets carry issuer/custody/tracking and liquidity risks, and the contract foundation is unaudited. Its published terms are described as a template subject to revision.[^12][^14][^15] Stocklana can learn from its fee loop, but should not copy its legal wording or treat it as production assurance.
+The weaknesses are equally important. StockDotFun says the pairing does not convey ownership of the paired stock, supported assets carry issuer/custody/tracking and liquidity risks, and the contract foundation is unaudited. Its published terms are described as a template subject to revision.[^12][^14][^15] Warren can learn from its fee loop, but should not copy its legal wording or treat it as production assurance.
 
 Robinhood's own documentation reinforces the distinction: Robinhood Stock Tokens are tokenized debt securities issued by Robinhood Assets (Jersey) that provide economic exposure but do not grant legal or beneficial ownership in the underlying equity. Direct minting is limited to authorized participants.[^16][^17]
 
@@ -130,13 +130,13 @@ Decision: copy the clarity of the fee loop, not the suggestion that mere pairing
 
 StonkFun is a different product from StockDotFun, but it is a closer Solana implementation comparison. Bitquery's integration documentation describes StonkFun launches using Raydium LaunchLab, including stock-token pairs, with curve graduation to Raydium CPMM.[^18] Raydium's own LaunchLab documentation also describes no-seed-liquidity launches and estimated interface creation costs around 0.05–0.5 SOL depending on launch mode.[^19]
 
-DefiLlama currently reports substantial recent fee and revenue activity for StonkFun, but the observed numbers are highly concentrated around a recent launch window and should not be treated as a normal monthly run rate.[^20] The useful lesson is that stock-themed quote assets can attract attention. The dangerous lesson would be to forecast a new Stocklana business from a short burst of competitor activity.
+DefiLlama currently reports substantial recent fee and revenue activity for StonkFun, but the observed numbers are highly concentrated around a recent launch window and should not be treated as a normal monthly run rate.[^20] The useful lesson is that stock-themed quote assets can attract attention. The dangerous lesson would be to forecast a new Warren business from a short burst of competitor activity.
 
 ### Perpspad
 
 Perpspad links token fees to a leveraged perpetual position and uses some resulting profits for token buybacks or treasury/creator distributions.[^21] This can create a dramatic narrative, but it also converts operating cash flow into liquidation risk. Its paper also contains inconsistent distribution percentages between sections, which is a warning that the economics need formal specification before capital is committed.
 
-Stocklana's core promise is understandable ownership. A platform token whose perceived backing is a leveraged trade is the opposite: users must understand trading fees, position margin, oracle behavior, funding, liquidation, profit realization, and buyback discretion. Stocklana should not use this design for its primary token or treasury.
+Warren's core promise is understandable ownership. A platform token whose perceived backing is a leveraged trade is the opposite: users must understand trading fees, position margin, oracle behavior, funding, liquidation, profit realization, and buyback discretion. Warren should not use this design for its primary token or treasury.
 
 ## Recommended product architecture
 
@@ -152,20 +152,20 @@ The first product should make tokenized stocks safe enough to understand and eas
 - portfolio accounting and corporate-action handling; and
 - transparent fees before signature.
 
-Jupiter's current meta-aggregator referral model permits an integrator fee between 50 and 255 basis points and retains 20% of that integrator fee.[^24] A 50 bps customer fee therefore gives Stocklana approximately 40 bps net before its own costs. Stocklana should begin at the low end and show the fee as a separate line item, rather than hiding a spread.
+Jupiter's current meta-aggregator referral model permits an integrator fee between 50 and 255 basis points and retains 20% of that integrator fee.[^24] A 50 bps customer fee therefore gives Warren approximately 40 bps net before its own costs. Warren should begin at the low end and show the fee as a separate line item, rather than hiding a spread.
 
 ```mermaid
 flowchart LR
-    A["User holds USDC"] --> B["Stocklana verifies asset and builds route"]
+    A["User holds USDC"] --> B["Warren verifies asset and builds route"]
     B --> C["Jupiter executes best available route"]
     C --> D["xStocks arrive in user's wallet"]
     C --> E["Transparent integration fee"]
-    E --> F["Stocklana treasury multisig"]
+    E --> F["Warren treasury multisig"]
 ```
 
-### Phase 2: Stocklana Themes without a basket token
+### Phase 2: Warren Themes without a basket token
 
-The simplest useful stock basket is a **transaction bundle**, not a new security. The user selects a theme and amount; Stocklana splits the amount across component xStocks and sends those individual tokens to the user's wallet.
+The simplest useful stock basket is a **transaction bundle**, not a new security. The user selects a theme and amount; Warren splits the amount across component xStocks and sends those individual tokens to the user's wallet.
 
 Example launch theme for product testing:
 
@@ -179,7 +179,7 @@ Example launch theme for product testing:
 
 This is a product prototype, not an investment recommendation. The final asset list should be based on permitted jurisdictions, verified mints, route depth, price impact, issuer terms, and operational availability. xStocks lists products including SPYx, QQQx, NVDAx, AAPLx, and MSFTx, while its partner materials require partners to implement jurisdiction controls.[^22][^23]
 
-Each purchase should show the components, weights, estimated price impact, Stocklana fee, and minimum received before the user signs. If Solana transaction-size or route constraints require multiple transactions, the interface must handle partial completion and offer a safe resume path.
+Each purchase should show the components, weights, estimated price impact, Warren fee, and minimum received before the user signs. If Solana transaction-size or route constraints require multiple transactions, the interface must handle partial completion and offer a safe resume path.
 
 The theme can be rebalanced in one of two ways:
 
@@ -196,14 +196,14 @@ Leverage should be a separate “Pro” mode after the spot product is trusted. 
 - isolated margin is the default;
 - 2x is the initial UI default, with a conservative maximum;
 - liquidation price, funding, fees, and oracle are visible before signature;
-- Stocklana never uses spot customer assets as margin; and
+- Warren never uses spot customer assets as margin; and
 - any referral/revenue share is based on a signed venue agreement, not assumed in the financial model.
 
-Venue selection requires a separate diligence project covering stock-market trading hours, oracle behavior when equities are closed, funding, open interest, liquidators, insurance, contract audits, jurisdiction, and whether the venue is actually accessible to Stocklana's target users. This work is outside the current Milestone 1 scope.
+Venue selection requires a separate diligence project covering stock-market trading hours, oracle behavior when equities are closed, funding, open interest, liquidators, insurance, contract audits, jurisdiction, and whether the venue is actually accessible to Warren's target users. This work is outside the current Milestone 1 scope.
 
 ### Phase 4: optional community-token launchpad
 
-If spot volume and user retention are real, Stocklana can add a clearly separated “Labs” area for speculative community tokens paired with supported stock tokens through Meteora DBC.
+If spot volume and user retention are real, Warren can add a clearly separated “Labs” area for speculative community tokens paired with supported stock tokens through Meteora DBC.
 
 A conservative starting configuration would be:
 
@@ -212,7 +212,7 @@ A conservative starting configuration would be:
 - one simple curve segment so price behavior is explainable;
 - supported and badged stock-token quote mint with zero transfer fee;
 - 1% total curve trading fee;
-- 25% of the post-protocol fee to the creator and 75% to Stocklana;
+- 25% of the post-protocol fee to the creator and 75% to Warren;
 - zero or low migration fee;
 - migrated liquidity permanently locked, if the actual config enforces this; and
 - revocable authorities removed where consistent with compliance needs.
@@ -223,11 +223,11 @@ With Meteora's 20% protocol share, this illustrative 1% fee produces the followi
 |---|---:|
 | Meteora protocol | $0.20 |
 | Creator | $0.20 |
-| Stocklana partner | $0.60 |
+| Warren partner | $0.60 |
 
-The creator receives 25% of the remaining $0.80, not 25% of the original trade fee. Stocklana can use Meteora's Dynamic Fee Sharing to route compatible claimed fees among two to five fixed recipients, such as operations, treasury, and a disclosed community reward vault.[^25]
+The creator receives 25% of the remaining $0.80, not 25% of the original trade fee. Warren can use Meteora's Dynamic Fee Sharing to route compatible claimed fees among two to five fixed recipients, such as operations, treasury, and a disclosed community reward vault.[^25]
 
-A 0.10 SOL pool-creation fee would send 0.09 SOL to Stocklana and 0.01 SOL to Meteora under the documented 90/10 split. This can deter spam, but it is not a strong business by itself. Trading volume matters much more than launch count.
+A 0.10 SOL pool-creation fee would send 0.09 SOL to Warren and 0.01 SOL to Meteora under the documented 90/10 split. This can deter spam, but it is not a strong business by itself. Trading volume matters much more than launch count.
 
 ## The token decision
 
@@ -241,7 +241,7 @@ Start with non-transferable points or account status for:
 - referrals that pass anti-sybil checks; and
 - governance experiments over catalogue or interface priorities.
 
-Points let Stocklana test whether incentives improve retention without creating a liquid asset whose price becomes the product.
+Points let Warren test whether incentives improve retention without creating a liquid asset whose price becomes the product.
 
 ### If `$STOK` is launched later
 
@@ -257,9 +257,9 @@ Points let Stocklana test whether incentives improve retention without creating 
 - any buyback policy explicitly discretionary and reviewed by counsel; and
 - no treasury leverage tied to the token.
 
-The exact supply and allocation should be decided only after Stocklana knows its user-acquisition cost, retention, volume, and reward budget. Choosing “one billion tokens” does not create value; it only changes the number of units.
+The exact supply and allocation should be decided only after Warren knows its user-acquisition cost, retention, volume, and reward budget. Choosing “one billion tokens” does not create value; it only changes the number of units.
 
-### If Stocklana wants a true basket token
+### If Warren wants a true basket token
 
 Use a separate name, such as `STOCK5`, and a separate legal/technical structure. Do not call it `$STOK`.
 
@@ -278,14 +278,14 @@ Without these properties, the product is only a token themed around stocks, not 
 
 ## Revenue model
 
-Stocklana should earn money when it creates a useful transaction, not by silently trading against the user.
+Warren should earn money when it creates a useful transaction, not by silently trading against the user.
 
 ### Recommended revenue stack
 
 1. **Spot and theme execution:** 50 bps gross integrator fee through Jupiter, approximately 40 bps net after Jupiter's documented 20% share of the integrator fee.[^24]
 2. **Pro subscription:** optional advanced analytics, tax exports, alerts, and professional order controls; for example $10 per month.
-3. **Labs launch fee:** optional 0.10 SOL DBC pool-creation fee, of which 90% goes to Stocklana under Meteora's fee split.[^7]
-4. **Labs trading fee:** approximately 60 bps to Stocklana under the illustrative DBC configuration above.
+3. **Labs launch fee:** optional 0.10 SOL DBC pool-creation fee, of which 90% goes to Warren under Meteora's fee split.[^7]
+4. **Labs trading fee:** approximately 60 bps to Warren under the illustrative DBC configuration above.
 5. **Post-migration LP economics:** only the fee rights that the actual locked/vested DAMM v2 liquidity position grants; disclose them before launch.
 6. **Perpetuals referral or venue share:** recognize only after a vetted venue and signed commercial agreement exist.
 
@@ -299,7 +299,7 @@ Illustrative monthly revenue—not a forecast:
 Other examples:
 
 - 1,000 Pro subscribers at $10/month = $10,000/month.
-- 100 launches at a 0.10 SOL creation fee = 9 SOL to Stocklana before tax and operating costs.
+- 100 launches at a 0.10 SOL creation fee = 9 SOL to Warren before tax and operating costs.
 
 These streams should not be added together unless the corresponding businesses actually exist. Revenue is before customer support, RPC/indexing, security, compliance, taxes, refunds, incentives, and salaries.
 
@@ -317,7 +317,7 @@ These streams should not be added together unless the corresponding businesses a
 
 ### A. Technical token experiment
 
-On devnet, onchain capital can be obtained from a faucet. On mainnet, the exact SOL needed depends on whether Stocklana reuses a DBC config or creates one, metadata/accounts, any configured pool-creation fee, transaction priority, and failed attempts. Meteora documents configurable creation fees from 0.001 to 100 SOL but does not publish one universal all-in deployment price.[^6][^7]
+On devnet, onchain capital can be obtained from a faucet. On mainnet, the exact SOL needed depends on whether Warren reuses a DBC config or creates one, metadata/accounts, any configured pool-creation fee, transaction priority, and failed attempts. Meteora documents configurable creation fees from 0.001 to 100 SOL but does not publish one universal all-in deployment price.[^6][^7]
 
 For planning, keep 0.25–0.5 SOL in the isolated deployer wallet and simulate every transaction before signing. This is an operating buffer, not a claim that the protocol will consume all of it.
 
@@ -338,7 +338,7 @@ These are judgment ranges for budgeting and must be replaced by vendor quotes in
 
 ### C. Non-custodial basket UX
 
-Stocklana does not need to buy the basket. Each user supplies USDC and receives the individual xStocks. The company funds engineering, security, compliance, RPC/indexing, and support, but not inventory.
+Warren does not need to buy the basket. Each user supplies USDC and receives the individual xStocks. The company funds engineering, security, compliance, RPC/indexing, and support, but not inventory.
 
 A lean production planning envelope outside current salaries is roughly $50,000–$200,000, driven more by legal, geo-compliance, and security requirements than by Solana transactions. This range should also be replaced by scoped vendor quotes.
 
@@ -358,7 +358,7 @@ For example, a $100,000 pilot supply needs approximately $100,000 of eligible st
 
 ### E. Perpetuals
 
-Integrating a vetted venue is an engineering and diligence project. Operating a venue is a liquidity, risk, security, and regulatory business. Stocklana should not plan to own a perpetuals protocol until it has substantial spot volume, a dedicated risk team, audited contracts, reliable oracle/liquidator infrastructure, and at least seven figures of risk capital or committed liquidity.
+Integrating a vetted venue is an engineering and diligence project. Operating a venue is a liquidity, risk, security, and regulatory business. Warren should not plan to own a perpetuals protocol until it has substantial spot volume, a dedicated risk team, audited contracts, reliable oracle/liquidator infrastructure, and at least seven figures of risk capital or committed liquidity.
 
 ## Technical design and controls
 
@@ -367,7 +367,7 @@ Integrating a vetted venue is an engineering and diligence project. Operating a 
 - **Asset registry:** canonical mint, issuer, chain, token program, authorities, oracle, eligibility, legal links, and current status.
 - **Route service:** Jupiter quote, fee account, price impact, expiry, and exact minimum output.
 - **Theme composer:** deterministic weights, rounding rules, per-leg minimum output, and safe recovery from partial fills.
-- **Wallet:** user-owned Privy wallet; Stocklana never retains a withdrawal key.
+- **Wallet:** user-owned Privy wallet; Warren never retains a withdrawal key.
 - **Portfolio/indexer:** token balances, cost basis, issuer rebases or corporate actions, and price-source timestamp.
 - **Policy engine:** jurisdiction/eligibility checks before quoting and again before transaction construction.
 - **Treasury:** multisig, separated fee accounts, transaction policy, and public reporting.
@@ -375,7 +375,7 @@ Integrating a vetted venue is an engineering and diligence project. Operating a 
 ### DBC Labs
 
 - use the official DBC SDK and verify the published program ID rather than trusting an arbitrary front end;[^26]
-- allow only Stocklana-approved config keys and quote mints;
+- allow only Warren-approved config keys and quote mints;
 - verify TokenBadge and zero-transfer-fee requirements at launch time;
 - publish curve shape, migration threshold, all fee shares, authorities, and liquidity lock before signature;
 - index curve progress, fee claims, and migration state independently;
@@ -399,7 +399,7 @@ Before production, counsel should classify each planned activity separately:
 
 | Activity | Principal question |
 |---|---|
-| Routing an xStock trade | Can Stocklana market and route this product to this user in this jurisdiction? |
+| Routing an xStock trade | Can Warren market and route this product to this user in this jurisdiction? |
 | Charging an execution fee | What disclosures, registrations, and best-execution duties apply? |
 | Selling `$STOK` | Is it a utility token, security, financial promotion, or another regulated instrument? |
 | Sharing fees or buying back `$STOK` | Does this create an expectation of profit from the team's efforts? |
@@ -422,7 +422,7 @@ This memo is technical and business research, not legal or investment advice.
 
 - Finish the current onboarding and wallet milestone.
 - Ship individual tokenized-stock buying.
-- Add one five-asset Stocklana Theme as direct component purchases.
+- Add one five-asset Warren Theme as direct component purchases.
 - Add partial-fill recovery, transaction simulation, and receipts.
 - Test 50 bps gross pricing against conversion and routing quality.
 
@@ -446,7 +446,7 @@ This memo is technical and business research, not legal or investment advice.
 Consider a mainnet DBC Labs launch only when:
 
 - spot has repeat users and stable execution;
-- Stocklana can explain every fee in one screen;
+- Warren can explain every fee in one screen;
 - stock-token quote support has been verified end to end;
 - contracts/configuration have had independent review;
 - monitoring and incident response are live; and
@@ -458,21 +458,21 @@ Consider `$STOK` only after at least three months of measurable retention and re
 
 The highest-value move is not “launch a token cheaply.” It is to create the trusted transaction layer around assets users already understand.
 
-Stocklana's durable advantages can be:
+Warren's durable advantages can be:
 
 1. **Trust:** verified mints, plain-language rights, visible authorities, and safety controls.
 2. **Convenience:** one wallet, one portfolio, best routing, and one-click themes.
-3. **Ownership:** individual assets arrive in the user's wallet; Stocklana does not pool them.
+3. **Ownership:** individual assets arrive in the user's wallet; Warren does not pool them.
 4. **Distribution:** creators can later launch separate speculative communities with stock-token fee loops.
 5. **Revenue:** transparent execution, subscription, and launch infrastructure fees.
 
-Build the user and revenue engine first. Add a community token only when it improves that engine. Build a stock-backed basket token only when Stocklana is ready to become an issuer or work with one.
+Build the user and revenue engine first. Add a community token only when it improves that engine. Build a stock-backed basket token only when Warren is ready to become an issuer or work with one.
 
 ## Sources
 
-[^1]: Stocklana repository, [`README.md`](../../README.md).
-[^2]: Stocklana repository, [`docs/milestone/milestone-one.md`](../milestone/milestone-one.md).
-[^3]: Stocklana repository, [`docs/modules/theme-design/phase-zero.md`](../modules/theme-design/phase-zero.md).
+[^1]: Warren repository, [`README.md`](../../README.md).
+[^2]: Warren repository, [`docs/milestone/milestone-one.md`](../milestone/milestone-one.md).
+[^3]: Warren repository, [`docs/modules/theme-design/phase-zero.md`](../modules/theme-design/phase-zero.md).
 [^4]: Meteora, [What is Dynamic Bonding Curve?](https://docs.meteora.ag/core-products/dbc/what-is-dbc) and [Universal Dynamic Bonding Curve](https://docs.meteora.ag/core-products/dbc/universal-curve).
 [^5]: Meteora, [Migration and Liquidity](https://docs.meteora.ag/core-products/dbc/migration-and-liquidity).
 [^6]: Meteora, [Launch Configurations](https://docs.meteora.ag/core-products/dbc/launch-configurations) and [Accounts and Permissions](https://docs.meteora.ag/core-products/dbc/accounts-and-permissions).

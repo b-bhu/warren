@@ -13,8 +13,8 @@ export function ProfileScreen({ profile, onAddWallet, onRefresh, onSignOut }: { 
   const missing = (['evm', 'solana'] as const).filter((family) => !families.has(family));
 
   return <OnboardingScaffold actionDock={<ActionDock primaryLabel="Sign out" onPrimaryPress={onSignOut} secondaryLabel="Refresh profile" onSecondaryPress={onRefresh} />} contentStyle={styles.content}>
-    <RegisterHeader label="Stocklana profile" title="Your verified wallets" />
-    <StatusPanel variant="verified" heading="You’re signed in.">Your wallet ownership is recorded with Stocklana.</StatusPanel>
+    <RegisterHeader label="Warren profile" title="Your verified wallets" />
+    <StatusPanel variant="verified" heading="You’re signed in.">Your wallet ownership is recorded with Warren.</StatusPanel>
     <View style={styles.section}>
       {profile.wallets.map((wallet) => <View key={`${wallet.family}:${wallet.addressDisplay}`} style={styles.wallet}>
         <WalletEvidenceCard chain={wallet.family === 'evm' ? 'EVM wallet' : 'Solana wallet'} address={wallet.addressDisplay} shortenedAddress={shortenAddress(wallet.addressDisplay)} network={wallet.context} />

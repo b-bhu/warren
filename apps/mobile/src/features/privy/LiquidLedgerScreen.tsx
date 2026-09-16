@@ -167,7 +167,7 @@ export function LiquidLedgerScreen({
 
               {mode === 'web-preview' ? (
                 <Notice message={message ?? undefined}>
-                  Email and external-wallet sign-in run in the Stocklana native development build.
+                  Email and external-wallet sign-in run in the Warren native development build.
                 </Notice>
               ) : null}
 
@@ -199,7 +199,7 @@ export function LiquidLedgerScreen({
               <View style={styles.assurance}>
                 <Text style={styles.assuranceGlyph}>◇</Text>
                 <Text style={styles.assuranceText}>
-                  Stocklana does not store your wallet keys.
+                  Warren does not store your wallet keys.
                 </Text>
               </View>
             </View>
@@ -295,11 +295,11 @@ function EmailAuthForm({ auth, disabled }: { auth: EmailAuth; disabled: boolean 
 function Header({ status }: { status: string }) {
   return (
     <View style={styles.topbar}>
-      <View accessibilityLabel="Stocklana" style={styles.brand}>
+      <View accessibilityLabel="Warren" style={styles.brand}>
         <View accessible={false} style={styles.brandMark}>
-          <Text style={styles.brandLetter}>S</Text>
+          <Text style={styles.brandLetter}>W</Text>
         </View>
-        <Text style={styles.brandText}>Stocklana</Text>
+        <Text style={styles.brandText}>Warren</Text>
       </View>
       <View style={styles.statusPill}>
         <Text style={styles.statusText}>{status}</Text>
@@ -523,7 +523,7 @@ function screenCopy(mode: LiquidLedgerMode) {
         eyebrow: 'Creating your private account',
         titleBefore: 'One sign-in.\nTwo wallets.\n',
         titleAccent: 'Almost yours.',
-        intro: 'Keep Stocklana open while Privy finishes your account and restores both wallets.',
+        intro: 'Keep Warren open while Privy finishes your account and restores both wallets.',
       };
     case 'missing-config':
       return {
@@ -531,7 +531,7 @@ function screenCopy(mode: LiquidLedgerMode) {
         eyebrow: 'Privy configuration',
         titleBefore: 'Add two IDs.\nRestart Expo.\n',
         titleAccent: 'Then sign in.',
-        intro: 'Stocklana is ready for Privy; this local build only needs its public app and client IDs.',
+        intro: 'Warren is ready for Privy; this local build only needs its public app and client IDs.',
       };
     case 'web-preview':
       return {
@@ -555,7 +555,7 @@ function screenCopy(mode: LiquidLedgerMode) {
         eyebrow: 'Your existing account',
         titleBefore: 'Same wallets.\nNew device.\n',
         titleAccent: 'Recover safely.',
-        intro: 'Stocklana will not create replacement wallets while your existing wallets need recovery.',
+        intro: 'Warren will not create replacement wallets while your existing wallets need recovery.',
       };
     default:
       return {
@@ -563,7 +563,7 @@ function screenCopy(mode: LiquidLedgerMode) {
         eyebrow: 'Your private market account',
         titleBefore: 'One sign-in.\nTwo wallets.\n',
         titleAccent: 'Yours.',
-        intro: 'Continue once and Stocklana prepares secure Solana and EVM wallets for you. Both appear automatically inside your account.',
+        intro: 'Continue once and Warren prepares secure Solana and EVM wallets for you. Both appear automatically inside your account.',
       };
   }
 }
@@ -590,7 +590,7 @@ function walletLensAccessibilityLabel(
   if (mode === 'ready' && solanaAddress && evmAddress) {
     return 'Default Solana wallet ready. Default EVM wallet ready.';
   }
-  if (mode === 'preparing') return 'Stocklana is preparing default Solana and EVM wallets.';
+  if (mode === 'preparing') return 'Warren is preparing default Solana and EVM wallets.';
   if (mode === 'recovery-required') {
     return 'Your existing Solana and EVM wallets require recovery on this device.';
   }

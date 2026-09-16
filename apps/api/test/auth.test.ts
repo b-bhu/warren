@@ -6,16 +6,16 @@ import { join } from 'node:path';
 import test from 'node:test';
 import Database from 'better-sqlite3';
 import type { FastifyInstance } from 'fastify';
-import { DeterministicTestWalletAdapter } from '@stocklana/test-wallet-provider';
+import { DeterministicTestWalletAdapter } from '@warren/test-wallet-provider';
 import { buildApp } from '../src/server.js';
 import { readConfig, type Config } from '../src/config.js';
-import { serializeEip4361V1, serializeSiwsV1 } from '@stocklana/auth-contract';
+import { serializeEip4361V1, serializeSiwsV1 } from '@warren/auth-contract';
 
 const fixtures = JSON.parse(readFileSync(new URL('../../../packages/auth-contract/fixtures/v1/canonical.json', import.meta.url), 'utf8')) as Record<string, any>;
 
 function setup(overrides: Partial<Config> = {}, injectTestProvider = true) {
-  const directory = mkdtempSync(join(tmpdir(), 'stocklana-api-'));
-  const config: Config = { NODE_ENV: 'test', PORT: 0, DATABASE_URL: `file:${join(directory, 'test.db')}`, AUTH_DOMAIN: 'stocklana.test', AUTH_URI: 'https://stocklana.test', CHALLENGE_TTL_SECONDS: 900, ATTEMPT_TTL_SECONDS: 1200, ACCESS_TTL_SECONDS: 900, REFRESH_TTL_SECONDS: 2_592_000, SESSION_HMAC_PEPPER: 'test-only-pepper-with-at-least-24-characters', SESSION_RESULT_ENCRYPTION_KEY: 'test-only-result-encryption-key-at-least-32-chars', EVM_SUPPORTED_CHAIN_IDS: '1', SOLANA_SUPPORTED_CLUSTERS: 'devnet', CORS_ORIGINS: 'https://stocklana.test', RATE_LIMIT_MAX: 60, RATE_LIMIT_WINDOW_SECONDS: 60, ...overrides };
+  const directory = mkdtempSync(join(tmpdir(), 'warren-api-'));
+  const config: Config = { NODE_ENV: 'test', PORT: 0, DATABASE_URL: `file:${join(directory, 'test.db')}`, AUTH_DOMAIN: 'warren.test', AUTH_URI: 'https://warren.test', CHALLENGE_TTL_SECONDS: 900, ATTEMPT_TTL_SECONDS: 1200, ACCESS_TTL_SECONDS: 900, REFRESH_TTL_SECONDS: 2_592_000, SESSION_HMAC_PEPPER: 'test-only-pepper-with-at-least-24-characters', SESSION_RESULT_ENCRYPTION_KEY: 'test-only-result-encryption-key-at-least-32-chars', EVM_SUPPORTED_CHAIN_IDS: '1', SOLANA_SUPPORTED_CLUSTERS: 'devnet', CORS_ORIGINS: 'https://warren.test', RATE_LIMIT_MAX: 60, RATE_LIMIT_WINDOW_SECONDS: 60, ...overrides };
   const provider = new DeterministicTestWalletAdapter('test'); const app = buildApp(injectTestProvider ? { config, provider } : { config });
   return { app, provider, databaseFile: join(directory, 'test.db'), close: async () => { await app.close(); rmSync(directory, { recursive: true, force: true }); } };
 }
@@ -43,7 +43,7 @@ test('config rejects unsafe TTL, network, and production CORS invariants', () =>
   assert.throws(() => readConfig({ NODE_ENV: 'test', CHALLENGE_TTL_SECONDS: '900', ATTEMPT_TTL_SECONDS: '899' }));
   assert.throws(() => readConfig({ NODE_ENV: 'test', EVM_SUPPORTED_CHAIN_IDS: '01' }));
   assert.throws(() => readConfig({ NODE_ENV: 'test', SOLANA_SUPPORTED_CLUSTERS: 'devnet,' }));
-  assert.throws(() => readConfig({ NODE_ENV: 'production', DATABASE_URL: 'file:/var/lib/stocklana.db', AUTH_URI: 'https://api.stocklana.test', SESSION_HMAC_PEPPER: 'a-production-hmac-pepper-that-is-long-enough', SESSION_RESULT_ENCRYPTION_KEY: 'a-production-result-key-that-is-long-enough', CORS_ORIGINS: '*' }));
+  assert.throws(() => readConfig({ NODE_ENV: 'production', DATABASE_URL: 'file:/var/lib/warren.db', AUTH_URI: 'https://api.warren.test', SESSION_HMAC_PEPPER: 'a-production-hmac-pepper-that-is-long-enough', SESSION_RESULT_ENCRYPTION_KEY: 'a-production-result-key-that-is-long-enough', CORS_ORIGINS: '*' }));
 });
 async function proof(app: FastifyInstance, item: Record<string, any>, challengeValue: Record<string, any>, signature: string) {
   return request(app, 'POST', `/v1/auth/attempts/${item.attemptId}/proofs`, { challengeId: challengeValue.challengeId, protocol: challengeValue.protocol, signature }, { 'x-attempt-capability': item.attemptCapability });

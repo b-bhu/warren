@@ -4,11 +4,11 @@ import * as SecureStore from 'expo-secure-store';
 
 import type { SessionResult } from '@/features/onboarding';
 
-const ACCESS_TOKEN_STORAGE_KEY = 'com.stocklana.session.v1.access';
-const REFRESH_TOKEN_STORAGE_KEY = 'com.stocklana.session.v1.refresh';
+const ACCESS_TOKEN_STORAGE_KEY = 'com.warren.session.v1.access';
+const REFRESH_TOKEN_STORAGE_KEY = 'com.warren.session.v1.refresh';
 const secureStoreOptions: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-  keychainService: 'com.stocklana.session.v1',
+  keychainService: 'com.warren.session.v1',
 };
 
 type StoredTokens = { accessToken: string; refreshToken: string };
@@ -180,8 +180,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [apiUrl, fetchProfile, preserveForRetry, rotateSession]);
 
   const completeOnboarding = useCallback(async (result: SessionResult) => {
-    if (result.source !== 'server_verified') throw new Error('A development demonstration cannot create a Stocklana session.');
-    if (!apiUrl) throw new Error('Stocklana API is not configured for this build.');
+    if (result.source !== 'server_verified') throw new Error('A development demonstration cannot create a Warren session.');
+    if (!apiUrl) throw new Error('Warren API is not configured for this build.');
     const next = { accessToken: result.accessToken, refreshToken: result.refreshToken };
     await writeTokens(next);
     setTokens(next);
@@ -278,7 +278,7 @@ async function requestJson<T>(baseUrl: string, path: string, options: { method: 
 
 class SessionRequestError extends Error {
   constructor(readonly status?: number) {
-    super(status === undefined ? 'Session request could not reach Stocklana.' : `Session request failed with status ${status}.`);
+    super(status === undefined ? 'Session request could not reach Warren.' : `Session request failed with status ${status}.`);
   }
 }
 
@@ -287,8 +287,8 @@ function isAuthoritativeSessionRejection(error: unknown): boolean {
 }
 
 function recoverableMessageFor(error: unknown): string {
-  if (error instanceof SessionRequestError && error.status && error.status >= 500) return 'Stocklana is temporarily unavailable. Your saved session is still kept on this device.';
-  return 'We could not reach Stocklana. Your saved session is still kept on this device.';
+  if (error instanceof SessionRequestError && error.status && error.status >= 500) return 'Warren is temporarily unavailable. Your saved session is still kept on this device.';
+  return 'We could not reach Warren. Your saved session is still kept on this device.';
 }
 
 /** Stable per refresh-token ID; the bearer secret is never copied into an HTTP header. */

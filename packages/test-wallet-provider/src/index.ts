@@ -2,11 +2,11 @@ import { createHash } from 'node:crypto';
 import bs58 from 'bs58';
 import nacl from 'tweetnacl';
 import { privateKeyToAccount } from 'viem/accounts';
-import type { ExactMessageRequest, ProviderAdapter, ProviderRequest, ProviderRequestResult } from '@stocklana/provider-contract';
+import type { ExactMessageRequest, ProviderAdapter, ProviderRequest, ProviderRequestResult } from '@warren/provider-contract';
 
 // This reproducible non-production key is derived from a public test label; it is never a user or production secret.
-const EVM_KEY = `0x${createHash('sha256').update('stocklana-deterministic-wallet-provider-v1').digest('hex')}` as `0x${string}`;
-const EVM_ALT_KEY = `0x${createHash('sha256').update('stocklana-deterministic-wallet-provider-alt-v1').digest('hex')}` as `0x${string}`;
+const EVM_KEY = `0x${createHash('sha256').update('warren-deterministic-wallet-provider-v1').digest('hex')}` as `0x${string}`;
+const EVM_ALT_KEY = `0x${createHash('sha256').update('warren-deterministic-wallet-provider-alt-v1').digest('hex')}` as `0x${string}`;
 const SOLANA_SEED = new Uint8Array(32).fill(7);
 
 type Stored = { input: ExactMessageRequest; result?: ProviderRequestResult };

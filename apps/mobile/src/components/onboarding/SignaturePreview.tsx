@@ -29,7 +29,7 @@ export function SignaturePreview({
     <View accessibilityLabel={`Sign in to ${domain} with ${shortenedAddress} on ${chain}. ${safetyCopy}`} accessible style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.outline }]}>
       <Text style={[styles.heading, { color: theme.ink }]}>Sign-in details</Text>
       <View style={styles.detailList}>
-        <Detail label="Stocklana domain" value={domain} />
+        <Detail label="Warren domain" value={domain} />
         <Detail label="Wallet" value={shortenedAddress} evidence />
         <Detail label="Chain" value={chain} />
         {validityWindow ? <Detail label="Valid for" value={validityWindow} /> : null}

@@ -25,11 +25,11 @@ type Provider = 'email' | 'external-wallet';
 const CANCELLED_AUTH = /association cancelled|plugin closed|user rejected|user denied|request rejected|cancell?ed/i;
 const SESSION_RECONCILIATION_TIMEOUT_MS = 12_000;
 const WALLET_PREPARATION_TIMEOUT_MS = 25_000;
-const DEFAULT_DEVELOPMENT_APP_URL = 'https://stocklana.test';
-const STOCKLANA_LOGIN_URI = 'stocklana://privy-login';
+const DEFAULT_DEVELOPMENT_APP_URL = 'https://warren.test';
+const WARREN_LOGIN_URI = 'warren://privy-login';
 const walletIdentity = readWalletIdentityConfig();
 const mobileWalletIdentity: AppIdentity = {
-  name: 'Stocklana',
+  name: 'Warren',
   uri: walletIdentity.mobileWalletUri,
 };
 
@@ -111,7 +111,7 @@ function ConfiguredPrivyEntry() {
         const { message } = await generateMessage({
           from: {
             domain: walletIdentity.domain,
-            uri: STOCKLANA_LOGIN_URI,
+            uri: WARREN_LOGIN_URI,
           },
           wallet: { address: externalAddress },
         });
@@ -237,7 +237,7 @@ function ConfiguredPrivyEntry() {
         ? 'Your wallets are taking longer than expected. Check your connection and try again.'
         : null;
   const sessionError = sessionTimedOut && !user
-    ? 'Sign-in finished, but the Privy session did not return to Stocklana. Please try again.'
+    ? 'Sign-in finished, but the Privy session did not return to Warren. Please try again.'
     : null;
   const initializationMessage = initializationError
     ? 'Privy could not start in this build. Check the public app and client configuration, then restart the app.'
@@ -328,7 +328,7 @@ function friendlyAuthError(
     return 'No compatible Solana wallet was found. Install an MWA-compatible wallet and try again.';
   }
   if (/network|fetch|offline|internet/i.test(message)) {
-    return 'Stocklana could not reach Privy. Check your connection and try again.';
+    return 'Warren could not reach Privy. Check your connection and try again.';
   }
   if (/not enabled|disabled|not configured|unsupported.*(?:login|oauth|provider)/i.test(message)) {
     return `${method ?? 'This'} sign-in is not enabled in the Privy dashboard.`;
@@ -355,12 +355,12 @@ function readWalletIdentityConfig() {
     const normalizedAppUrl = parsed.toString().replace(/\/$/, '');
     return {
       domain: parsed.host,
-      mobileWalletUri: configuredAppUrl ? normalizedAppUrl : STOCKLANA_LOGIN_URI,
+      mobileWalletUri: configuredAppUrl ? normalizedAppUrl : WARREN_LOGIN_URI,
     };
   } catch {
     return {
-      domain: 'stocklana.test',
-      mobileWalletUri: STOCKLANA_LOGIN_URI,
+      domain: 'warren.test',
+      mobileWalletUri: WARREN_LOGIN_URI,
     };
   }
 }

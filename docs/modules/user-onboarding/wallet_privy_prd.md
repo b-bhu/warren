@@ -6,19 +6,19 @@
 | Parent | [Milestone 1: Discover and Buy Tokenized Stocks](../../milestone/milestone-one.md) |
 | Working name | `wallet_privy_prd` |
 | Dependency | Phase 0 Liquid Ledger direction approved |
-| Product surface | Stocklana mobile app; Android is the primary Milestone 1 target |
+| Product surface | Warren mobile app; Android is the primary Milestone 1 target |
 | Last updated | 2026-09-13 |
 
 ## 1. Decision
 
-Stocklana will explore Privy as the identity and wallet infrastructure for the
+Warren will explore Privy as the identity and wallet infrastructure for the
 production onboarding flow. The initial authentication methods are email OTP and an
 external Solana wallet. External-wallet authentication uses Sign-In With Solana (SIWS)
 so the user proves ownership without transferring funds or exposing a private key.
 
-After either authentication path succeeds, Stocklana automatically provisions one
+After either authentication path succeeds, Warren automatically provisions one
 user-owned EVM wallet and one user-owned Solana wallet through Privy. These managed
-wallets are available inside Stocklana and become the defaults for their chain
+wallets are available inside Warren and become the defaults for their chain
 families. An external identity wallet never silently replaces a managed trading
 wallet.
 
@@ -30,16 +30,16 @@ signer within policies approved by the user.
 
 | Concept | Role |
 | --- | --- |
-| Email identity | Creates and restores the Stocklana account using a verified OTP. |
+| Email identity | Creates and restores the Warren account using a verified OTP. |
 | External Solana wallet | Creates or restores an account through a fresh SIWS ownership proof. |
-| Stocklana profile | Stable internal user record, independent of a device. |
+| Warren profile | Stable internal user record, independent of a device. |
 | Embedded Solana wallet | Automatically created default wallet for Solana activity. |
 | Embedded EVM wallet | Automatically created default wallet for supported EVM networks. |
-| Additional external wallet | Optional linked wallet controlled outside Stocklana. |
-| Stocklana agent | Optional additional signer with narrow, policy-limited permissions. |
+| Additional external wallet | Optional linked wallet controlled outside Warren. |
+| Warren agent | Optional additional signer with narrow, policy-limited permissions. |
 
 “Managed wallet” in this document means provisioned and operated through Privy inside
-Stocklana. It does not mean Stocklana receives or stores the user's private key.
+Warren. It does not mean Warren receives or stores the user's private key.
 
 ## 3. First-time experience
 
@@ -47,11 +47,11 @@ Stocklana. It does not mean Stocklana receives or stores the user's private key.
 2. Email users verify a one-time code. On Android, external-wallet users choose any
    installed Mobile Wallet Adapter-compatible Solana wallet in the native system
    picker and approve a SIWS message that does not move funds.
-3. Stocklana creates or restores the profile associated with that authenticated
+3. Warren creates or restores the profile associated with that authenticated
    identity.
 4. If the profile has no embedded wallets, provisioning creates one Solana wallet and
    one EVM wallet idempotently.
-5. Stocklana records their public addresses and Privy wallet references and marks them
+5. Warren records their public addresses and Privy wallet references and marks them
    as the defaults for their chain families.
 6. The user sees a clear confirmation that both wallets are ready and enters the app.
 7. The user may later link another external wallet; this never silently replaces a
@@ -59,18 +59,18 @@ Stocklana. It does not mean Stocklana receives or stores the user's private key.
 
 The user is not asked to understand chains, create seed phrases, or visit Privy.
 Email onboarding requires no separate wallet app. External-wallet onboarding clearly
-hands off through Android's native wallet picker and returns to the same Stocklana
+hands off through Android's native wallet picker and returns to the same Warren
 flow after approval.
 
 ## 4. Returning user and new-device recovery
 
 The user verifies the same email address or signs a fresh SIWS message with the same
-external Solana wallet. Stocklana restores the same profile, queries its existing
+external Solana wallet. Warren restores the same profile, queries its existing
 Privy wallet references, and shows the same EVM and Solana addresses. It must never
 create replacement wallets merely because the device or local app installation changed.
 
 Account recovery and wallet-key export are different operations. Email or external-
-wallet authentication restores access to the Stocklana profile; wallet export lets
+wallet authentication restores access to the Warren profile; wallet export lets
 the user take an embedded wallet to another compatible client. Both capabilities
 require dedicated security UX.
 
@@ -78,9 +78,9 @@ require dedicated security UX.
 
 - Privy protects embedded-wallet key material and performs authorized signing in its
   wallet infrastructure.
-- Stocklana stores the Privy user reference, opaque wallet references, public wallet
+- Warren stores the Privy user reference, opaque wallet references, public wallet
   addresses, chain family, default status, policy references, and audit metadata.
-- Stocklana application databases, logs, analytics, and support tools never store raw
+- Warren application databases, logs, analytics, and support tools never store raw
   private keys, seed phrases, recovery shares, or unredacted exported keys.
 - The mobile device stores only the minimum application session material in the
   platform-backed secure store.
@@ -91,7 +91,7 @@ require dedicated security UX.
 
 Privy documents automatic EVM and Solana wallet creation, user key export, and
 user-owned wallets with additional policy-scoped signers. These capabilities remain
-vendor validation items until proven in Stocklana's exact Expo and deployment setup.
+vendor validation items until proven in Warren's exact Expo and deployment setup.
 
 ## 6. Agent delegation
 
@@ -99,7 +99,7 @@ Creating a wallet does **not** automatically grant an agent control. Delegation 
 separate opt-in flow that explains who will act, what it may do, the limits, duration,
 and how to revoke access.
 
-The initial policy is deny-by-default. An approved Stocklana agent signer must be
+The initial policy is deny-by-default. An approved Warren agent signer must be
 restricted by all applicable controls:
 
 - supported chain and network allowlists;
@@ -121,13 +121,13 @@ the key, change ownership, add other signers, or weaken its own policies.
 - **FR-01:** Support email OTP on iOS and Android, and external Solana wallet sign-in
   through Mobile Wallet Adapter on Android. An iOS external-wallet transport is a
   separate post-Milestone 1 decision.
-- **FR-02:** Map every authenticated identity to one stable Stocklana profile.
+- **FR-02:** Map every authenticated identity to one stable Warren profile.
 - **FR-03:** Automatically create exactly one initial EVM and one initial Solana wallet
   when the profile has neither.
 - **FR-04:** Provisioning is idempotent and safe under retries, concurrent requests,
   partial provider failure, backgrounding, and app restarts.
 - **FR-05:** Never replace or orphan an existing wallet during login or recovery.
-- **FR-06:** Persist only public addresses and opaque provider references in Stocklana.
+- **FR-06:** Persist only public addresses and opaque provider references in Warren.
 - **FR-07:** Mark the initial wallet in each chain family as the default without making
   an external wallet the default silently.
 - **FR-08:** Restore the same profile and wallets after a device change.
@@ -135,7 +135,7 @@ the key, change ownership, add other signers, or weaken its own policies.
 - **FR-10:** Allow an authenticated user to link an additional external wallet through
   a fresh ownership proof.
 - **FR-11:** Require explicit user consent before adding an agent signer.
-- **FR-12:** Enforce agent permissions in wallet-level policies, not only in Stocklana
+- **FR-12:** Enforce agent permissions in wallet-level policies, not only in Warren
   UI or API code.
 - **FR-13:** Let the wallet owner view and revoke every active agent delegation.
 - **FR-14:** Record wallet creation, default changes, exports, signer changes, policy
@@ -152,7 +152,7 @@ Privy provider boundary, email OTP and an Android Mobile Wallet Adapter entry po
 automatic embedded EVM and Solana wallet creation, wallet preparation/error states,
 and a wallet-ready state that displays both default addresses. The MWA entry point
 invokes Android's installed-wallet picker instead of naming individual wallet brands.
-This slice does not yet implement Stocklana API
+This slice does not yet implement Warren API
 profile binding, a protected cross-device recovery ceremony, or the mobile-to-web key
 export handoff. Privy dashboard configuration and physical-device validation are still
 required before this foundation is considered releasable. Only installed wallets that
@@ -181,20 +181,20 @@ user experience, risk limits, and operational controls require their own release
 
 - Tokenized-stock discovery or order execution
 - Autonomous trading enabled by default
-- Unrestricted Stocklana server access to user wallets
-- Custody of raw user keys by Stocklana
+- Unrestricted Warren server access to user wallets
+- Custody of raw user keys by Warren
 - Silent key export, ownership transfer, or wallet replacement
 - A promise to support every social provider, chain, external wallet, or jurisdiction
 
 ## 10. Acceptance criteria
 
 - A new user signs in once and receives one EVM and one Solana wallet without creating
-  either managed wallet manually. Email remains in Stocklana; external-wallet login
+  either managed wallet manually. Email remains in Warren; external-wallet login
   returns automatically after wallet consent.
 - Retrying onboarding cannot create duplicate default wallets.
 - Signing in on another device restores the same profile and wallet addresses.
 - The user can intentionally export both wallet types through an authenticated flow.
-- Stocklana contains no raw wallet secret before, during, or after normal use or export.
+- Warren contains no raw wallet secret before, during, or after normal use or export.
 - No agent can act before explicit delegation.
 - A delegated agent can perform only policy-allowed actions and cannot withdraw,
   export, change ownership, or expand its own access.
@@ -215,7 +215,7 @@ user experience, risk limits, and operational controls require their own release
 6. Agent policy boundaries, limits, approval thresholds, duration, and emergency stop.
 7. Compliance, regional availability, data-processing, incident-response, SLA, pricing,
    and vendor-exit requirements.
-8. Migration procedure that preserves user access if Stocklana later leaves Privy.
+8. Migration procedure that preserves user access if Warren later leaves Privy.
 
 ## 12. Reference material
 

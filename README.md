@@ -1,4 +1,4 @@
-# Stocklana
+# Warren
 
 Mobile-first spot trading for tokenized stocks. Milestone 1 is split into a design
 foundation, wallet onboarding, and the later spot/profile experience. The current
@@ -43,8 +43,8 @@ port (typically `http://localhost:8081`). For an explicitly web-only client, use
 
 For real Privy sign-in, copy `apps/mobile/.env.example` to `apps/mobile/.env.local`,
 add the public Privy App ID and mobile Client ID, and restart Expo. In the Privy
-dashboard, enable Apple and Google, allow the `stocklana` URL scheme, and register
-`com.stocklana.app` as both the iOS bundle identifier and Android application ID.
+dashboard, enable Apple and Google, allow the `warren` URL scheme, and register
+`com.warren.app` as both the iOS bundle identifier and Android application ID.
 Use an iOS/Android development build; Privy's Expo SDK does not support web or Expo Go.
 Never add a Privy app secret to an `EXPO_PUBLIC_*` variable.
 

@@ -8,7 +8,7 @@ import { PrivyRuntimeProvider } from '@/features/privy';
 
 SplashScreen.preventAutoHideAsync();
 
-const stocklanaTheme = {
+const warrenTheme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
@@ -22,7 +22,7 @@ const stocklanaTheme = {
 export default function TabLayout() {
   useEffect(() => { void SplashScreen.hideAsync(); }, []);
   return (
-    <ThemeProvider value={stocklanaTheme}>
+    <ThemeProvider value={warrenTheme}>
       <SafeAreaProvider>
         <PrivyRuntimeProvider>
           <StatusBar style="light" />

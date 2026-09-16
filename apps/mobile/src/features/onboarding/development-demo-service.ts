@@ -21,8 +21,8 @@ export function createDevelopmentDemoOnboardingService(scenario: DevelopmentDemo
       const id = `demo-attempt-${++sequence}`;
       const address = selectedFamily === 'evm' ? '0x12ab34cd56ef789012ab34cd56ef789012ab8F91' : '7M4d6wAaj4c3tZrPq9vA6sWyyTJVv2rSjH6BXKfDpKpK';
       const wallet: WalletContext = { family: selectedFamily, address, addressDisplay: shortenAddress(address), context: selectedFamily === 'evm' ? 'Development EVM network' : 'Development Solana cluster', credentialRef: `demo-credential-${id}` };
-      const attempt: AttemptContext = { attemptId: id, attemptCapability: `development-only-${id}`, expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(), providerId: 'development-demo', authorizationUrl: 'stocklana-demo://wallet-approval' };
-      const challenge: ChallengePreview = { challengeId: `demo-challenge-${id}`, domain: 'stocklana.example', validityWindow: '15 minutes', messagePreview: 'Sign in to Stocklana\nThis is a development-only preview.' };
+      const attempt: AttemptContext = { attemptId: id, attemptCapability: `development-only-${id}`, expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(), providerId: 'development-demo', authorizationUrl: 'warren-demo://wallet-approval' };
+      const challenge: ChallengePreview = { challengeId: `demo-challenge-${id}`, domain: 'warren.example', validityWindow: '15 minutes', messagePreview: 'Sign in to Warren\nThis is a development-only preview.' };
       attempts.set(id, { input: { ...input, family: selectedFamily }, attempt, wallet, challenge, signatureRequested: false });
       return attempt;
     },
@@ -43,7 +43,7 @@ export function createDevelopmentDemoOnboardingService(scenario: DevelopmentDemo
       if (demo.signatureRequested) throw new Error('The development demo refuses duplicate signature requests. Reconcile the existing request instead.');
       if (wallet.credentialRef !== demo.wallet.credentialRef || challenge.challengeId !== demo.challenge.challengeId) throw new Error('The development demo received wallet or challenge data for another attempt.');
       demo.signatureRequested = true;
-      return { requestId: `demo-request-${attempt.attemptId}`, handoffUrl: 'stocklana-demo://wallet-approval', pollAfterMs: 0 };
+      return { requestId: `demo-request-${attempt.attemptId}`, handoffUrl: 'warren-demo://wallet-approval', pollAfterMs: 0 };
     },
     async reconcileSignature(attempt): Promise<Reconciliation> {
       const demo = requireDemoAttempt(attempts, attempt.attemptId);
@@ -60,9 +60,9 @@ export function createDevelopmentDemoOnboardingService(scenario: DevelopmentDemo
       const wallet: WalletContext = { family: restored.family, address, addressDisplay: shortenAddress(address), context: restored.family === 'evm' ? 'Development EVM network' : 'Development Solana cluster', credentialRef: `demo-credential-${restored.attempt.attemptId}` };
       if ((restored.addressDisplay && restored.addressDisplay !== wallet.addressDisplay) || (restored.credentialRef && restored.credentialRef !== wallet.credentialRef) || (restored.chainContext && restored.chainContext !== wallet.context)) throw new Error('The development attempt does not match its deterministic credential.');
       const challenge: ChallengePreview = {
-        ...(restored.challenge ?? { challengeId: `demo-challenge-${restored.attempt.attemptId}`, domain: 'stocklana.example', validityWindow: '15 minutes' }),
+        ...(restored.challenge ?? { challengeId: `demo-challenge-${restored.attempt.attemptId}`, domain: 'warren.example', validityWindow: '15 minutes' }),
         // Recreated development fixture text is held only in memory; it was never persisted.
-        messagePreview: 'Sign in to Stocklana\nThis is a development-only preview.',
+        messagePreview: 'Sign in to Warren\nThis is a development-only preview.',
       };
       const attempt: AttemptContext = restored.attempt;
       const signatureRequested = Boolean(attempt.providerRequestId);

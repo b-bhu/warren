@@ -8,9 +8,9 @@ import { getAddress, isAddress, recoverMessageAddress } from 'viem';
 import {
   challengeRequestSchema, createAttemptSchema, idempotencyKeySchema, proofSchema, refreshSchema, serializeEip4361V1,
   serializeSiwsV1, signatureRequestSchema, type ErrorCode, type WalletFamily,
-} from '@stocklana/auth-contract';
-import { DeterministicTestWalletAdapter } from '@stocklana/test-wallet-provider';
-import type { ProviderAdapter } from '@stocklana/provider-contract';
+} from '@warren/auth-contract';
+import { DeterministicTestWalletAdapter } from '@warren/test-wallet-provider';
+import type { ProviderAdapter } from '@warren/provider-contract';
 import { openDatabase, type Sqlite } from './db.js';
 import { readConfig, type Config } from './config.js';
 
@@ -189,7 +189,7 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
     contextOk(config, family, credential.network);
     if (canonicalAddress(family, credential.address).normalized !== address.normalized) throw new ApiFault('ADDRESS_MISMATCH', 422, 'The selected wallet credential does not match this challenge.');
     const issuedAt = now(), expiresAt = expiry(config.CHALLENGE_TTL_SECONDS), challengeNonce = nonce(), protocol = family === 'evm' ? 'eip4361-v1' : 'siws-v1';
-    const input = { domain: config.AUTH_DOMAIN, uri: config.AUTH_URI, address: address.display, nonce: challengeNonce, issuedAt, expiresAt, requestId: attemptId, chainContext: body.chainContext, statement: 'Sign in to Stocklana. This is free and will not move funds.' };
+    const input = { domain: config.AUTH_DOMAIN, uri: config.AUTH_URI, address: address.display, nonce: challengeNonce, issuedAt, expiresAt, requestId: attemptId, chainContext: body.chainContext, statement: 'Sign in to Warren. This is free and will not move funds.' };
     const message = family === 'evm' ? serializeEip4361V1(input) : serializeSiwsV1(input), challengeId = id();
     db.prepare('UPDATE sign_challenges SET invalidated_at=? WHERE attempt_id=? AND consumed_at IS NULL AND invalidated_at IS NULL').run(now(), attemptId);
     db.prepare('INSERT INTO sign_challenges(id,attempt_id,protocol,nonce,message_utf8,message_sha256,address_normalized,address_display,chain_context,issued_at,not_before,expires_at,credential_ref) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)').run(challengeId, attemptId, protocol, challengeNonce, message, sha256(message), address.normalized, address.display, body.chainContext, issuedAt, issuedAt, expiresAt, body.credentialRef);

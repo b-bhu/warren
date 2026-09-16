@@ -61,7 +61,7 @@ export function createHttpOnboardingTransport(apiUrl: string): OnboardingApiTran
       const payload: unknown = await response.json().catch(() => undefined);
       if (!response.ok) {
         const apiError = (payload as ApiErrorDto | undefined)?.error;
-        throw new OnboardingApiFault(apiError ?? { code: 'INTERNAL_ERROR', message: 'Stocklana could not complete that request.', retryable: response.status >= 500, requestId: 'invalid-response' });
+        throw new OnboardingApiFault(apiError ?? { code: 'INTERNAL_ERROR', message: 'Warren could not complete that request.', retryable: response.status >= 500, requestId: 'invalid-response' });
       }
       return payload as T;
     },
@@ -85,7 +85,7 @@ export function createDeterministicApiOnboardingService(transport: OnboardingApi
   const reconcileSignature = async (attempt: AttemptContext): Promise<Reconciliation> => {
     if (!attempt.providerRequestId) throw new Error('Cannot reconcile a signature without an existing provider request ID.');
     const item = pending.get(attempt.attemptId);
-    if (!item) return { kind: 'recoverable_error', error: { category: 'unknown', message: 'This signing attempt needs to be resumed with Stocklana.', diagnosticCategory: 'ATTEMPT_CONTEXT_MISSING', attemptReference: attempt.attemptId } };
+    if (!item) return { kind: 'recoverable_error', error: { category: 'unknown', message: 'This signing attempt needs to be resumed with Warren.', diagnosticCategory: 'ATTEMPT_CONTEXT_MISSING', attemptReference: attempt.attemptId } };
     const dto = await transport.request<ApiSignaturePollDto>({ method: 'GET', path: `/v1/auth/attempts/${attempt.attemptId}/signature-requests/${attempt.providerRequestId}`, attemptCapability: attempt.attemptCapability });
     if (dto.state === 'complete') return { kind: 'complete', session: { ...dto, wallet: item.wallet, source: 'server_verified' } };
     if (dto.state === 'awaiting_signature') return { kind: 'awaiting_signature', providerRequestId: attempt.providerRequestId };
@@ -171,7 +171,7 @@ export function mapApiError(error: ApiErrorDto['error']): SafeError | SafeBlocke
     case 'ATTEMPT_EXPIRED': return { category: 'request_expired', message: 'The signing request expired. Choose your wallet again to create a new request.', diagnosticCategory: error.code, attemptReference };
     case 'SIGNATURE_REJECTED': return { category: 'signature_rejected', message: 'You did not approve the sign-in. Choose your wallet again to create a new request.', diagnosticCategory: error.code, attemptReference };
     case 'ADDRESS_MISMATCH': return { category: 'address_mismatch', message: 'The wallet address did not match the sign-in request. Choose a wallet and try again.', diagnosticCategory: error.code, attemptReference };
-    case 'PROOF_INVALID': return { category: 'verification_failed', message: 'Stocklana could not verify that signature. Try again with this wallet.', diagnosticCategory: error.code, attemptReference };
+    case 'PROOF_INVALID': return { category: 'verification_failed', message: 'Warren could not verify that signature. Try again with this wallet.', diagnosticCategory: error.code, attemptReference };
     case 'OFFLINE': return { category: 'offline', message: 'You appear to be offline. Reconnect, then try again.', diagnosticCategory: error.code, attemptReference };
     case 'PROVIDER_DISABLED': return { category: 'provider_unavailable', message: 'Wallet sign-in is not configured for this build.', diagnosticCategory: error.code, attemptReference };
     case 'PROVIDER_UNAVAILABLE': return { category: 'provider_unavailable', message: 'The wallet provider is temporarily unavailable. Try again shortly.', diagnosticCategory: error.code, attemptReference };
@@ -186,7 +186,7 @@ function unsupportedProvider(): OnboardingApiFault {
 }
 
 function domainFromMessage(message: string): string {
-  return message.split(' wants you to sign in with ')[0] || 'Stocklana';
+  return message.split(' wants you to sign in with ')[0] || 'Warren';
 }
 
 function validityWindow(issuedAt: string, expiresAt: string): string | undefined {

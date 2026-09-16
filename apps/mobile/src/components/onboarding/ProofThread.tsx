@@ -8,13 +8,13 @@ export type ProofStepState = 'open' | 'waiting' | 'confirmed' | 'checking' | 'er
 export type ProofThreadSteps = {
   domain: ProofStepState;
   wallet: ProofStepState;
-  /** The final stop cannot be marked confirmed before Stocklana verifies the proof. */
+  /** The final stop cannot be marked confirmed before Warren verifies the proof. */
   signature: Exclude<ProofStepState, 'confirmed'>;
 };
 
 export type ProofThreadProps = {
   steps: ProofThreadSteps;
-  /** Set only after Stocklana has verified the signature and created or restored a session. */
+  /** Set only after Warren has verified the signature and created or restored a session. */
   serverVerified?: boolean;
   walletLabel?: string;
   signatureLabel?: string;
@@ -22,7 +22,7 @@ export type ProofThreadProps = {
   accessibilityLabel?: string;
 };
 
-const stepNames = ['Stocklana domain', 'Wallet address', 'Your signature'] as const;
+const stepNames = ['Warren domain', 'Wallet address', 'Your signature'] as const;
 
 function visualStateLabel(state: ProofStepState) {
   switch (state) {
@@ -56,7 +56,7 @@ export function ProofThread({
     ? { domain: 'confirmed', wallet: 'confirmed', signature: 'confirmed' }
     : steps;
   const rows = [
-    { label: 'Stocklana domain', state: visualSteps.domain },
+    { label: 'Warren domain', state: visualSteps.domain },
     { label: walletLabel, state: visualSteps.wallet },
     { label: signatureLabel, state: visualSteps.signature },
   ];

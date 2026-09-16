@@ -1,10 +1,10 @@
 {
-  "name": "@stocklana/provider-contract",
+  "name": "@warren/provider-contract",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": "./src/index.ts",
   "scripts": { "typecheck": "tsc --noEmit", "lint": "tsc --noEmit" },
-  "dependencies": { "@stocklana/auth-contract": "workspace:*" },
+  "dependencies": { "@warren/auth-contract": "workspace:*" },
   "devDependencies": { "typescript": "6.0.3" }
 }

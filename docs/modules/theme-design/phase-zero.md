@@ -25,7 +25,7 @@ Every screen has one persistent question in its top third: **what is known, and 
 still needs the owner's approval?** A compact **Proof Thread** answers it. It is a
 three-stop vertical line with a deliberately open final segment:
 
-`Stocklana domain -> wallet address -> your signature`
+`Warren domain -> wallet address -> your signature`
 
 The first two stops can become solid only when confirmed; the final stop closes only
 after server verification. It is a visual status record, not a progress bar and never a
@@ -113,13 +113,13 @@ session, never merely a successful wallet handoff.
 | --- | --- | --- | --- |
 | Welcome / `not_started` | Domain is solid; wallet and signature open | “Investing starts with ownership.” Explain that a wallet signs in now and approves future actions later. **Get started**. | “How wallet sign-in works” disclosure; it says no seed phrase, no funds moved. |
 | Choose chain / `choosing_chain` | Domain solid; rest open | “Which wallet do you use?” Two equal, labelled cards: **EVM wallet** and **Solana wallet**, each with a one-line plain-language description. **Continue** activates after selection. | Back. Selection persists after background/return. |
-| Provider explanation / before `connecting` | Domain solid; chosen family label appears by wallet stop | Name the provider and destination: “You’ll leave Stocklana to choose a wallet, then return here.” **Open [provider]**. | “Why am I leaving the app?” disclosure; Cancel / choose another chain. |
+| Provider explanation / before `connecting` | Domain solid; chosen family label appears by wallet stop | Name the provider and destination: “You’ll leave Warren to choose a wallet, then return here.” **Open [provider]**. | “Why am I leaving the app?” disclosure; Cancel / choose another chain. |
 | External handoff / `connecting` | Domain solid; wallet stop is dashed and labelled “Waiting for wallet” | “Choose a wallet in [provider]. Keep this screen open when you return.” Static “Waiting for approval” status, not a spinner-only screen. | Cancel; **Resume connection** only reconciles the existing attempt, never creates a new one. |
 | Connected, unverified / `connected_unverified` | Domain + wallet stop solid; signature open | “Wallet connected. Prove it’s yours.” Card shows chain and shortened `0x12ab…8F91` / `7M…pK` address; full address is copyable in Details. **Review signature**. | Change wallet; details include network/cluster when decided. Do not use a checkmark as sign-in success. |
-| Pre-sign / before `awaiting_signature` | First two stops solid; signature open | “Review your sign-in.” Show Stocklana domain, shortened address, chain, and the exact reassurance: “This signature is free. It cannot move funds or approve a trade.” **Sign in with wallet**. | Back; “What you will see” expands to a readable, non-editable challenge preview. |
+| Pre-sign / before `awaiting_signature` | First two stops solid; signature open | “Review your sign-in.” Show Warren domain, shortened address, chain, and the exact reassurance: “This signature is free. It cannot move funds or approve a trade.” **Sign in with wallet**. | Back; “What you will see” expands to a readable, non-editable challenge preview. |
 | Signature request / `awaiting_signature` | Signature stop is dashed, never filled | “Approve the sign-in in your wallet.” State the request is waiting and preserve the exact address/chain context. **Open approval**. | Cancel; return reconciliation. If rejected, go to recoverable error with connected wallet preserved. |
-| Checking proof / `verifying` | Signature stop has a small static “Checking” marker; no check | “Checking your signature with Stocklana.” Explain that this may take a moment and suppress duplicate primary actions. | Details exposes a safe attempt reference only; background/resume rechecks the existing attempt. |
-| Verified / `complete` | All three stops solid and joined | “Wallet verified.” Show shortened address, chain, and “Your Stocklana session is ready.” **Continue**. | Copy full address; “Add another wallet later” only as a quiet note. No confetti, balance, or purchase prompt. |
+| Checking proof / `verifying` | Signature stop has a small static “Checking” marker; no check | “Checking your signature with Warren.” Explain that this may take a moment and suppress duplicate primary actions. | Details exposes a safe attempt reference only; background/resume rechecks the existing attempt. |
+| Verified / `complete` | All three stops solid and joined | “Wallet verified.” Show shortened address, chain, and “Your Warren session is ready.” **Continue**. | Copy full address; “Add another wallet later” only as a quiet note. No confetti, balance, or purchase prompt. |
 | Recoverable error / `recoverable_error` | Last confirmed stop remains solid; failed next segment dashed in `caution` | Specific heading and cause: rejected signature, expired request, offline, provider unavailable, wrong network, or verification failed. **Try again** performs the safe state-specific retry. | Change wallet / choose chain; Details has redacted error category and attempt reference safe to share. Expiry gets **Get a new request**, not retry. |
 | Blocked / `blocked` | Previously confirmed stops persist; unresolved stop uses `caution` label “Cannot verify this wallet” | Plain, privacy-preserving explanation for unsupported wallet/network or address already linked elsewhere. **Choose another wallet**. | **Get help** only where approved support policy exists; never imply a merge or reveal another profile. |
 | Returning / session restored | Thread need not appear as a gate; profile context uses a compact all-solid mark | “You’re signed in.” Return directly to the authenticated surface. If expired, explain “Your session ended. Sign in again to continue,” then resume at known wallet/chain with a fresh challenge. | Use another wallet; never silently replace identity. |
@@ -130,7 +130,7 @@ session, never merely a successful wallet handoff.
 ```text
 WELCOME                         CHOOSE CHAIN
 ┌────────────────────────┐      ┌────────────────────────┐
-│ STOCKLANA   DOMAIN ●    │      │ Back     YOUR WALLET   │
+│ WARREN   DOMAIN ●    │      │ Back     YOUR WALLET   │
 │                          │      │ ●──○──○  domain > ... │
 │ Investing starts with    │      │                          │
 │ ownership.               │      │ Which wallet do you use?│
@@ -227,7 +227,7 @@ overlaying the last line of content.
       network/cluster are visible before signing, while the address is shortened by default.
 - [ ] Pre-sign copy exactly communicates that the signature is free, off-chain, cannot
       move funds, and cannot approve a trade; no screen asks for a seed phrase.
-- [ ] The signature preview makes the Stocklana domain, selected chain, wallet context,
+- [ ] The signature preview makes the Warren domain, selected chain, wallet context,
       and validity inspectable without modifying or reconstructing message bytes.
 - [ ] Handoff, pending, background/return, cancellation, rejection, expiry, offline,
       provider failure, unsupported conditions, wrong network, and address conflict have
@@ -243,7 +243,7 @@ overlaying the last line of content.
 ## Design self-critique
 
 The Proof Thread is intentionally a little more formal than a typical consumer wallet
-onboarding. That is its value: Stocklana needs to teach the difference between “wallet
+onboarding. That is its value: Warren needs to teach the difference between “wallet
 seen,” “signature requested,” and “server verified.” The risk is visual density on a small
 phone. The mitigation is strict compression—three short labels, no card around the
 thread, and a spoken summary that can replace the visual for assistive technology.

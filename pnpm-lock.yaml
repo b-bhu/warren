@@ -13,13 +13,13 @@ importers:
       '@fastify/cors':
         specifier: 11.2.0
         version: 11.2.0
-      '@stocklana/auth-contract':
+      '@warren/auth-contract':
         specifier: workspace:*
         version: link:../../packages/auth-contract
-      '@stocklana/provider-contract':
+      '@warren/provider-contract':
         specifier: workspace:*
         version: link:../../packages/provider-contract
-      '@stocklana/test-wallet-provider':
+      '@warren/test-wallet-provider':
         specifier: workspace:*
         version: link:../../packages/test-wallet-provider
       better-sqlite3:
@@ -208,7 +208,7 @@ importers:
 
   packages/provider-contract:
     dependencies:
-      '@stocklana/auth-contract':
+      '@warren/auth-contract':
         specifier: workspace:*
         version: link:../auth-contract
     devDependencies:
@@ -218,7 +218,7 @@ importers:
 
   packages/test-wallet-provider:
     dependencies:
-      '@stocklana/provider-contract':
+      '@warren/provider-contract':
         specifier: workspace:*
         version: link:../provider-contract
       bs58:

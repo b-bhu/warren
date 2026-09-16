@@ -45,10 +45,10 @@ Target state, not implemented yet:
   Phase 1. It is correct for one writer instance; it is not a horizontal-scaling
   design.
 - The API, not the app or a wallet provider, creates challenges, verifies signatures,
-  assigns profiles, and issues Stocklana sessions.
+  assigns profiles, and issues Warren sessions.
 - The default provider-token architecture is a **backend-for-frontend (BFF)**:
   provider OAuth codes and refresh tokens are exchanged and held only by the API.
-  Provider credentials never become the Stocklana session or a mobile bearer token.
+  Provider credentials never become the Warren session or a mobile bearer token.
 - Phase 1 supports one active EVM wallet and one active Solana wallet per profile.
   A wallet identity is immutable once linked; conflicts are private and fail closed.
 - EVM contract accounts are **unsupported at launch** until DG-04 selects and tests
@@ -124,11 +124,11 @@ not written to ordinary logs. The abbreviated schema below is the migration cont
 
 | Table | Important columns and constraints | Purpose |
 | --- | --- | --- |
-| `profiles` | `id`, `created_at`, `status` | Minimal durable Stocklana profile. |
+| `profiles` | `id`, `created_at`, `status` | Minimal durable Warren profile. |
 | `wallets` | `id`, `profile_id FK`, `family`, `namespace`, `chain_id`, `cluster`, `address_normalized`, `address_display`, `provider_credential_id`, `verified_at`, `revoked_at`; unique canonical key and active `(profile_id, family)` | One verified active wallet per family, never silently reassigned. |
 | `auth_attempts` | `id`, `purpose(sign_in/link_wallet)`, `initiating_profile_id?`, `family`, `provider_id`, `state`, `return_state_digest`, `expires_at`, `last_provider_request_id?` | Idempotent, resumable client journey. |
 | `sign_challenges` | `id`, `attempt_id FK`, `protocol`, `nonce`, `message_utf8`, `message_sha256`, bound identity/context fields, `issued_at`, `not_before`, `expires_at`, `consumed_at?`, `invalidated_at?`; unique `nonce` | Single server-issued challenge. Encrypt raw message at rest only if operationally needed; its hash/fields are enough for audit. |
-| `provider_credentials` | provider/user credential ref, encrypted access/refresh token ciphertext + key version, expiry, revoked timestamps | Server-only provider authorization, separate from Stocklana sessions. |
+| `provider_credentials` | provider/user credential ref, encrypted access/refresh token ciphertext + key version, expiry, revoked timestamps | Server-only provider authorization, separate from Warren sessions. |
 | `provider_requests` | `id`, `attempt_id`, provider request ID (unique), challenge ID, status, terminal reason, `result_ciphertext?` | Reconcile an existing provider request; never create another while pending. |
 | `session_families` | `id`, `profile_id`, `device_installation_id_digest`, `created_at`, `revoked_at`, reason | Revocation boundary for a device login. |
 | `refresh_tokens` / `access_tokens` | token id, family FK, keyed-secret digest, expiry, used/revoked/replaced timestamps | Opaque session credentials; only digests persist. |
@@ -278,7 +278,7 @@ an idempotency key and retains the old pair until it durably stores the response
 response is lost, it makes one documented reconciliation attempt, otherwise returns to
 re-verification rather than weakening replay detection. Access token expiry is normal;
 logout or provider/session compromise revokes the family immediately. `POST /revoke`
-clears only Stocklana authentication; provider-grant revoke is a distinct adapter action
+clears only Warren authentication; provider-grant revoke is a distinct adapter action
 with separately documented effect. Background token refresh does not itself invoke a
 wallet signature.
 
@@ -351,7 +351,7 @@ reconciliation rules. Those callback routes are not part of this prototype.
 Use SDK-57 `expo-secure-store` installed through `pnpm expo install` (current SDK-57
 package metadata resolves `expo-secure-store@57.0.4`). Store access/refresh tokens,
 attempt capability and provider return code only there, using a small value per key,
-`WHEN_UNLOCKED_THIS_DEVICE_ONLY`, and `keychainService: 'com.stocklana.session.v1'`.
+`WHEN_UNLOCKED_THIS_DEVICE_ONLY`, and `keychainService: 'com.warren.session.v1'`.
 SecureStore uses Android encrypted SharedPreferences/Keystore and iOS Keychain, but it
 is not a source of truth; iOS keychain items can survive reinstall and Android values
 do not. Therefore `SessionProvider` calls `/me`/refresh before declaring a restored

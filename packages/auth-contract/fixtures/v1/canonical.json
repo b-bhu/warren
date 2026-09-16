@@ -1,21 +1,21 @@
 {
   "input": {
-    "domain": "stocklana.test",
-    "uri": "https://stocklana.test",
+    "domain": "warren.test",
+    "uri": "https://warren.test",
     "address": "0x8e4a6f513A4D837d2B8C27F3A2f5F8A456cF4B34",
     "nonce": "Abc123Def456",
     "issuedAt": "2026-09-12T00:00:00.000Z",
     "expiresAt": "2026-09-12T00:15:00.000Z",
     "requestId": "018f70f2-84dd-7cc8-bb9d-a70b5cd8f99a",
     "chainContext": "1",
-    "statement": "Sign in to Stocklana. This is free and will not move funds."
+    "statement": "Sign in to Warren. This is free and will not move funds."
   },
   "evm": {
-    "message": "stocklana.test wants you to sign in with your Ethereum account:\n0x8e4a6f513A4D837d2B8C27F3A2f5F8A456cF4B34\n\nSign in to Stocklana. This is free and will not move funds.\n\nURI: https://stocklana.test\nVersion: 1\nChain ID: 1\nNonce: Abc123Def456\nIssued At: 2026-09-12T00:00:00.000Z\nExpiration Time: 2026-09-12T00:15:00.000Z\nRequest ID: 018f70f2-84dd-7cc8-bb9d-a70b5cd8f99a",
-    "sha256": "5f1ed7d6f130c2d5046e5835f5c462625342c36c6c0426db638f608f7a98c0e2"
+    "message": "warren.test wants you to sign in with your Ethereum account:\n0x8e4a6f513A4D837d2B8C27F3A2f5F8A456cF4B34\n\nSign in to Warren. This is free and will not move funds.\n\nURI: https://warren.test\nVersion: 1\nChain ID: 1\nNonce: Abc123Def456\nIssued At: 2026-09-12T00:00:00.000Z\nExpiration Time: 2026-09-12T00:15:00.000Z\nRequest ID: 018f70f2-84dd-7cc8-bb9d-a70b5cd8f99a",
+    "sha256": "070e8c8929390039c2d6970c6a2e2559ff9e1673157f28b5135771521e9e3ed9"
   },
   "solana": {
-    "message": "stocklana.test wants you to sign in with your Solana account:\n0x8e4a6f513A4D837d2B8C27F3A2f5F8A456cF4B34\n\nSign in to Stocklana. This is free and will not move funds.\n\nURI: https://stocklana.test\nVersion: 1\nChain ID: 1\nNonce: Abc123Def456\nIssued At: 2026-09-12T00:00:00.000Z\nExpiration Time: 2026-09-12T00:15:00.000Z\nRequest ID: 018f70f2-84dd-7cc8-bb9d-a70b5cd8f99a",
-    "sha256": "482b78b874a0631cd252f6bdec28a859c4c7a934bb6e3497fb0259f4754a3cae"
+    "message": "warren.test wants you to sign in with your Solana account:\n0x8e4a6f513A4D837d2B8C27F3A2f5F8A456cF4B34\n\nSign in to Warren. This is free and will not move funds.\n\nURI: https://warren.test\nVersion: 1\nChain ID: 1\nNonce: Abc123Def456\nIssued At: 2026-09-12T00:00:00.000Z\nExpiration Time: 2026-09-12T00:15:00.000Z\nRequest ID: 018f70f2-84dd-7cc8-bb9d-a70b5cd8f99a",
+    "sha256": "e9f4cd3bb264f8f3c0b91b89919dcd07685163f8cd1387f30538118beb25eb6a"
   }
 }

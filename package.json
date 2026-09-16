@@ -1,5 +1,5 @@
 {
-  "name": "stocklana",
+  "name": "warren",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -7,10 +7,10 @@
   },
   "packageManager": "pnpm@10.28.0",
   "scripts": {
-    "dev": "EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-http://localhost:3000} pnpm --parallel --filter @stocklana/api --filter mobile run start",
-    "dev:api": "pnpm --filter @stocklana/api dev",
+    "dev": "EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-http://localhost:3000} pnpm --parallel --filter @warren/api --filter mobile run start",
+    "dev:api": "pnpm --filter @warren/api dev",
     "dev:mobile": "EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-http://localhost:3000} pnpm --filter mobile start",
-    "test:api": "pnpm --filter @stocklana/api test",
+    "test:api": "pnpm --filter @warren/api test",
     "android": "pnpm --filter mobile android",
     "ios": "pnpm --filter mobile ios",
     "web": "EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-http://localhost:3000} pnpm --filter mobile web",
