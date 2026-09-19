@@ -79,6 +79,7 @@ export const newsSummarySchema = z.object({
   category: z.string().min(1).max(80),
   source: z.string().min(1).max(120),
   publishedAt: z.string().datetime(),
+  imageUrl: publicHttpUrlSchema.nullable(),
   summary: z.string().min(1).max(500).nullable(),
   url: publicHttpUrlSchema.nullable(),
   relatedAssetIds: z.array(z.string().min(1).max(128)).max(20),

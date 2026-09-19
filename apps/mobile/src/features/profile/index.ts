@@ -1,0 +1,1 @@
+export { ProfileTabScreen } from './ProfileTabScreen';

@@ -205,6 +205,8 @@ own non-null source timestamp and a non-`unavailable` state.
   domain, or provider-related identifiers in this milestone.
 - The API still rejects malformed records, invalid or unsafe URLs, and invalid timestamps,
   and deduplicates repeated article URLs.
+- A valid provider image is normalized to optional `imageUrl`; missing or unsafe images
+  become `null` without removing the article.
 - Headline matches against a known company name or ticker populate `relatedAssetIds`;
   unmatched articles remain valid with an empty relationship list.
 - An empty provider result returns an empty news list with `NEWS_EMPTY`.

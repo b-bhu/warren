@@ -1,4 +1,4 @@
-import { DarkTheme, Slot, ThemeProvider } from 'expo-router';
+import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -37,7 +37,12 @@ function AppProviders() {
       <ThemeProvider value={warrenTheme}>
         <PrivyRuntimeProvider>
           <StatusBar style="light" />
-          <Slot />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="stocks/[symbol]" />
+            <Stack.Screen name="buy/[symbol]" />
+            <Stack.Screen name="sign-in" />
+          </Stack>
         </PrivyRuntimeProvider>
       </ThemeProvider>
     </TamaguiProvider>

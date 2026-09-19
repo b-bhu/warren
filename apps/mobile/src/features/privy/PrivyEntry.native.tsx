@@ -21,6 +21,10 @@ import { LiquidLedgerScreen } from './LiquidLedgerScreen';
 import { usePrivyRuntimeStatus } from './config';
 
 type Provider = 'email' | 'external-wallet';
+type PrivyEntryProps = {
+  contextLabel?: string;
+  onCancel?: () => void;
+};
 
 const CANCELLED_AUTH = /association cancelled|plugin closed|user rejected|user denied|request rejected|cancell?ed/i;
 const SESSION_RECONCILIATION_TIMEOUT_MS = 12_000;
@@ -33,17 +37,23 @@ const mobileWalletIdentity: AppIdentity = {
   uri: walletIdentity.mobileWalletUri,
 };
 
-export function PrivyEntry() {
+export function PrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
   const runtimeStatus = usePrivyRuntimeStatus();
 
   if (runtimeStatus !== 'configured') {
-    return <LiquidLedgerScreen mode="missing-config" />;
+    return (
+      <LiquidLedgerScreen
+        contextLabel={contextLabel}
+        mode="missing-config"
+        onCancel={onCancel}
+      />
+    );
   }
 
-  return <ConfiguredPrivyEntry />;
+  return <ConfiguredPrivyEntry contextLabel={contextLabel} onCancel={onCancel} />;
 }
 
-function ConfiguredPrivyEntry() {
+function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
   const { error: initializationError, isReady, logout, refreshUser, user } = usePrivy();
   const { loginWithCode, sendCode } = useLoginWithEmail();
   const { generateMessage, login: loginWithSiws } = useLoginWithSiws();
@@ -247,9 +257,11 @@ function ConfiguredPrivyEntry() {
   if (recoveryRequired) {
     return (
       <LiquidLedgerScreen
+        contextLabel={contextLabel}
         evmAddress={evmAddress}
         message="Your existing wallet keys are not available on this device. An approved Privy recovery method must be configured before continuing."
         mode="recovery-required"
+        onCancel={onCancel}
         onSignOut={() => void signOut()}
         solanaAddress={solanaAddress}
       />
@@ -259,9 +271,11 @@ function ConfiguredPrivyEntry() {
   if (visibleError) {
     return (
       <LiquidLedgerScreen
+        contextLabel={contextLabel}
         evmAddress={evmAddress}
         message={visibleError}
         mode="error"
+        onCancel={onCancel}
         onRetry={initializationError ? undefined : () => void retry()}
         onSignOut={user ? () => void signOut() : undefined}
         solanaAddress={solanaAddress}
@@ -273,8 +287,10 @@ function ConfiguredPrivyEntry() {
     return (
       <LiquidLedgerScreen
         activeProvider={activeProvider}
+        contextLabel={contextLabel}
         evmAddress={evmAddress}
         mode="preparing"
+        onCancel={onCancel}
         solanaAddress={solanaAddress}
       />
     );
@@ -283,8 +299,10 @@ function ConfiguredPrivyEntry() {
   if (user && walletsReady) {
     return (
       <LiquidLedgerScreen
+        contextLabel={contextLabel}
         evmAddress={evmAddress}
         mode="ready"
+        onCancel={onCancel}
         onSignOut={() => void signOut()}
         solanaAddress={solanaAddress}
       />
@@ -294,6 +312,7 @@ function ConfiguredPrivyEntry() {
   return (
     <LiquidLedgerScreen
       activeProvider={activeProvider}
+      contextLabel={contextLabel}
       emailAuth={{
         code: emailCode,
         codeSent: emailCodeSent,
@@ -307,6 +326,7 @@ function ConfiguredPrivyEntry() {
       }}
       message={legalConfigurationMessage()}
       mode="sign-in"
+      onCancel={onCancel}
       walletAuth={{
         onConnect: canBeginLogin() ? () => void beginExternalWalletLogin() : undefined,
       }}

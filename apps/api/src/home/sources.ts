@@ -162,6 +162,7 @@ const tokensNewsItemSchema = z.object({
   url: z.string().min(1),
   posted_at: z.string().min(1),
   source_name: z.string().min(1),
+  image: z.string().optional().nullable(),
   related_coin_ids: z.array(z.string()).optional().default([]),
 }).passthrough();
 
@@ -211,6 +212,7 @@ export class TokensNewsSource implements NewsSource {
         category: relatedAssetIds.length ? 'Company' : 'Markets',
         source,
         publishedAt: published.toISOString(),
+        imageUrl: safeUrl(item.image),
         summary: null,
         url: articleUrl,
         relatedAssetIds,

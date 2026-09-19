@@ -374,7 +374,7 @@ test('Tokens news source returns the latest provider articles without topic filt
       requestedUrl = String(input);
       requestHeaders = new Headers(init?.headers);
       return new Response(JSON.stringify({ items: [
-        { title: 'NVIDIA shares rise after stronger data-center earnings', url: 'https://news.test/nvidia-earnings', posted_at: '2026-09-18T11:30:00Z', source_name: 'Market Wire', related_coin_ids: [] },
+        { title: 'NVIDIA shares rise after stronger data-center earnings', url: 'https://news.test/nvidia-earnings', image: 'https://images.test/nvidia.jpg', posted_at: '2026-09-18T11:30:00Z', source_name: 'Market Wire', related_coin_ids: [] },
         { title: 'S&P 500 closes higher as investors assess the Federal Reserve', url: 'https://news.test/market-close', posted_at: '2026-09-18T10:30:00Z', source_name: 'Business Desk', related_coin_ids: [] },
         { title: 'Bitcoin market cap overtakes Tesla after crypto rally', url: 'https://crypto.test/bitcoin-tesla', posted_at: '2026-09-18T11:45:00Z', source_name: 'Digital Assets Daily', related_coin_ids: ['bitcoin'] },
         { title: 'Solana token gains after blockchain upgrade', url: 'https://news.test/solana', posted_at: '2026-09-18T11:40:00Z', source_name: 'Wire Service', related_coin_ids: ['solana'] },
@@ -398,6 +398,7 @@ test('Tokens news source returns the latest provider articles without topic filt
   ]);
   assert.deepEqual(result[3].relatedAssetIds, ['nvidia']);
   assert.equal(result[3].category, 'Company');
+  assert.equal(result[3].imageUrl, 'https://images.test/nvidia.jpg');
   assert.equal(result[0].category, 'Markets');
 });
 

@@ -48,9 +48,11 @@ type WalletAuth = {
 type LiquidLedgerScreenProps = {
   mode: LiquidLedgerMode;
   activeProvider?: Provider | null;
+  contextLabel?: string;
   emailAuth?: EmailAuth;
   evmAddress?: string | null;
   message?: string | null;
+  onCancel?: () => void;
   onLogin?: (provider: Provider) => void;
   onRetry?: () => void;
   onSignOut?: () => void;
@@ -71,9 +73,11 @@ const palette = {
 export function LiquidLedgerScreen({
   mode,
   activeProvider,
+  contextLabel,
   emailAuth,
   evmAddress,
   message,
+  onCancel,
   onLogin,
   onRetry,
   onSignOut,
@@ -100,6 +104,13 @@ export function LiquidLedgerScreen({
           showsVerticalScrollIndicator={false}>
           <View style={styles.shell}>
             <Header status={copy.status} />
+
+            {contextLabel ? (
+              <View style={styles.intentBanner}>
+                <Text style={styles.intentEyebrow}>PURCHASE INTENT SAVED</Text>
+                <Text style={styles.intentText}>{contextLabel}</Text>
+              </View>
+            ) : null}
 
             <View style={styles.hero}>
               <WalletLens
@@ -194,6 +205,14 @@ export function LiquidLedgerScreen({
 
               {mode === 'ready' ? (
                 <ProviderButton glyph="↗" label="Sign out" onPress={onSignOut} />
+              ) : null}
+
+              {onCancel ? (
+                <ProviderButton
+                  glyph="←"
+                  label={mode === 'ready' ? 'Return to Warren' : 'Keep browsing'}
+                  onPress={onCancel}
+                />
               ) : null}
 
               <View style={styles.assurance}>
@@ -689,6 +708,28 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 1.3,
     textTransform: 'uppercase',
+  },
+  intentBanner: {
+    backgroundColor: 'rgba(169, 216, 198, 0.08)',
+    borderColor: 'rgba(169, 216, 198, 0.24)',
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 5,
+    marginTop: 8,
+    paddingHorizontal: 13,
+    paddingVertical: 11,
+  },
+  intentEyebrow: {
+    color: palette.seaGlass,
+    fontFamily: Fonts.mono,
+    fontSize: 9,
+    letterSpacing: 1.2,
+  },
+  intentText: {
+    color: palette.pearl,
+    fontFamily: Fonts.sans,
+    fontSize: 13,
+    lineHeight: 19,
   },
   hero: {
     flexGrow: 1,

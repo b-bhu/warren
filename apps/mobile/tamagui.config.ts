@@ -1,4 +1,4 @@
-import { defaultConfig } from '@tamagui/config/v5';
+import { createSystemFont, defaultConfig } from '@tamagui/config/v5';
 import { createTamagui } from 'tamagui';
 
 import { Colors, Radii, Spacing } from './src/constants/design-tokens';
@@ -42,6 +42,17 @@ function createWarrenTheme(mode: keyof typeof Colors) {
 
 export const tamaguiConfig = createTamagui({
   ...defaultConfig,
+  fonts: {
+    ...defaultConfig.fonts,
+    serif: createSystemFont({ font: { family: 'serif' } }),
+    mono: createSystemFont({ font: { family: 'monospace' } }),
+  },
+  settings: {
+    ...defaultConfig.settings,
+    // Warren uses readable long-form style props in feature code. Config v5
+    // defaults to shorthand-only typing, so opt back into both forms.
+    onlyAllowShorthands: false,
+  },
   tokens: {
     ...defaultConfig.tokens,
     space: {

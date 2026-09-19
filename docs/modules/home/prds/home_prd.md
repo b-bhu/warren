@@ -294,7 +294,8 @@ period, timestamp, and data-state label.
 ### News summary
 
 Each story requires a stable identifier, headline, category, source, published time,
-optional summary, optional destination, and zero or more related `assetId` values.
+optional image, optional summary, optional destination, and zero or more related
+`assetId` values.
 
 The first implementation may use controlled fixtures. The view model must allow those
 fixtures to be replaced with server-normalized Tokens.xyz catalogue, price, and news
