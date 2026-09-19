@@ -7,6 +7,10 @@ const configSchema = z.object({
   REFRESH_TTL_SECONDS: z.coerce.number().int().min(3600).default(2_592_000), SESSION_HMAC_PEPPER: z.string().min(24).default('development-only-change-this-pepper-value'), SESSION_RESULT_ENCRYPTION_KEY: z.string().min(32).default('development-only-result-encryption-key-change-me'),
   EVM_SUPPORTED_CHAIN_IDS: z.string().default('1'), SOLANA_SUPPORTED_CLUSTERS: z.string().default('devnet'),
   CORS_ORIGINS: z.string().default('http://localhost:8081'), RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(60), RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().min(1).default(60),
+  TOKENS_API_BASE_URL: z.string().url().default('https://api.tokens.xyz'), TOKENS_API_KEY: z.string().min(20).optional(),
+  HOME_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(250).max(30_000).default(5_000),
+  HOME_CATALOG_CACHE_SECONDS: z.coerce.number().int().min(1).default(60), HOME_CATALOG_STALE_SECONDS: z.coerce.number().int().min(0).default(900),
+  HOME_HTTP_CACHE_SECONDS: z.coerce.number().int().min(0).default(15), HOME_HTTP_STALE_SECONDS: z.coerce.number().int().min(0).default(60),
 });
 export type Config = z.infer<typeof configSchema>;
 export const readConfig = (env: NodeJS.ProcessEnv = process.env): Config => {
@@ -23,6 +27,7 @@ export const readConfig = (env: NodeJS.ProcessEnv = process.env): Config => {
     if (config.DATABASE_URL === 'file:./warren.db') throw new Error('DATABASE_URL must use a mounted production volume');
     const origins = config.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean);
     if (!origins.length || origins.includes('*')) throw new Error('CORS_ORIGINS must contain explicit production origins');
+    if (!config.TOKENS_API_KEY) throw new Error('TOKENS_API_KEY is required in production');
   }
   return config;
 };

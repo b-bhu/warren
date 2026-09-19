@@ -13,12 +13,15 @@ import { DeterministicTestWalletAdapter } from '@warren/test-wallet-provider';
 import type { ProviderAdapter } from '@warren/provider-contract';
 import { openDatabase, type Sqlite } from './db.js';
 import { readConfig, type Config } from './config.js';
+import { registerHomeRoutes } from './home/routes.js';
+import { HomeService, HomeServiceFault } from './home/service.js';
+import { FixtureCatalogSource, FixtureSupplementSource, TokensCatalogSource, TokensNewsSource } from './home/sources.js';
 
 type Row = Record<string, unknown>;
-type AppOptions = { config?: Config; db?: Sqlite; provider?: ProviderAdapter };
+type AppOptions = { config?: Config; db?: Sqlite; provider?: ProviderAdapter; homeService?: HomeService };
 type Completion = { profileId: string; accessToken?: string; refreshToken?: string; accessExpiresAt?: string; alreadyCompleted?: boolean };
 class ApiFault extends Error {
-  constructor(readonly code: ErrorCode, readonly status: number, message: string, readonly retryable = false, readonly attemptId?: string, readonly details?: { retryAfterSeconds?: number }) { super(message); }
+  constructor(readonly code: ErrorCode | 'CATALOG_UNAVAILABLE', readonly status: number, message: string, readonly retryable = false, readonly attemptId?: string, readonly details?: { retryAfterSeconds?: number }) { super(message); }
 }
 const now = () => new Date().toISOString();
 const expiry = (seconds: number) => new Date(Date.now() + seconds * 1000).toISOString();
@@ -54,6 +57,20 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
     async requestMessageSignature() { throw new ApiFault('PROVIDER_DISABLED', 503, 'Wallet signing is not configured.', true); }, async getMessageSignature() { throw new ApiFault('PROVIDER_DISABLED', 503, 'Wallet signing is not configured.', true); },
   };
   const provider = options.provider ?? (config.NODE_ENV === 'production' ? disabledProvider : new DeterministicTestWalletAdapter(config.NODE_ENV));
+  const catalog = config.TOKENS_API_KEY
+    ? new TokensCatalogSource({ apiKey: config.TOKENS_API_KEY, baseUrl: config.TOKENS_API_BASE_URL, timeoutMs: config.HOME_PROVIDER_TIMEOUT_MS })
+    : new FixtureCatalogSource();
+  const fixtureSupplement = new FixtureSupplementSource();
+  const homeService = options.homeService ?? new HomeService({
+    catalog,
+    market: fixtureSupplement,
+    indices: fixtureSupplement,
+    news: config.TOKENS_API_KEY
+      ? new TokensNewsSource({ apiKey: config.TOKENS_API_KEY, baseUrl: config.TOKENS_API_BASE_URL, timeoutMs: config.HOME_PROVIDER_TIMEOUT_MS })
+      : fixtureSupplement,
+    cacheTtlMs: config.HOME_CATALOG_CACHE_SECONDS * 1000,
+    staleTtlMs: config.HOME_CATALOG_STALE_SECONDS * 1000,
+  });
   const app = Fastify({ logger: config.NODE_ENV === 'test' ? false : { level: 'info', redact: ['req.headers.authorization', 'req.headers.x-attempt-capability', 'req.headers.idempotency-key'] }, genReqId: id });
   const origins = config.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean);
   app.register(cors, { origin: origins });
@@ -61,9 +78,11 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
   app.addHook('onRequest', async (request, reply) => {
     const path = request.url.split('?')[0];
     const sensitivePoll = request.method === 'GET' && /^\/v1\/auth\/attempts\/[^/]+\/(credentials|signature-requests\/[^/]+)$/.test(path);
+    const publicMarketRead = request.method === 'GET' && (path === '/v1/home' || path === '/v1/assets');
     const mutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method) && path.startsWith('/v1/');
-    if (!mutation && !sensitivePoll) return;
-    const scope = /^\/v1\/auth\/attempts\/[^/]+\/signature-requests\/[^/]+$/.test(path) ? 'auth-poll'
+    if (!mutation && !sensitivePoll && !publicMarketRead) return;
+    const scope = publicMarketRead ? path
+      : /^\/v1\/auth\/attempts\/[^/]+\/signature-requests\/[^/]+$/.test(path) ? 'auth-poll'
       : /^\/v1\/auth\/attempts\/[^/]+\/credentials$/.test(path) ? 'auth-credentials'
         : path.replace(/\/v1\/auth\/attempts\/[^/]+/g, '/v1/auth/attempts/:attemptId');
     const at = Date.now();
@@ -77,9 +96,15 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
       throw new ApiFault('RATE_LIMITED', 429, 'Too many requests. Please try again shortly.', true, undefined, { retryAfterSeconds });
     }
   });
-  app.addHook('onSend', async (_request, reply) => { reply.header('cache-control', 'no-store'); });
+  app.addHook('onSend', async (_request, reply) => { if (!reply.hasHeader('cache-control')) reply.header('cache-control', 'no-store'); });
   app.setErrorHandler((error, request, reply) => {
-    const fault = error instanceof ApiFault ? error : error instanceof z.ZodError
+    const fault = error instanceof ApiFault ? error : error instanceof HomeServiceFault
+      ? error.code === 'INVALID_CURSOR'
+        ? new ApiFault('INVALID_REQUEST', 400, error.message, error.retryable)
+        : error.code === 'CATALOG_UNAVAILABLE'
+          ? new ApiFault('CATALOG_UNAVAILABLE', 503, error.message, error.retryable)
+          : new ApiFault('INTERNAL_ERROR', 500, 'Something went wrong. Please try again.', true)
+      : error instanceof z.ZodError
       ? new ApiFault('INVALID_REQUEST', 400, 'The request could not be processed.')
       : new ApiFault('INTERNAL_ERROR', 500, 'Something went wrong. Please try again.', true);
     if (!(error instanceof ApiFault) && !(error instanceof z.ZodError)) request.log.error({ requestId: request.id, errorName: error instanceof Error ? error.name : 'unknown' }, 'Unhandled API error');
@@ -163,6 +188,7 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
   const providerFault = (error: unknown): ApiFault => error instanceof ApiFault ? error : new ApiFault('PROVIDER_UNAVAILABLE', 502, 'Wallet signing is temporarily unavailable.', true);
 
   app.get('/v1/health', async () => ({ status: 'ok' }));
+  registerHomeRoutes(app, homeService, config.HOME_HTTP_CACHE_SECONDS, config.HOME_HTTP_STALE_SECONDS);
   app.post('/v1/auth/attempts', async (request, reply) => {
     const body = createAttemptSchema.parse(request.body); let profileId: string | null = null, sessionFamilyId: string | null = null;
     let support; try { support = await provider.getSupport(); } catch (error) { throw providerFault(error); }

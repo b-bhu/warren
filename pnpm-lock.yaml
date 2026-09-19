@@ -16,6 +16,9 @@ importers:
       '@warren/auth-contract':
         specifier: workspace:*
         version: link:../../packages/auth-contract
+      '@warren/home-contract':
+        specifier: workspace:*
+        version: link:../../packages/home-contract
       '@warren/provider-contract':
         specifier: workspace:*
         version: link:../../packages/provider-contract
@@ -203,6 +206,16 @@ importers:
         version: 6.0.3
 
   packages/auth-contract:
+    dependencies:
+      zod:
+        specifier: 4.1.12
+        version: 4.1.12
+    devDependencies:
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+
+  packages/home-contract:
     dependencies:
       zod:
         specifier: 4.1.12
@@ -7344,9 +7357,7 @@ snapshots:
       metro-runtime: 0.84.6
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-color@2.1.0': {}
 
