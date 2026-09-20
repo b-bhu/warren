@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Warren · Markets concept</title>
+  <style>
+    :root {
+      --canvas: #131918;
+      --surface: #1c2523;
+      --surface-raised: #222d2a;
+      --ink: #f2f5f1;
+      --muted: #b8c4bf;
+      --proof: #74c7df;
+      --on-proof: #131918;
+      --proof-wash: #163640;
+      --outline: #51615c;
+      --outline-soft: rgba(184, 196, 191, 0.2);
+      --caution: #ffaaa2;
+      --caution-wash: #42201f;
+      --gain: #8bc4a1;
+      --private: #d8b87c;
+      --private-wash: #3c321f;
+      --card-radius: 12px;
+      --control-radius: 10px;
+      --font-sans: Spline Sans, Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      --font-serif: Georgia, "Times New Roman", serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: var(--ink);
+      background: #0b100f;
+      font-family: var(--font-sans);
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { margin: 0; }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    button, input { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid rgba(116, 199, 223, 0.42);
+      outline-offset: 2px;
+    }
+    h1, h2, h3, p { margin: 0; }
+    svg, img { display: block; }
+    [hidden] { display: none !important; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .prototype-stage {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: #0b100f;
+    }
+
+    .phone {
+      position: relative;
+      width: min(430px, 100%);
+      height: min(900px, calc(100dvh - 48px));
+      min-height: 680px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: var(--canvas);
+      border: 7px solid #050807;
+      border-radius: 42px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+    }
+
+    .status-bar {
+      position: relative;
+      height: 34px;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 24px 5px;
+      background: var(--canvas);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      z-index: 12;
+    }
+
+    .dynamic-island {
+      position: absolute;
+      top: 7px;
+      left: 50%;
+      width: 84px;
+      height: 18px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: #050807;
+    }
+
+    .status-icons { display: flex; align-items: center; gap: 4px; }
+
+    .app-header {
+      min-height: 62px;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 18px 7px;
+      border-bottom: 1px solid var(--outline-soft);
+      background: rgba(19, 25, 24, 0.97);
+      z-index: 11;
+    }
+
+    .brand {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      transform: rotate(-9deg);
+      border: 1px solid var(--outline);
+      border-radius: 9px;
+      color: var(--proof);
+      background: var(--proof-wash);
+      font: 400 15px/1 var(--font-serif);
+    }
+
+    .brand-mark span { transform: rotate(9deg); }
+    .brand-name { font: 700 19px/1 var(--font-serif); }
+
+    .guest-pill {
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      border: 1px solid var(--outline);
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--surface);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .guest-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--proof); }
+
+    .screen-scroll {
+      min-height: 0;
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: none;
+      overscroll-behavior-y: contain;
+    }
+
+    .screen-scroll::-webkit-scrollbar,
+    .product-tabs::-webkit-scrollbar,
+    .filter-rail::-webkit-scrollbar { display: none; }
+
+    .markets-content { padding: 16px 16px 28px; }
+
+    .screen-intro {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0 2px 13px;
+    }
+
+    .screen-intro h1 {
+      font: 700 28px/1.05 var(--font-serif);
+      letter-spacing: -0.035em;
+    }
+
+    .screen-state { text-align: right; }
+    .screen-state strong {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      color: var(--ink);
+      font: 600 9px/1.3 var(--font-mono);
+    }
+
+    .screen-state strong::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    .screen-state span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font: 500 8px/1.2 var(--font-mono);
+    }
+
+    .registry-panel {
+      position: relative;
+      border: 1px solid var(--outline);
+      border-radius: var(--card-radius);
+      background: var(--surface);
+    }
+
+    .search-wrap { position: relative; z-index: 8; padding: 8px; }
+    .search-box {
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 11px;
+      border: 1px solid var(--outline-soft);
+      border-radius: var(--control-radius);
+      color: var(--muted);
+      background: var(--canvas);
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    .search-box:focus-within {
+      border-color: var(--proof);
+      box-shadow: 0 0 0 3px rgba(116, 199, 223, 0.12);
+    }
+
+    .search-box input {
+      min-width: 0;
+      flex: 1;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      color: var(--ink);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .search-box input::placeholder { color: var(--muted); font-weight: 500; }
+    .clear-search {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 8px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 19px;
+      cursor: pointer;
+    }
+
+    .search-results {
+      position: absolute;
+      top: calc(100% + 2px);
+      right: 8px;
+      left: 8px;
+      max-height: 276px;
+      overflow-y: auto;
+      padding: 5px;
+      border: 1px solid var(--outline);
+      border-radius: 12px;
+      background: var(--surface-raised);
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
+    }
+
+    .search-result {
+      width: 100%;
+      min-height: 58px;
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 8px;
+      border: 0;
+      border-radius: 9px;
+      color: var(--ink);
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .search-result:hover { background: var(--proof-wash); }
+    .search-result-copy { min-width: 0; }
+    .search-result-copy strong { display: block; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .search-result-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; }
+    .capability-chips { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 3px; max-width: 116px; }
+    .mini-chip { padding: 3px 5px; border-radius: 5px; color: var(--proof); background: var(--proof-wash); font: 600 7px/1 var(--font-mono); }
+    .mini-chip.private { color: var(--private); background: var(--private-wash); }
+    .mini-chip.preview { color: var(--muted); background: var(--canvas); }
+    .search-empty { padding: 18px 12px; color: var(--muted); font-size: 11px; line-height: 1.5; text-align: center; }
+
+    .product-tabs {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding: 0 8px 8px;
+      scroll-padding-inline: 8px;
+      scrollbar-width: none;
+    }
+
+    .product-tab {
+      min-width: 104px;
+      min-height: 44px;
+      flex: 1 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0 11px;
+      border: 1px solid var(--outline-soft);
+      border-radius: var(--control-radius);
+      color: var(--muted);
+      background: transparent;
+      font-size: 10px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .product-tab:hover { color: var(--ink); background: var(--proof-wash); }
+    .product-tab.active { color: var(--proof); border-color: var(--proof); background: var(--proof-wash); }
+    .tab-count { color: inherit; font: 600 8px/1 var(--font-mono); opacity: 0.8; }
+
+    .product-context {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 9px;
+      padding: 11px 12px;
+      border-top: 1px solid var(--outline-soft);
+      border-bottom: 1px solid var(--outline-soft);
+      background: var(--canvas);
+    }
+
+    .context-icon { color: var(--proof); }
+    .product-context strong { display: block; font-size: 10px; line-height: 1.3; }
+    .product-context p { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.45; }
+
+    .catalog-toolbar {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 9px;
+    }
+
+    .catalog-heading strong { display: block; font-size: 11px; }
+    .catalog-heading span { display: block; margin-top: 2px; color: var(--muted); font: 500 8px/1.2 var(--font-mono); }
+    .filter-rail { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; }
+    .filter-chip {
+      min-height: 32px;
+      flex: 0 0 auto;
+      padding: 0 9px;
+      border: 1px solid var(--outline-soft);
+      border-radius: 8px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 8px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .filter-chip:hover, .filter-chip.active { color: var(--proof); border-color: var(--proof); background: var(--proof-wash); }
+
+    .instrument-list { border-top: 1px solid var(--outline-soft); }
+    .instrument-row {
+      width: 100%;
+      min-height: 78px;
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border: 0;
+      border-bottom: 1px solid var(--outline-soft);
+      color: var(--ink);
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+      transition: background 120ms ease;
+    }
+
+    .instrument-row:last-child { border-bottom: 0; }
+    .instrument-row:hover, .instrument-row:active { background: var(--proof-wash); }
+
+    .company-logo {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 10px;
+      color: var(--proof);
+      background: var(--proof-wash);
+      font-size: 10px;
+      font-weight: 850;
+      letter-spacing: -0.04em;
+    }
+
+    .company-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .company-logo.private-logo { color: var(--private); background: var(--private-wash); }
+
+    .instrument-identity { min-width: 0; }
+    .company-line { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .company-line strong { overflow: hidden; font-size: 12px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+    .company-line span { flex: 0 0 auto; color: var(--muted); font: 500 8px/1.2 var(--font-mono); }
+
+    .instrument-line {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 8px;
+      line-height: 1.3;
+    }
+
+    .instrument-symbol { color: var(--ink); font: 650 8px/1.2 var(--font-mono); }
+    .verified-mark { display: inline-flex; align-items: center; gap: 3px; color: var(--proof); }
+    .instrument-market { min-width: 91px; text-align: right; }
+    .market-value { display: block; color: var(--ink); font: 650 11px/1.15 var(--font-mono); }
+    .market-change { display: block; margin-top: 4px; color: var(--gain); font: 650 9px/1.15 var(--font-mono); }
+    .market-change.negative { color: var(--caution); }
+    .market-secondary { display: block; margin-top: 4px; color: var(--muted); font: 500 7px/1.15 var(--font-mono); }
+
+    .availability {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      padding: 3px 5px;
+      border-radius: 5px;
+      color: var(--gain);
+      background: rgba(139, 196, 161, 0.1);
+      font: 650 7px/1 var(--font-mono);
+      text-transform: uppercase;
+    }
+    .availability::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+    .availability.preview { color: var(--private); background: var(--private-wash); }
+    .availability.paused { color: var(--caution); background: var(--caution-wash); }
+
+    .catalog-empty { padding: 38px 24px; text-align: center; }
+    .catalog-empty strong { display: block; font-size: 13px; }
+    .catalog-empty p { margin-top: 7px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+
+    .coverage {
+      margin-top: 18px;
+      padding: 13px 2px 0;
+      border-top: 1px solid var(--outline-soft);
+    }
+    .coverage-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .coverage strong { font-size: 10px; }
+    .coverage span { color: var(--muted); font: 550 8px/1.2 var(--font-mono); }
+    .coverage p { margin-top: 8px; color: var(--muted); font-size: 8px; line-height: 1.55; }
+
+    .bottom-nav {
+      position: relative;
+      min-height: 72px;
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: start;
+      padding: 8px 20px 12px;
+      border-top: 1px solid var(--outline-soft);
+      background: rgba(28, 37, 35, 0.98);
+      z-index: 10;
+    }
+
+    .nav-item {
+      position: relative;
+      min-height: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: 0;
+      border-radius: 10px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .nav-item.active { color: var(--proof); }
+    .nav-item.active::after { content: ""; position: absolute; top: -8px; width: 22px; height: 2px; border-radius: 999px; background: var(--proof); }
+
+    .sheet-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      display: flex;
+      align-items: flex-end;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .sheet-layer.open { visibility: visible; pointer-events: auto; }
+    .sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      border: 0;
+      background: rgba(0, 0, 0, 0.6);
+      opacity: 0;
+      transition: opacity 180ms ease;
+      cursor: pointer;
+    }
+    .sheet-layer.open .sheet-backdrop { opacity: 1; }
+    .capability-sheet {
+      position: relative;
+      width: 100%;
+      max-height: 82%;
+      overflow-y: auto;
+      padding: 10px 16px 22px;
+      transform: translateY(102%);
+      border: 1px solid var(--outline);
+      border-bottom: 0;
+      border-radius: 22px 22px 0 0;
+      background: var(--surface);
+      transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .sheet-layer.open .capability-sheet { transform: translateY(0); }
+    .sheet-handle { width: 38px; height: 4px; margin: 0 auto 12px; border-radius: 999px; background: var(--outline); }
+    .sheet-header { display: grid; grid-template-columns: 48px minmax(0, 1fr) 44px; align-items: center; gap: 11px; }
+    .sheet-header .company-logo { width: 48px; height: 48px; border-radius: 13px; font-size: 12px; }
+    .sheet-title { min-width: 0; }
+    .sheet-title p { color: var(--proof); font: 600 8px/1.2 var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; }
+    .sheet-title h2 { margin-top: 4px; overflow: hidden; font: 700 23px/1.1 var(--font-serif); text-overflow: ellipsis; white-space: nowrap; }
+    .sheet-close { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 1px solid var(--outline); border-radius: 11px; color: var(--ink); background: transparent; font-size: 24px; cursor: pointer; }
+    .sheet-close:hover { background: var(--proof-wash); }
+
+    .sheet-evidence {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 10px 11px;
+      border: 1px solid var(--outline-soft);
+      border-radius: 10px;
+      background: var(--canvas);
+      color: var(--muted);
+      font-size: 9px;
+    }
+    .sheet-evidence strong { color: var(--proof); font: 650 8px/1.2 var(--font-mono); text-transform: uppercase; }
+
+    .capability-group { margin-top: 19px; }
+    .capability-group-heading { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 8px; }
+    .capability-group-heading h3 { font-size: 12px; }
+    .capability-group-heading span { color: var(--muted); font: 550 7px/1.2 var(--font-mono); text-transform: uppercase; }
+    .capability-list { overflow: hidden; border: 1px solid var(--outline); border-radius: var(--card-radius); }
+    .capability-row {
+      width: 100%;
+      min-height: 66px;
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border: 0;
+      border-bottom: 1px solid var(--outline-soft);
+      color: var(--ink);
+      background: transparent;
+      text-align: left;
+    }
+    button.capability-row { cursor: pointer; }
+    button.capability-row:hover { background: var(--proof-wash); }
+    .capability-row:last-child { border-bottom: 0; }
+    .capability-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; color: var(--proof); background: var(--proof-wash); }
+    .capability-copy strong { display: block; font-size: 11px; }
+    .capability-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; line-height: 1.35; }
+    .capability-state { text-align: right; }
+    .capability-state b { display: block; color: var(--gain); font: 650 8px/1.2 var(--font-mono); text-transform: uppercase; }
+    .capability-state b.preview { color: var(--private); }
+    .capability-state b.later { color: var(--muted); }
+    .capability-state span { display: block; margin-top: 4px; color: var(--muted); font-size: 14px; }
+
+    .sheet-disclosure { margin: 17px 2px 0; color: var(--muted); font-size: 8px; line-height: 1.55; }
+    .toast {
+      position: absolute;
+      right: 16px;
+      bottom: 84px;
+      left: 16px;
+      z-index: 50;
+      padding: 11px 13px;
+      transform: translateY(20px);
+      border: 1px solid var(--outline);
+      border-radius: 10px;
+      color: var(--ink);
+      background: var(--surface-raised);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
+      opacity: 0;
+      pointer-events: none;
+      font-size: 10px;
+      line-height: 1.4;
+      transition: opacity 140ms ease, transform 140ms ease;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 520px) {
+      .prototype-stage { padding: 0; background: var(--canvas); }
+      .phone { width: 100%; height: 100dvh; min-height: 0; border: 0; border-radius: 0; }
+      .status-bar { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.001ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="prototype-stage">
+    <div class="phone">
+      <div class="status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span class="dynamic-island"></span>
+        <span class="status-icons">● ◒ ▰</span>
+      </div>
+
+      <header class="app-header">
+        <button class="brand" id="brand-button" type="button" aria-label="Scroll Markets to top">
+          <span class="brand-mark"><span>W</span></span>
+          <span class="brand-name">Warren</span>
+        </button>
+        <div class="guest-pill" aria-label="Browsing as guest"><span class="guest-dot"></span>Guest</div>
+      </header>
+
+      <div class="screen-scroll" id="market-scroll">
+        <div class="markets-content">
+          <div class="screen-intro">
+            <h1>Markets</h1>
+            <div class="screen-state">
+              <strong>Read-only</strong>
+              <span>Sample registry · 9:41 AM</span>
+            </div>
+          </div>
+
+          <section class="registry-panel" aria-label="Verified market instruments">
+            <div class="search-wrap">
+              <div class="search-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="m15.4 15.4 4.2 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <label class="sr-only" for="market-search">Search company, ticker, or instrument</label>
+                <input id="market-search" type="search" autocomplete="off" placeholder="Search company, ticker, or instrument" aria-controls="search-results" aria-expanded="false">
+                <button class="clear-search" id="clear-search" type="button" aria-label="Clear search" hidden>×</button>
+              </div>
+              <div class="search-results" id="search-results" role="region" aria-label="Market search results" hidden></div>
+            </div>
+
+            <div class="product-tabs" role="tablist" aria-label="Market product type">
+              <button class="product-tab active" type="button" role="tab" aria-selected="true" data-product="spot">Spot <span class="tab-count">06</span></button>
+              <button class="product-tab" type="button" role="tab" aria-selected="false" data-product="prestock">PreStocks <span class="tab-count">03</span></button>
+              <button class="product-tab" type="button" role="tab" aria-selected="false" data-product="perp">Perpetuals <span class="tab-count">04</span></button>
+            </div>
+
+            <div class="product-context" id="product-context"></div>
+
+            <div class="catalog-toolbar">
+              <div class="catalog-heading">
+                <strong id="catalog-title">Spot stocks</strong>
+                <span id="catalog-count">6 verified instruments</span>
+              </div>
+              <div class="filter-rail" aria-label="Market filters">
+                <button class="filter-chip" id="available-filter" type="button" aria-pressed="false">Available now</button>
+                <button class="filter-chip" id="sort-control" type="button">Most active</button>
+              </div>
+            </div>
+
+            <div class="instrument-list" id="instrument-list"></div>
+          </section>
+
+          <section class="coverage" aria-label="Registry coverage">
+            <div class="coverage-top"><strong>Registry coverage</strong><span>13 products · Solana</span></div>
+            <p>Warren verifies the instrument identity shown here. Verification does not mean an investment is safe, endorsed, or available in every region. Prices are informational and never reused as executable quotes.</p>
+          </section>
+        </div>
+      </div>
+
+      <nav class="bottom-nav" aria-label="Primary navigation">
+        <button class="nav-item" type="button" data-nav="Home">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 10.5 12 3.7l8.5 6.8v8.3a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5v-8.3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 20.3v-5.6h6v5.6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          Home
+        </button>
+        <button class="nav-item active" type="button" aria-current="page" data-nav="Markets">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4.5v15h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="m7 15 4-4 3 2 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Markets
+        </button>
+        <button class="nav-item" type="button" data-nav="Profile">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="2"/><path d="M5.5 20c.5-3.8 2.7-5.7 6.5-5.7s6 1.9 6.5 5.7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Profile
+        </button>
+      </nav>
+
+      <div class="sheet-layer" id="sheet-layer" aria-hidden="true">
+        <button class="sheet-backdrop" id="sheet-backdrop" type="button" aria-label="Close company markets"></button>
+        <section class="capability-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-company">
+          <div class="sheet-handle"></div>
+          <div class="sheet-header">
+            <div id="sheet-logo"></div>
+            <div class="sheet-title"><p>Markets for</p><h2 id="sheet-company"></h2></div>
+            <button class="sheet-close" id="sheet-close" type="button" aria-label="Close company markets">×</button>
+          </div>
+          <div class="sheet-evidence"><span id="sheet-summary"></span><strong>Registry checked</strong></div>
+          <div id="sheet-capabilities"></div>
+          <p class="sheet-disclosure">Product availability and market-data freshness are separate. Opening a product here does not request a quote, connect a wallet, or place a trade.</p>
+        </section>
+      </div>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+  </main>
+
+  <script>
+    const products = {
+      spot: {
+        title: 'Spot stocks',
+        countLabel: 'verified instruments',
+        contextTitle: 'Own the supported stock token',
+        context: 'Verified public-stock tokens. Reference prices are informational; availability belongs to the instrument, not the US market clock.',
+        icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 18V9m7 9V5m7 13v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        items: [
+          { id: 'nvidia', company: 'NVIDIA', ticker: 'NVDA', symbol: 'NVDAx', provider: 'xStocks', price: 222.01, change: 0.39, availability: 'Available', state: 'available', activity: 98, logo: 'https://api.tokens.xyz/logos/xstocks/NVDAx.png', capabilities: ['spot', 'perp'] },
+          { id: 'circle', company: 'Circle', ticker: 'CRCL', symbol: 'CRCLx', provider: 'xStocks', price: 141.32, change: 1.82, availability: 'Available', state: 'available', activity: 93, logo: 'https://api.tokens.xyz/logos/xstocks/CRCLx.png', capabilities: ['spot', 'perp'] },
+          { id: 'microsoft', company: 'Microsoft', ticker: 'MSFT', symbol: 'MSFTx', provider: 'xStocks', price: 451.84, change: 0.27, availability: 'Available', state: 'available', activity: 88, logo: 'https://api.tokens.xyz/logos/xstocks/MSFTx.png', capabilities: ['spot'] },
+          { id: 'apple', company: 'Apple', ticker: 'AAPL', symbol: 'AAPLx', provider: 'xStocks', price: 225.16, change: -0.64, availability: 'Available', state: 'available', activity: 86, logo: 'https://api.tokens.xyz/logos/xstocks/AAPLx.png', capabilities: ['spot'] },
+          { id: 'tesla', company: 'Tesla', ticker: 'TSLA', symbol: 'TSLAx', provider: 'xStocks', price: 250.44, change: 1.43, availability: 'Available', state: 'available', activity: 81, logo: 'https://api.tokens.xyz/logos/xstocks/TSLAx.png', capabilities: ['spot', 'perp'] },
+          { id: 'alphabet', company: 'Alphabet', ticker: 'GOOGL', symbol: 'GOOGLx', provider: 'xStocks', price: 197.08, change: -0.18, availability: 'Paused', state: 'paused', activity: 74, logo: 'https://api.tokens.xyz/logos/xstocks/GOOGLx.png', capabilities: ['spot'] }
+        ]
+      },
+      prestock: {
+        title: 'Private-company exposure',
+        countLabel: 'preview products',
+        contextTitle: 'Exposure before a public listing',
+        context: 'PreStocks are not listed shares. Each product must explain its legal structure, valuation source, liquidity, fees, and exit terms.',
+        icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19.5h16M6 19.5V8l6-3.5L18 8v11.5M9 10h1m4 0h1M9 14h1m4 0h1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        items: [
+          { id: 'anthropic', company: 'Anthropic', ticker: 'Private', symbol: 'ANTH.PS', provider: 'PreStocks', price: 31.80, priceLabel: 'Indicative', change: null, availability: 'Preview', state: 'preview', activity: 91, mark: 'AN', capabilities: ['prestock'] },
+          { id: 'spacex', company: 'SpaceX', ticker: 'Private', symbol: 'SPACEX.PS', provider: 'PreStocks', price: 42.15, priceLabel: 'Indicative', change: null, availability: 'Preview', state: 'preview', activity: 87, mark: 'SX', capabilities: ['prestock'] },
+          { id: 'openai', company: 'OpenAI', ticker: 'Private', symbol: 'OPENAI.PS', provider: 'PreStocks', price: 27.40, priceLabel: 'Indicative', change: null, availability: 'Preview', state: 'preview', activity: 83, mark: 'OA', capabilities: ['prestock'] }
+        ]
+      },
+      perp: {
+        title: 'Equity perpetuals',
+        countLabel: 'preview contracts',
+        contextTitle: 'Directional exposure, not ownership',
+        context: 'Perpetual contracts add funding, leverage, liquidation, oracle, and venue risk. Discovery stays read-only until those risks are reviewed.',
+        icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 17 5-5 3.2 3.2L19 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.5 8H19v4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        items: [
+          { id: 'nvidia', company: 'NVIDIA', ticker: 'NVDA', symbol: 'NVDA-PERP', provider: 'Phoenix', price: 222.18, change: 0.44, funding: '+0.0062%', availability: 'Preview', state: 'preview', activity: 97, logo: 'https://api.tokens.xyz/logos/xstocks/NVDAx.png', capabilities: ['spot', 'perp'] },
+          { id: 'tesla', company: 'Tesla', ticker: 'TSLA', symbol: 'TSLA-PERP', provider: 'Phoenix', price: 250.62, change: 1.51, funding: '-0.0038%', availability: 'Preview', state: 'preview', activity: 92, logo: 'https://api.tokens.xyz/logos/xstocks/TSLAx.png', capabilities: ['spot', 'perp'] },
+          { id: 'circle', company: 'Circle', ticker: 'CRCL', symbol: 'CRCL-PERP', provider: 'Phoenix', price: 141.48, change: 1.77, funding: '+0.0041%', availability: 'Preview', state: 'preview', activity: 84, logo: 'https://api.tokens.xyz/logos/xstocks/CRCLx.png', capabilities: ['spot', 'perp'] },
+          { id: 'coinbase', company: 'Coinbase', ticker: 'COIN', symbol: 'COIN-PERP', provider: 'Phoenix', price: 337.12, change: -1.15, funding: '-0.0022%', availability: 'Preview', state: 'preview', activity: 79, mark: 'CO', capabilities: ['perp'] }
+        ]
+      }
+    };
+
+    const productLabels = { spot: 'Spot stock', prestock: 'PreStock', perp: 'Equity perpetual' };
+    let activeProduct = 'spot';
+    let availableOnly = false;
+    let sortMode = 'activity';
+    let toastTimer;
+
+    const $ = selector => document.querySelector(selector);
+    const $$ = selector => [...document.querySelectorAll(selector)];
+    const list = $('#instrument-list');
+    const search = $('#market-search');
+    const searchResults = $('#search-results');
+    const clearSearch = $('#clear-search');
+    const marketScroll = $('#market-scroll');
+
+    function logoMarkup(item, extraClass = '') {
+      const fallback = item.mark || item.ticker.slice(0, 2);
+      if (!item.logo) return `<span class="company-logo ${(item.product === 'prestock' || activeProduct === 'prestock') ? 'private-logo' : ''} ${extraClass}">${fallback}</span>`;
+      return `<span class="company-logo ${extraClass}"><img src="${item.logo}" alt="" onerror="this.remove();this.parentElement.textContent='${fallback}'"></span>`;
+    }
+
+    function formatPrice(item) {
+      return item.price == null ? '—' : `$${item.price.toFixed(2)}`;
+    }
+
+    function formatChange(value) {
+      if (value == null) return '';
+      return `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value).toFixed(2)}%`;
+    }
+
+    function visibleItems() {
+      let items = [...products[activeProduct].items];
+      if (availableOnly) items = items.filter(item => item.state === 'available');
+      if (sortMode === 'alpha') items.sort((a, b) => a.company.localeCompare(b.company));
+      if (sortMode === 'change') items.sort((a, b) => (b.change ?? -Infinity) - (a.change ?? -Infinity));
+      if (sortMode === 'activity') items.sort((a, b) => b.activity - a.activity);
+      return items;
+    }
+
+    function renderContext() {
+      const product = products[activeProduct];
+      $('#product-context').innerHTML = `<div class="context-icon">${product.icon}</div><div><strong>${product.contextTitle}</strong><p>${product.context}</p></div>`;
+      $('#catalog-title').textContent = product.title;
+      $('#catalog-count').textContent = `${visibleItems().length} ${product.countLabel}`;
+    }
+
+    function renderList() {
+      const items = visibleItems();
+      $('#catalog-count').textContent = `${items.length} ${products[activeProduct].countLabel}`;
+      if (!items.length) {
+        list.innerHTML = `<div class="catalog-empty"><strong>No available products in this view</strong><p>Turn off “Available now” to see preview and paused instruments.</p></div>`;
+        return;
+      }
+      list.innerHTML = items.map(item => {
+        const secondary = activeProduct === 'perp'
+          ? `<span class="market-secondary">Funding ${item.funding}</span>`
+          : activeProduct === 'prestock'
+            ? `<span class="market-secondary">${item.priceLabel} · sample</span>`
+            : `<span class="market-secondary">Reference · sample</span>`;
+        const change = item.change == null ? '' : `<span class="market-change ${item.change < 0 ? 'negative' : ''}">${formatChange(item.change)} · 1D</span>`;
+        return `<button class="instrument-row" type="button" data-company="${item.id}" aria-label="Open markets for ${item.company}">
+          ${logoMarkup(item)}
+          <span class="instrument-identity">
+            <span class="company-line"><strong>${item.company}</strong><span>${item.ticker}</span></span>
+            <span class="instrument-line"><b class="instrument-symbol">${item.symbol}</b><span>·</span><span>${item.provider}</span><span class="verified-mark" title="Canonical instrument checked by Warren">✓ Verified</span></span>
+          </span>
+          <span class="instrument-market"><b class="market-value">${formatPrice(item)}</b>${change}${secondary}<i class="availability ${item.state}">${item.availability}</i></span>
+        </button>`;
+      }).join('');
+
+      $$('.instrument-row').forEach(row => row.addEventListener('click', () => openCompany(row.dataset.company)));
+    }
+
+    function switchProduct(product) {
+      activeProduct = product;
+      availableOnly = false;
+      $('#available-filter').classList.remove('active');
+      $('#available-filter').setAttribute('aria-pressed', 'false');
+      $$('.product-tab').forEach(tab => {
+        const selected = tab.dataset.product === product;
+        tab.classList.toggle('active', selected);
+        tab.setAttribute('aria-selected', String(selected));
+      });
+      renderContext();
+      renderList();
+    }
+
+    function allItems() {
+      return Object.entries(products).flatMap(([product, config]) => config.items.map(item => ({ ...item, product })));
+    }
+
+    function searchCompanies(query) {
+      const normalized = query.trim().toLowerCase();
+      if (!normalized) return [];
+      const matches = allItems().filter(item => `${item.company} ${item.ticker} ${item.symbol} ${item.provider}`.toLowerCase().includes(normalized));
+      const companies = new Map();
+      matches.forEach(item => {
+        const current = companies.get(item.id) || { ...item, products: new Set() };
+        current.products.add(item.product);
+        companies.set(item.id, current);
+      });
+      return [...companies.values()].sort((a, b) => {
+        const aExact = a.ticker.toLowerCase() === normalized || a.symbol.toLowerCase() === normalized ? 0 : 1;
+        const bExact = b.ticker.toLowerCase() === normalized || b.symbol.toLowerCase() === normalized ? 0 : 1;
+        return aExact - bExact || a.company.localeCompare(b.company);
+      }).slice(0, 7);
+    }
+
+    function renderSearch() {
+      const query = search.value;
+      clearSearch.hidden = !query;
+      if (!query.trim()) {
+        searchResults.hidden = true;
+        search.setAttribute('aria-expanded', 'false');
+        return;
+      }
+      const results = searchCompanies(query);
+      searchResults.innerHTML = results.length ? results.map(item => {
+        const chips = [...item.products].map(product => `<span class="mini-chip ${product === 'prestock' ? 'private' : product === 'perp' ? 'preview' : ''}">${productLabels[product]}</span>`).join('');
+        return `<button class="search-result" type="button" data-company="${item.id}">${logoMarkup(item)}<span class="search-result-copy"><strong>${item.company}</strong><span>${item.ticker === 'Private' ? 'Private company exposure' : item.ticker}</span></span><span class="capability-chips">${chips}</span></button>`;
+      }).join('') : '<p class="search-empty">No verified company or instrument matches this search.</p>';
+      searchResults.hidden = false;
+      search.setAttribute('aria-expanded', 'true');
+      $$('.search-result').forEach(result => result.addEventListener('click', () => openCompany(result.dataset.company)));
+    }
+
+    function companyRecords(companyId) {
+      return allItems().filter(item => item.id === companyId);
+    }
+
+    function capabilityIcon(type) {
+      if (type === 'spot') return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 18V9m7 9V5m7 13v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+      if (type === 'prestock') return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 19h14M7 19V8l5-3 5 3v11" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+      if (type === 'perp') return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m5 17 5-5 3 3 5-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 12h12M12 6v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+    }
+
+    function capabilityRow(type, label, description, state, detail, interactive = false) {
+      const tag = interactive ? 'button' : 'div';
+      const stateClass = state === 'Available' ? '' : state === 'Preview' ? 'preview' : 'later';
+      return `<${tag} class="capability-row" ${interactive ? 'type="button" data-detail="' + label + '"' : ''}>
+        <span class="capability-icon">${capabilityIcon(type)}</span>
+        <span class="capability-copy"><strong>${label}</strong><span>${description}</span></span>
+        <span class="capability-state"><b class="${stateClass}">${state}</b><span>${detail}</span></span>
+      </${tag}>`;
+    }
+
+    function openCompany(companyId) {
+      const records = companyRecords(companyId);
+      if (!records.length) return;
+      const company = records[0];
+      const types = new Set(records.map(record => record.product));
+      const availableCount = records.filter(record => record.state === 'available').length;
+      $('#sheet-logo').innerHTML = logoMarkup(company);
+      $('#sheet-company').textContent = company.company;
+      $('#sheet-summary').textContent = `${records.length} ${records.length === 1 ? 'market' : 'markets'} found · ${availableCount} available now`;
+
+      const investRows = [];
+      if (types.has('spot')) {
+        const record = records.find(item => item.product === 'spot');
+        investRows.push(capabilityRow('spot', 'Spot stock', `${record.symbol} · ${record.provider} · Solana`, record.state === 'available' ? 'Available' : 'Paused', '›', record.state === 'available'));
+      }
+      if (types.has('prestock')) {
+        const record = records.find(item => item.product === 'prestock');
+        investRows.push(capabilityRow('prestock', 'PreStock', `${record.symbol} · private-company exposure`, 'Preview', '›', true));
+      }
+      if (types.has('perp')) {
+        const record = records.find(item => item.product === 'perp');
+        investRows.push(capabilityRow('perp', 'Equity perpetual', `${record.symbol} · ${record.provider} · no ownership`, 'Preview', '›', true));
+      }
+
+      const groups = `<div class="capability-group"><div class="capability-group-heading"><h3>Invest & trade</h3><span>Read-only</span></div><div class="capability-list">${investRows.join('')}</div></div>
+        <div class="capability-group"><div class="capability-group-heading"><h3>Use holdings</h3><span>Future</span></div><div class="capability-list">
+          ${capabilityRow('later', 'Lend', 'Earn against a supported stock position', 'Later', '')}
+          ${capabilityRow('later', 'Borrow', 'Use a supported position as collateral', 'Later', '')}
+        </div></div>`;
+      $('#sheet-capabilities').innerHTML = groups;
+      $('#sheet-layer').classList.add('open');
+      $('#sheet-layer').setAttribute('aria-hidden', 'false');
+      searchResults.hidden = true;
+      $$('#sheet-capabilities [data-detail]').forEach(button => button.addEventListener('click', () => showToast(`${button.dataset.detail} details would open next. No trade is started.`)));
+      setTimeout(() => $('#sheet-close').focus(), 20);
+    }
+
+    function closeSheet() {
+      $('#sheet-layer').classList.remove('open');
+      $('#sheet-layer').setAttribute('aria-hidden', 'true');
+    }
+
+    function showToast(message) {
+      const toast = $('#toast');
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.add('show');
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    $$('.product-tab').forEach(tab => tab.addEventListener('click', () => switchProduct(tab.dataset.product)));
+    search.addEventListener('input', renderSearch);
+    search.addEventListener('keydown', event => { if (event.key === 'Escape') { searchResults.hidden = true; search.setAttribute('aria-expanded', 'false'); } });
+    clearSearch.addEventListener('click', () => { search.value = ''; renderSearch(); search.focus(); });
+    $('#available-filter').addEventListener('click', event => {
+      availableOnly = !availableOnly;
+      event.currentTarget.classList.toggle('active', availableOnly);
+      event.currentTarget.setAttribute('aria-pressed', String(availableOnly));
+      renderContext();
+      renderList();
+    });
+    $('#sort-control').addEventListener('click', event => {
+      const order = ['activity', 'alpha', 'change'];
+      sortMode = order[(order.indexOf(sortMode) + 1) % order.length];
+      event.currentTarget.textContent = sortMode === 'activity' ? 'Most active' : sortMode === 'alpha' ? 'A–Z' : '1D change';
+      event.currentTarget.classList.toggle('active', sortMode !== 'activity');
+      renderList();
+    });
+    $('#sheet-close').addEventListener('click', closeSheet);
+    $('#sheet-backdrop').addEventListener('click', closeSheet);
+    $('#brand-button').addEventListener('click', () => marketScroll.scrollTo({ top: 0, behavior: 'smooth' }));
+    $$('.nav-item').forEach(item => item.addEventListener('click', () => { if (item.dataset.nav !== 'Markets') showToast(`${item.dataset.nav} is outside this Markets mock.`); }));
+    document.addEventListener('click', event => {
+      if (!event.target.closest('.search-wrap')) {
+        searchResults.hidden = true;
+        search.setAttribute('aria-expanded', 'false');
+      }
+    });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeSheet(); });
+
+    renderContext();
+    renderList();
+  </script>
+</body>
+</html>

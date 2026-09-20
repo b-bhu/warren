@@ -115,9 +115,13 @@ const idsQuery = z.preprocess((value) => {
 }, z.array(z.string().min(1).max(128).regex(/^[a-z0-9][a-z0-9:_-]*$/)).max(50).optional())
   .transform((value) => value ? [...new Set(value)] : value);
 
+export const assetsSortSchema = z.enum(['catalog', 'change_desc', 'change_asc']);
+export type AssetsSort = z.infer<typeof assetsSortSchema>;
+
 export const assetsQuerySchema = z.object({
   q: optionalTrimmedQuery,
   view: z.enum(['all', 'earnings']).default('all'),
+  sort: assetsSortSchema.default('catalog'),
   ids: idsQuery,
   cursor: z.preprocess(
     (value) => typeof value === 'string' ? value.trim() || undefined : value,
@@ -131,6 +135,12 @@ export const assetsQuerySchema = z.object({
   if (value.ids && value.cursor) {
     context.addIssue({ code: 'custom', message: 'ids and cursor cannot be combined', path: ['cursor'] });
   }
+  if (value.ids && value.sort !== 'catalog') {
+    context.addIssue({ code: 'custom', message: 'ids cannot be combined with movement sorting', path: ['sort'] });
+  }
+  if (value.view === 'earnings' && value.sort !== 'catalog') {
+    context.addIssue({ code: 'custom', message: 'earnings cannot be combined with movement sorting', path: ['sort'] });
+  }
 });
 export type AssetsQuery = z.infer<typeof assetsQuerySchema>;
 
@@ -139,6 +149,7 @@ export const assetsResponseSchema = z.object({
   query: z.object({
     q: z.string().nullable(),
     view: z.enum(['all', 'earnings']),
+    sort: assetsSortSchema,
     ids: z.array(z.string()),
   }).strict(),
   items: z.array(companySummarySchema).max(50),

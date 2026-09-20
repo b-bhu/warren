@@ -7,6 +7,7 @@ import {
   newsSummarySchema,
   type AssetsQuery,
   type AssetsResponse,
+  type AssetsSort,
   type CompanySummary,
   type HomeResponse,
   type HomeWarning,
@@ -49,14 +50,15 @@ export class HomeService {
     const catalog = await this.readCatalog(warnings);
     const sections = await this.readOptionalSections(catalog, warnings);
     const homeLimit = Math.min(this.options.homeLimit ?? 24, 36);
-    const selected = catalog.slice(0, homeLimit);
-    const hasNextPage = catalog.length > homeLimit;
+    const ranked = sortByDailyChange(catalog, 'change_desc');
+    const selected = ranked.slice(0, homeLimit);
+    const hasNextPage = ranked.length > homeLimit;
     const response = {
       generatedAt: generatedAt.toISOString(),
       market: sections.market,
       indices: sections.indices,
       companies: selected,
-      pageInfo: { nextCursor: hasNextPage ? encodeCursor(homeLimit) : null, hasNextPage },
+      pageInfo: { nextCursor: hasNextPage ? encodeCursor(homeLimit, 'change_desc') : null, hasNextPage },
       news: sections.news,
       warnings,
     };
@@ -107,18 +109,19 @@ export class HomeService {
         matches = matches.filter((company) => [company.companyName, company.ticker, ...company.instrumentHints]
           .some((value) => value.toLocaleLowerCase().includes(needle)));
       }
+      if (query.sort !== 'catalog') matches = sortByDailyChange(matches, query.sort);
     }
 
-    const offset = query.ids ? 0 : decodeCursor(query.cursor);
+    const offset = query.ids ? 0 : decodeCursor(query.cursor, query.sort);
     const page = query.ids ? matches : matches.slice(offset, offset + query.limit);
     const nextOffset = offset + page.length;
     const hasNextPage = !query.ids && nextOffset < matches.length;
     try {
       return assetsResponseSchema.parse({
         generatedAt: generatedAt.toISOString(),
-        query: { q: query.q ?? null, view: query.view, ids: query.ids ?? [] },
+        query: { q: query.q ?? null, view: query.view, sort: query.sort, ids: query.ids ?? [] },
         items: page,
-        pageInfo: { nextCursor: hasNextPage ? encodeCursor(nextOffset) : null, hasNextPage },
+        pageInfo: { nextCursor: hasNextPage ? encodeCursor(nextOffset, query.sort) : null, hasNextPage },
         warnings,
       });
     } catch { throw new HomeServiceFault('CONTRACT_INVALID', 'The asset response could not be prepared.', true); }
@@ -239,15 +242,25 @@ function normalizeCatalog(companies: CompanySummary[]) {
   return ordered;
 }
 
-function encodeCursor(offset: number) {
-  return Buffer.from(JSON.stringify({ v: 1, offset }), 'utf8').toString('base64url');
+function sortByDailyChange(companies: readonly CompanySummary[], sort: Exclude<AssetsSort, 'catalog'>) {
+  const direction = sort === 'change_desc' ? -1 : 1;
+  return companies
+    .filter((company): company is CompanySummary & { changePercent: number } => company.changePercent !== null)
+    .sort((left, right) => direction * (left.changePercent - right.changePercent)
+      || left.companyName.localeCompare(right.companyName)
+      || left.assetId.localeCompare(right.assetId));
 }
 
-function decodeCursor(cursor: string | undefined) {
+function encodeCursor(offset: number, sort: AssetsSort) {
+  return Buffer.from(JSON.stringify({ v: 1, offset, sort }), 'utf8').toString('base64url');
+}
+
+function decodeCursor(cursor: string | undefined, sort: AssetsSort) {
   if (!cursor) return 0;
   try {
     const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as unknown;
     if (!parsed || typeof parsed !== 'object' || (parsed as { v?: unknown }).v !== 1) throw new Error();
+    if ((parsed as { sort?: unknown }).sort !== sort) throw new Error();
     const offset = (parsed as { offset?: unknown }).offset;
     if (!Number.isSafeInteger(offset) || Number(offset) < 0) throw new Error();
     return Number(offset);

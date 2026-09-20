@@ -43,6 +43,11 @@ export async function loadEarnings(signal?: AbortSignal): Promise<AssetsResponse
   return loadAssets('/v1/assets?view=earnings&limit=24', signal);
 }
 
+export async function loadMovers(direction: 'gainers' | 'losers', signal?: AbortSignal): Promise<AssetsResponse> {
+  const sort = direction === 'gainers' ? 'change_desc' : 'change_asc';
+  return loadAssets(`/v1/assets?sort=${sort}&limit=24`, signal);
+}
+
 export async function loadWatchlist(assetIds: readonly string[], signal?: AbortSignal): Promise<AssetsResponse> {
   const ids = assetIds.map(encodeURIComponent).join(',');
   return loadAssets(`/v1/assets?ids=${ids}`, signal);

@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Fonts } from '@/constants/theme';
@@ -8,6 +9,8 @@ type TabIconName = 'home' | 'markets' | 'profile';
 
 export default function MainTabLayout() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 8);
 
   return (
     <Tabs
@@ -28,6 +31,8 @@ export default function MainTabLayout() {
           borderTopColor: theme.outline,
           borderTopWidth: 1,
           elevation: 0,
+          height: 56 + bottomInset,
+          paddingBottom: bottomInset,
           paddingTop: 7,
           shadowOpacity: 0,
         },

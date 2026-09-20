@@ -16,12 +16,15 @@ import { readConfig, type Config } from './config.js';
 import { registerHomeRoutes } from './home/routes.js';
 import { HomeService, HomeServiceFault } from './home/service.js';
 import { FixtureCatalogSource, FixtureSupplementSource, TokensCatalogSource, TokensNewsSource } from './home/sources.js';
+import { registerMarketsRoutes } from './markets/routes.js';
+import { MarketsService, MarketsServiceFault } from './markets/service.js';
+import { FixtureSpotSource, PhoenixPerpetualSource, PreStocksSource, TesseraSource, TokensSpotSource } from './markets/sources.js';
 
 type Row = Record<string, unknown>;
-type AppOptions = { config?: Config; db?: Sqlite; provider?: ProviderAdapter; homeService?: HomeService };
+type AppOptions = { config?: Config; db?: Sqlite; provider?: ProviderAdapter; homeService?: HomeService; marketsService?: MarketsService };
 type Completion = { profileId: string; accessToken?: string; refreshToken?: string; accessExpiresAt?: string; alreadyCompleted?: boolean };
 class ApiFault extends Error {
-  constructor(readonly code: ErrorCode | 'CATALOG_UNAVAILABLE', readonly status: number, message: string, readonly retryable = false, readonly attemptId?: string, readonly details?: { retryAfterSeconds?: number }) { super(message); }
+  constructor(readonly code: ErrorCode | 'CATALOG_UNAVAILABLE' | 'REGISTRY_UNAVAILABLE', readonly status: number, message: string, readonly retryable = false, readonly attemptId?: string, readonly details?: { retryAfterSeconds?: number }) { super(message); }
 }
 const now = () => new Date().toISOString();
 const expiry = (seconds: number) => new Date(Date.now() + seconds * 1000).toISOString();
@@ -71,6 +74,18 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
     cacheTtlMs: config.HOME_CATALOG_CACHE_SECONDS * 1000,
     staleTtlMs: config.HOME_CATALOG_STALE_SECONDS * 1000,
   });
+  const marketsService = options.marketsService ?? new MarketsService({
+    sources: [
+      config.TOKENS_API_KEY
+        ? new TokensSpotSource({ apiKey: config.TOKENS_API_KEY, baseUrl: config.TOKENS_API_BASE_URL, timeoutMs: config.MARKETS_PROVIDER_TIMEOUT_MS })
+        : new FixtureSpotSource(),
+      new PreStocksSource({ url: config.PRESTOCKS_API_URL, timeoutMs: config.MARKETS_PROVIDER_TIMEOUT_MS }),
+      new TesseraSource(),
+      new PhoenixPerpetualSource({ baseUrl: config.PHOENIX_API_BASE_URL, timeoutMs: config.MARKETS_PROVIDER_TIMEOUT_MS }),
+    ],
+    cacheTtlMs: config.MARKETS_REGISTRY_CACHE_SECONDS * 1000,
+    staleTtlMs: config.MARKETS_REGISTRY_STALE_SECONDS * 1000,
+  });
   const app = Fastify({ logger: config.NODE_ENV === 'test' ? false : { level: 'info', redact: ['req.headers.authorization', 'req.headers.x-attempt-capability', 'req.headers.idempotency-key'] }, genReqId: id });
   const origins = config.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean);
   app.register(cors, { origin: origins });
@@ -78,7 +93,8 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
   app.addHook('onRequest', async (request, reply) => {
     const path = request.url.split('?')[0];
     const sensitivePoll = request.method === 'GET' && /^\/v1\/auth\/attempts\/[^/]+\/(credentials|signature-requests\/[^/]+)$/.test(path);
-    const publicMarketRead = request.method === 'GET' && (path === '/v1/home' || path === '/v1/assets');
+    const publicMarketRead = request.method === 'GET'
+      && (path === '/v1/home' || path === '/v1/assets' || path === '/v1/markets' || path.startsWith('/v1/markets/'));
     const mutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method) && path.startsWith('/v1/');
     if (!mutation && !sensitivePoll && !publicMarketRead) return;
     const scope = publicMarketRead ? path
@@ -104,6 +120,14 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
         : error.code === 'CATALOG_UNAVAILABLE'
           ? new ApiFault('CATALOG_UNAVAILABLE', 503, error.message, error.retryable)
           : new ApiFault('INTERNAL_ERROR', 500, 'Something went wrong. Please try again.', true)
+      : error instanceof MarketsServiceFault
+        ? error.code === 'INVALID_CURSOR'
+          ? new ApiFault('INVALID_REQUEST', 400, error.message, error.retryable)
+          : error.code === 'NOT_FOUND'
+            ? new ApiFault('NOT_FOUND', 404, error.message, error.retryable)
+            : error.code === 'REGISTRY_UNAVAILABLE'
+              ? new ApiFault('REGISTRY_UNAVAILABLE', 503, error.message, error.retryable)
+              : new ApiFault('INTERNAL_ERROR', 500, 'Something went wrong. Please try again.', true)
       : error instanceof z.ZodError
       ? new ApiFault('INVALID_REQUEST', 400, 'The request could not be processed.')
       : new ApiFault('INTERNAL_ERROR', 500, 'Something went wrong. Please try again.', true);
@@ -189,6 +213,7 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
 
   app.get('/v1/health', async () => ({ status: 'ok' }));
   registerHomeRoutes(app, homeService, config.HOME_HTTP_CACHE_SECONDS, config.HOME_HTTP_STALE_SECONDS);
+  registerMarketsRoutes(app, marketsService, config.MARKETS_HTTP_CACHE_SECONDS, config.MARKETS_HTTP_STALE_SECONDS);
   app.post('/v1/auth/attempts', async (request, reply) => {
     const body = createAttemptSchema.parse(request.body); let profileId: string | null = null, sessionFamilyId: string | null = null;
     let support; try { support = await provider.getSupport(); } catch (error) { throw providerFault(error); }

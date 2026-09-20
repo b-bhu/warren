@@ -34,11 +34,13 @@ import {
   HomeRequestError,
   loadEarnings,
   loadHome,
+  loadMovers,
   loadWatchlist,
   searchAssets,
 } from './home-api';
 
 type MarketMode = 'all' | 'watchlist' | 'earnings';
+type MovementView = 'gainers' | 'losers';
 type HomeIconName = 'calendar' | 'clock' | 'deposit' | 'grid' | 'long' | 'search' | 'send' | 'star' | 'swap' | 'plus';
 
 const SAVED_ASSET_IDS: readonly string[] = [];
@@ -63,9 +65,13 @@ export function HomeScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState<string>();
   const [mode, setMode] = useState<MarketMode>('all');
+  const [movementView, setMovementView] = useState<MovementView>('gainers');
   const [modeCompanies, setModeCompanies] = useState<CompanySummary[]>([]);
   const [isModeLoading, setIsModeLoading] = useState(false);
   const [modeError, setModeError] = useState<string>();
+  const [loserCompanies, setLoserCompanies] = useState<CompanySummary[]>([]);
+  const [isMoverLoading, setIsMoverLoading] = useState(false);
+  const [moverError, setMoverError] = useState<string>();
   const [query, setQuery] = useState('');
   const [remoteSearchResults, setRemoteSearchResults] = useState<CompanySummary[]>([]);
   const [completedSearchQuery, setCompletedSearchQuery] = useState('');
@@ -184,7 +190,29 @@ export function HomeScreen() {
     return () => controller.abort();
   }, [mode]);
 
-  const companies = mode === 'all' ? home?.companies ?? [] : modeCompanies;
+  useEffect(() => {
+    if (mode !== 'all' || movementView !== 'losers') {
+      setIsMoverLoading(false);
+      setMoverError(undefined);
+      return;
+    }
+    const controller = new AbortController();
+    setIsMoverLoading(true);
+    setMoverError(undefined);
+    void loadMovers('losers', controller.signal)
+      .then((result) => setLoserCompanies(result.items))
+      .catch((error) => {
+        if (!isAbort(error)) setMoverError(messageFor(error));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsMoverLoading(false);
+      });
+    return () => controller.abort();
+  }, [home?.generatedAt, mode, movementView]);
+
+  const companies = mode === 'all'
+    ? movementView === 'gainers' ? home?.companies ?? [] : loserCompanies
+    : modeCompanies;
   const normalizedQuery = normalizeSearchText(query);
   const searchResults = useMemo(
     () => rankSearchResults(normalizedQuery, [...(home?.companies ?? []), ...remoteSearchResults]),
@@ -194,6 +222,13 @@ export function HomeScreen() {
   const columnCount = windowWidth < 340 || fontScale > 1.25 ? 2 : 3;
   const pageSize = columnCount * BOARD_ROWS;
   const pages = useMemo(() => chunk(companies, pageSize), [companies, pageSize]);
+  const isCompanyBoardLoading = isModeLoading || (mode === 'all' && isMoverLoading);
+  const companyBoardError = mode === 'all' ? moverError : modeError;
+
+  useEffect(() => {
+    setCurrentPage(0);
+    boardRef.current?.scrollTo({ x: 0, animated: false });
+  }, [movementView]);
 
   const openCompany = useCallback((company: CompanySummary) => {
     router.push({
@@ -252,16 +287,23 @@ export function HomeScreen() {
 
             <View style={[styles.boardHeading, { borderTopColor: theme.outline }]}>
               <Text style={[styles.boardTitle, { color: theme.ink }]}>Popular companies</Text>
-              <Text style={[styles.boardMeta, { color: theme.muted }]}>{modeLabel(mode)}</Text>
+              {mode === 'all' ? (
+                <View accessibilityLabel="Rank companies by daily movement" style={styles.movementSwitcher}>
+                  <MovementButton active={movementView === 'gainers'} label="Top gainers" onPress={() => setMovementView('gainers')} />
+                  <MovementButton active={movementView === 'losers'} label="Top losers" onPress={() => setMovementView('losers')} />
+                </View>
+              ) : (
+                <Text style={[styles.boardMeta, { color: theme.muted }]}>{modeLabel(mode)}</Text>
+              )}
             </View>
 
             <View onLayout={onBoardLayout}>
               {isLoading && !home ? (
                 <CompanyBoardSkeleton columns={columnCount} />
-              ) : isModeLoading ? (
-                <SectionMessage loading message={`Loading ${modeLabel(mode).toLowerCase()}…`} />
-              ) : modeError ? (
-                <SectionMessage message={modeError} />
+              ) : isCompanyBoardLoading ? (
+                <SectionMessage loading message={mode === 'all' ? 'Loading top losers…' : `Loading ${modeLabel(mode).toLowerCase()}…`} />
+              ) : companyBoardError ? (
+                <SectionMessage message={companyBoardError} />
               ) : pages.length ? (
                 <ScrollView
                   ref={boardRef}
@@ -273,7 +315,7 @@ export function HomeScreen() {
                   showsHorizontalScrollIndicator={false}>
                   {pages.map((page, pageIndex) => (
                     <CompanyPage
-                      key={`${mode}-${pageIndex}`}
+                      key={`${mode}-${movementView}-${pageIndex}`}
                       companies={page}
                       columns={columnCount}
                       mode={mode}
@@ -390,8 +432,8 @@ function DiscoveryToolbar({
   const theme = useTheme();
   return (
     <View style={[styles.toolbar, { borderBottomColor: theme.outline }]}>
-      <View style={[styles.searchBox, { borderColor: theme.outline }]}>
-        <HomeIcon color={theme.muted} name="search" size={17} />
+      <View style={[styles.searchBox, { backgroundColor: theme.canvas, borderColor: theme.outline }]}>
+        <HomeIcon color={theme.muted} name="search" size={16} />
         <TextInput
           accessibilityLabel="Search companies"
           autoCapitalize="none"
@@ -421,6 +463,24 @@ function DiscoveryToolbar({
         <ModeButton active={mode === 'earnings'} icon="calendar" label="Earnings" onPress={() => onModeChange('earnings')} />
       </View>
     </View>
+  );
+}
+
+function MovementButton({ active, label, onPress }: { active: boolean; label: string; onPress: () => void }) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      hitSlop={6}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.movementButton,
+        { backgroundColor: active ? theme.proofWash : 'transparent', borderColor: active ? theme.proof : theme.outline },
+        pressed && styles.pressed,
+      ]}>
+      <Text style={[styles.movementButtonText, { color: active ? theme.proof : theme.muted }]}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -579,7 +639,7 @@ function CompanyCard({ company, mode, onPress }: { company: CompanySummary; mode
       ]}>
       <View style={styles.companyCardLeft}>
         <CompanyLogo company={company} size={25} />
-        <Text numberOfLines={2} style={[styles.companyName, { color: theme.ink }]}>{company.companyName}</Text>
+        <Text numberOfLines={1} style={[styles.companyName, { color: theme.ink }]}>{company.companyName}</Text>
       </View>
       <View style={styles.companyCardRight}>
         <Text numberOfLines={1} style={[styles.companyTicker, { color: theme.muted }]}>{company.ticker}</Text>
@@ -1081,14 +1141,14 @@ const styles = StyleSheet.create({
   marketStatusMeta: { fontFamily: Fonts.mono, fontSize: 9, textAlign: 'right' },
   marketDeck: { borderRadius: 12, borderWidth: 1, overflow: 'hidden', position: 'relative' },
   toolbar: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 8, padding: 8, position: 'relative', zIndex: 30 },
-  searchBox: { alignItems: 'center', borderRadius: 10, borderWidth: 1, flex: 1, flexDirection: 'row', gap: 8, minHeight: 44, paddingHorizontal: 10 },
-  searchInput: { flex: 1, fontFamily: Fonts.sans, fontSize: 12, fontWeight: '600', minWidth: 0, paddingVertical: 0 },
-  clearSearch: { alignItems: 'center', height: 28, justifyContent: 'center', width: 28 },
-  clearSearchText: { fontFamily: Fonts.sans, fontSize: 22, lineHeight: 24 },
+  searchBox: { alignItems: 'center', borderRadius: 10, borderWidth: 1, flex: 1, flexDirection: 'row', gap: 5, height: 52, minWidth: 0, paddingHorizontal: 9 },
+  searchInput: { alignSelf: 'stretch', flex: 1, fontFamily: Fonts.sans, fontSize: 14, fontWeight: '600', height: '100%', lineHeight: 19, minWidth: 0, paddingVertical: 0, textAlignVertical: 'center' },
+  clearSearch: { alignItems: 'center', borderRadius: 9, height: 32, justifyContent: 'center', width: 32 },
+  clearSearchText: { fontFamily: Fonts.sans, fontSize: 20, lineHeight: 22 },
   marketModes: { borderRadius: 10, borderWidth: 1, flexDirection: 'row', height: 44, overflow: 'hidden', width: 132 },
   modeButton: { alignItems: 'center', borderRightWidth: StyleSheet.hairlineWidth, flex: 1, gap: 2, justifyContent: 'center', minHeight: 44 },
   modeLabel: { fontFamily: Fonts.sans, fontSize: 7, fontWeight: '700' },
-  searchPanel: { borderRadius: 10, borderWidth: 1, elevation: 12, left: 8, maxHeight: 238, overflow: 'hidden', padding: 5, position: 'absolute', right: 148, top: 57, zIndex: 40 },
+  searchPanel: { borderRadius: 10, borderWidth: 1, elevation: 12, left: 8, maxHeight: 238, overflow: 'hidden', padding: 5, position: 'absolute', right: 148, top: 65, zIndex: 40 },
   searchStatus: { alignItems: 'center', flexDirection: 'row', justifyContent: 'center', minHeight: 56, paddingHorizontal: 10 },
   searchResultsScroll: { maxHeight: 226 },
   panelMessage: { fontFamily: Fonts.sans, fontSize: 11, lineHeight: 17, paddingHorizontal: 10, paddingVertical: 14, textAlign: 'center' },
@@ -1109,15 +1169,18 @@ const styles = StyleSheet.create({
   boardHeading: { alignItems: 'center', borderTopWidth: StyleSheet.hairlineWidth, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 10, paddingBottom: 3, paddingTop: 8 },
   boardTitle: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '700' },
   boardMeta: { fontFamily: Fonts.mono, fontSize: 8, fontWeight: '600', letterSpacing: 0.3, textTransform: 'uppercase' },
+  movementSwitcher: { flexDirection: 'row', gap: 4 },
+  movementButton: { alignItems: 'center', borderRadius: 8, borderWidth: 1, justifyContent: 'center', minHeight: 32, paddingHorizontal: 8 },
+  movementButtonText: { fontFamily: Fonts.sans, fontSize: 8, fontWeight: '700' },
   companyPage: { gap: 6, minHeight: 274, paddingHorizontal: 8, paddingVertical: 6 },
   companyRow: { alignItems: 'stretch', flexDirection: 'row', gap: 6 },
-  companyCard: { borderRadius: 10, borderWidth: 1, flex: 1, flexDirection: 'row', gap: 5, justifyContent: 'space-between', minHeight: 62, paddingHorizontal: 7, paddingVertical: 7 },
+  companyCard: { borderRadius: 10, borderWidth: 1, flex: 1, minHeight: 62, paddingHorizontal: 7, paddingVertical: 7, position: 'relative' },
   companyPlaceholder: { flex: 1 },
-  companyCardLeft: { alignItems: 'flex-start', flex: 1, gap: 4, minWidth: 0 },
-  companyCardRight: { alignItems: 'flex-end', flexShrink: 0, justifyContent: 'space-between', minWidth: 34 },
+  companyCardLeft: { alignItems: 'flex-start', flex: 1, gap: 4, minWidth: 0, width: '100%' },
+  companyCardRight: { alignItems: 'flex-end', gap: 4, position: 'absolute', right: 7, top: 7 },
   companyLogo: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   companyInitials: { fontFamily: Fonts.sans, fontWeight: '800', letterSpacing: -0.3 },
-  companyName: { fontFamily: Fonts.sans, fontSize: 10, lineHeight: 12, maxWidth: 64 },
+  companyName: { alignSelf: 'stretch', fontFamily: Fonts.sans, fontSize: 10, lineHeight: 12 },
   companyTicker: { fontFamily: Fonts.mono, fontSize: 9, fontWeight: '500' },
   companyChange: { fontFamily: Fonts.mono, fontSize: 10, fontWeight: '700', letterSpacing: -0.2 },
   deckFooter: { alignItems: 'center', borderTopWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 8, justifyContent: 'space-between', minHeight: 38, paddingHorizontal: 12, paddingVertical: 9 },

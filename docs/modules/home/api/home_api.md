@@ -25,7 +25,7 @@ Returns the first Home payload in one request:
 
 - US market status;
 - ordered market indices;
-- the first 24 curated companies;
+- the 24 highest valid 1-day percentage movers from the curated equity catalogue;
 - catalogue pagination state;
 - Top News; and
 - section-level warnings.
@@ -72,6 +72,7 @@ an existing local watchlist.
 | --- | --- | --- |
 | `q` | omitted | Case-insensitive company, ticker, or known token-symbol search. |
 | `view` | `all` | `all` or `earnings`. |
+| `sort` | `catalog` | `catalog`, `change_desc`, or `change_asc`. Movement sorts exclude companies without a valid 1-day change. |
 | `ids` | omitted | Comma-separated canonical Warren asset IDs, maximum 50. |
 | `cursor` | omitted | Opaque cursor from the previous response. |
 | `limit` | `24` | Page size from 1 through 36. Ignored for ordered `ids` resolution. |
@@ -80,6 +81,8 @@ Examples:
 
 ```http
 GET /v1/assets?q=nvda&limit=8
+GET /v1/assets?sort=change_desc&limit=24
+GET /v1/assets?sort=change_asc&limit=24
 GET /v1/assets?view=earnings&limit=24
 GET /v1/assets?ids=apple,nvidia,microsoft
 GET /v1/assets?limit=24&cursor=<opaque-cursor>
@@ -93,6 +96,7 @@ A successful search response looks like:
   "query": {
     "q": "nvda",
     "view": "all",
+    "sort": "catalog",
     "ids": []
   },
   "items": [
@@ -148,8 +152,18 @@ The Home response never exposes Solana mints as the primary company identifier.
 - It checks `companyName`, public `ticker`, and every safe `instrumentHint`.
 - No match is `200` with an empty `items` array.
 - `q` cannot be combined with `ids`.
+- Movement sorting cannot be combined with ordered `ids` or the date-ordered Earnings
+  view.
 - Search runs over the cached normalized catalogue; it does not call a provider for every
   keystroke.
+
+## Market-mover behaviour
+
+`GET /v1/home` returns the 24 companies with the highest valid signed 1-day percentage
+change across the complete normalized equity catalogue. `sort=change_asc` returns the
+lowest changes for the Top losers view. Neither direction applies a volume or liquidity
+threshold. Companies without a valid `changePercent` are excluded rather than presented
+as movers, and alphabetical company name plus `assetId` provide deterministic tie-breaks.
 
 ## Watchlist behaviour
 
@@ -295,6 +309,7 @@ Tests cover:
 - ETag revalidation and public cache headers;
 - search by company, ticker, and token hint;
 - canonical deduplication;
+- complete-catalogue gainers/losers ordering without a volume filter;
 - stable pagination and invalid cursors;
 - ordered watchlist resolution and unknown IDs;
 - populated and empty earnings states;
@@ -309,5 +324,6 @@ The live Tokens integration is exercised through Fastify injection against the r
 provider without running a network listener. The verifier checks the company catalogue,
 NVIDIA search and source freshness, and guarantees that Home returns no more than 12
 normalized news items. Provider news may safely be empty when the feed has no valid items.
-As of 2026-09-19, API typechecking and all 34 API tests pass, and the live verifier returns
-a 24-company first page plus a fresh normalized NVIDIA price from Tokens.xyz.
+As of 2026-09-20, API typechecking and all 46 API tests pass. The live Home response
+returns up to 24 valid top gainers, and the assets endpoint returns the corresponding
+top-losers order on request.

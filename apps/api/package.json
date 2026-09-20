@@ -9,12 +9,14 @@
     "start": "node --env-file-if-exists=.env.local --env-file-if-exists=.env.providers.local --import tsx src/server.ts",
     "test": "NODE_ENV=test tsx --test test/**/*.test.ts",
     "verify:home:live": "node --env-file-if-exists=.env.local --env-file-if-exists=.env.providers.local --import tsx scripts/verify-home-live.ts",
+    "verify:markets:live": "node --env-file-if-exists=.env.local --env-file-if-exists=.env.providers.local --import tsx scripts/verify-markets-live.ts",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@warren/auth-contract": "workspace:*",
     "@warren/home-contract": "workspace:*",
+    "@warren/markets-contract": "workspace:*",
     "@warren/provider-contract": "workspace:*",
     "@warren/test-wallet-provider": "workspace:*",
     "@fastify/cors": "11.2.0",

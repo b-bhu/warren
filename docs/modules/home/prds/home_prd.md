@@ -140,6 +140,8 @@ wallet, or submit any transaction.
 | All | Tap | Show the complete curated Home catalogue. |
 | Watchlist | Tap | Show companies already saved by the current local/user state. |
 | Earnings | Tap | Show supported companies with upcoming earnings, ordered by date. |
+| Top gainers | Tap | Rank the current All catalogue from highest to lowest 1-day percentage movement. |
+| Top losers | Tap | Rank the current All catalogue from lowest to highest 1-day percentage movement. |
 | Index strip | Horizontal swipe | Reveal more indices; index items themselves are not actions in this slice. |
 | Company board | Horizontal swipe | Move between fixed pages of company cards. |
 | Pagination indicator | Tap, when rendered as a control | Move to its corresponding company page. |
@@ -170,6 +172,10 @@ nothing is not acceptable.
 
 ### 10.2 Search
 
+- Search flexes into the available discovery-toolbar width while the combined
+  All/Watchlist/Earnings control keeps its compact fixed width.
+- Home and Markets use the same fixed-height search treatment, compact leading icon,
+  text inset, and clear-control geometry.
 - Search accepts company name, public stock ticker, and known token symbol.
 - Matching is case-insensitive and ignores leading/trailing whitespace.
 - Each result identifies one company, not one row per provider or token mint.
@@ -216,11 +222,18 @@ nothing is not acceptable.
 - The left side contains company logo followed by company name.
 - The right side contains public ticker followed by daily percentage movement, stacked
   vertically and aligned to the end.
+- `Top gainers` and `Top losers` replace the non-actionable `Today` label in All mode.
+- `Top gainers` is selected by default. Switching the ranking resets the horizontal
+  board to its first page. The backend selects up to 24 companies from the complete
+  curated equity catalogue by signed 1-day percentage movement.
+- Gainers sort descending and losers sort ascending. No volume or liquidity filter is
+  applied. Companies without valid 1-day movement are excluded from both sets.
 - The entire card is one tap target and opens the company; it contains no Buy control.
 - A company appears once even when Warren knows about multiple spot tokens, venues, or
   future capabilities for it.
-- Company ordering is curated and deterministic for this milestone; live ranking or
-  personalization is not required.
+- The backend applies mover ordering with deterministic company-name and asset-ID
+  tie-breaks. The client does not present the ranking as an executable quote or a
+  personalized recommendation.
 - Returning from company detail restores Home's selected mode, horizontal page, search
   state when appropriate, and vertical scroll position.
 
@@ -263,6 +276,8 @@ nothing is not acceptable.
 - Home, Markets, and Profile are the only primary tabs in this milestone.
 - Home clearly exposes its selected state.
 - The navigation remains reachable without covering the final disclosure or content.
+- The tab bar reserves the device bottom safe-area inset so it does not touch or compete
+  with Android system navigation controls.
 - Markets and Profile behavior is owned by their respective modules.
 
 ## 11. Content and Data Model
@@ -493,13 +508,15 @@ Supported query parameters:
 | --- | --- | --- |
 | `q` | Optional, trimmed, 1–80 characters | Match company name, public ticker, or known supported token symbol. |
 | `view` | `all` or `earnings`; default `all` | Select the normal catalogue or companies with upcoming earnings. |
+| `sort` | `catalog`, `change_desc`, or `change_asc`; default `catalog` | Select provider catalogue order or a complete-catalogue 1-day mover ranking. |
 | `ids` | Optional comma-separated asset IDs, maximum 50 | Resolve a locally supplied watchlist without storing or modifying it. |
 | `cursor` | Optional opaque cursor returned by the API | Request the next stable page. |
 | `limit` | Optional integer, 1–36; default 24 | Bound the result page. |
 
-`q` and `ids` cannot be combined. Invalid combinations return the standard `400
-INVALID_REQUEST` response. An unknown search or an empty watchlist returns `200` with an
-empty `items` array; it is not an error.
+`q` and `ids` cannot be combined. Movement sorting cannot be combined with `ids` or the
+date-ordered Earnings view. Invalid combinations return the standard `400 INVALID_REQUEST`
+response. An unknown search or an empty watchlist returns `200` with an empty `items`
+array; it is not an error.
 
 The earnings view defaults to the next 30 calendar days and orders known dates from
 soonest to latest. Items without a verified earnings date are excluded.
@@ -512,6 +529,7 @@ Example response shape:
   "query": {
     "q": "nvda",
     "view": "all",
+    "sort": "catalog",
     "ids": []
   },
   "items": [
@@ -610,7 +628,7 @@ Gate A is complete only when all of the following pass:
 - [x] `GET /v1/home` returns a schema-valid public bootstrap response without requiring
       authentication or a wallet.
 - [x] `GET /v1/assets` supports catalogue paging, company/ticker/token-symbol search,
-      earnings view, and ordered ID resolution.
+      earnings view, ordered ID resolution, and ascending/descending 1-day movement.
 - [x] The same underlying company is returned once even when multiple providers,
       instruments, or Solana mints exist.
 - [x] Search matching is case-insensitive, trims whitespace, and returns an empty success
@@ -652,6 +670,8 @@ Gate A is complete only when all of the following pass:
 - [ ] Market status and data freshness/sample state are visible and unambiguous.
 - [ ] Search finds companies by name, public ticker, and known supported token symbol.
 - [ ] Search never renders multiple Home results for the same underlying company.
+- [ ] Home search matches the Markets search height and compact icon/text spacing while
+      the All/Saved/Earnings control keeps its compact fixed-width layout.
 - [ ] All, Watchlist, and Earnings are mutually exclusive and render their correct data
       or specific empty state.
 - [ ] The index strip scrolls horizontally, never auto-scrolls, and its items are not
@@ -660,6 +680,9 @@ Gate A is complete only when all of the following pass:
       default supported phone size and snaps between horizontal pages.
 - [ ] Every company card follows the approved left/right content structure and opens the
       correct read-only company detail.
+- [ ] Top gainers is the default All-mode ranking; Top losers reverses the movement order,
+      missing movements are excluded, no volume filter is applied, and changing rank
+      returns to page one.
 - [ ] Returning from company detail restores the Home context and scroll position.
 - [ ] Main Actions and Quick Actions are present but have no button semantics, press
       feedback, navigation, authentication, or financial behavior.
@@ -673,6 +696,7 @@ Gate A is complete only when all of the following pass:
       available Home content.
 - [ ] The screen passes keyboard/screen-reader semantics, dynamic type, 44-point target,
       contrast, and Reduce Motion checks on the supported device baseline.
+- [ ] The bottom tab bar clears the Android/iOS system-navigation safe area.
 - [ ] Home contains no provider API key or direct provider-specific response handling.
 
 Gate B also requires the frontend to use the validated Warren API contract without

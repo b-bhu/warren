@@ -8,12 +8,7 @@ import {
   useLoginWithSiws,
   usePrivy,
 } from '@privy-io/expo';
-import {
-  SolanaMobileWalletAdapterErrorCode,
-  transact,
-  type AppIdentity,
-} from '@solana-mobile/mobile-wallet-adapter-protocol';
-import { base64FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
+import type { AppIdentity } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import { getAddressCodec, getBase64Encoder } from '@solana/kit';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -27,6 +22,8 @@ type PrivyEntryProps = {
 };
 
 const CANCELLED_AUTH = /association cancelled|plugin closed|user rejected|user denied|request rejected|cancell?ed/i;
+const MWA_ASSOCIATION_CANCELLED = 'ERROR_ASSOCIATION_CANCELLED';
+const MWA_WALLET_NOT_FOUND = 'ERROR_WALLET_NOT_FOUND';
 const SESSION_RECONCILIATION_TIMEOUT_MS = 12_000;
 const WALLET_PREPARATION_TIMEOUT_MS = 25_000;
 const DEFAULT_DEVELOPMENT_APP_URL = 'https://warren.test';
@@ -109,6 +106,13 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
     setActiveProvider('external-wallet');
 
     try {
+      // Expo Router evaluates every route module during startup. Loading MWA at module
+      // scope would therefore require its native TurboModule even for guest-only screens
+      // in Expo Go. Resolve it only when an external-wallet action is actually requested.
+      const [{ transact }, { base64FromUint8Array }] = await Promise.all([
+        import('@solana-mobile/mobile-wallet-adapter-protocol'),
+        import('@solana-mobile/mobile-wallet-adapter-protocol/encoding'),
+      ]);
       const authenticatedUser = await transact(async (wallet) => {
         const authorization = await wallet.authorize({
           chain: 'solana:mainnet',
@@ -344,7 +348,7 @@ function friendlyAuthError(
   method?: 'Email' | 'Wallet',
   code?: string,
 ) {
-  if (code === SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND) {
+  if (code === MWA_WALLET_NOT_FOUND) {
     return 'No compatible Solana wallet was found. Install an MWA-compatible wallet and try again.';
   }
   if (/network|fetch|offline|internet/i.test(message)) {
@@ -397,7 +401,7 @@ function errorCode(error: unknown) {
 }
 
 function isCancelledWalletAuth(error: unknown, message: string) {
-  return errorCode(error) === SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED
+  return errorCode(error) === MWA_ASSOCIATION_CANCELLED
     || CANCELLED_AUTH.test(message);
 }
 

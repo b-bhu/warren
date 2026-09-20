@@ -11,6 +11,13 @@ const configSchema = z.object({
   HOME_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(250).max(30_000).default(5_000),
   HOME_CATALOG_CACHE_SECONDS: z.coerce.number().int().min(1).default(60), HOME_CATALOG_STALE_SECONDS: z.coerce.number().int().min(0).default(900),
   HOME_HTTP_CACHE_SECONDS: z.coerce.number().int().min(0).default(15), HOME_HTTP_STALE_SECONDS: z.coerce.number().int().min(0).default(60),
+  PRESTOCKS_API_URL: z.string().url().default('https://prestocks.com/api/prestocks'),
+  PHOENIX_API_BASE_URL: z.string().url().default('https://perp-api.phoenix.trade'),
+  MARKETS_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(250).max(30_000).default(8_000),
+  MARKETS_REGISTRY_CACHE_SECONDS: z.coerce.number().int().min(1).default(60),
+  MARKETS_REGISTRY_STALE_SECONDS: z.coerce.number().int().min(0).default(900),
+  MARKETS_HTTP_CACHE_SECONDS: z.coerce.number().int().min(0).default(15),
+  MARKETS_HTTP_STALE_SECONDS: z.coerce.number().int().min(0).default(60),
 });
 export type Config = z.infer<typeof configSchema>;
 export const readConfig = (env: NodeJS.ProcessEnv = process.env): Config => {

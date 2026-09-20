@@ -58,6 +58,9 @@ function config(databaseFile: string, overrides: Partial<Config> = {}): Config {
     EVM_SUPPORTED_CHAIN_IDS: '1', SOLANA_SUPPORTED_CLUSTERS: 'devnet', CORS_ORIGINS: 'https://warren.test', RATE_LIMIT_MAX: 60, RATE_LIMIT_WINDOW_SECONDS: 60,
     TOKENS_API_BASE_URL: 'https://tokens.test', HOME_PROVIDER_TIMEOUT_MS: 5_000,
     HOME_CATALOG_CACHE_SECONDS: 60, HOME_CATALOG_STALE_SECONDS: 900, HOME_HTTP_CACHE_SECONDS: 15, HOME_HTTP_STALE_SECONDS: 60,
+    PRESTOCKS_API_URL: 'https://prestocks.test/api/prestocks', PHOENIX_API_BASE_URL: 'https://phoenix.test',
+    MARKETS_PROVIDER_TIMEOUT_MS: 8_000, MARKETS_REGISTRY_CACHE_SECONDS: 60, MARKETS_REGISTRY_STALE_SECONDS: 900,
+    MARKETS_HTTP_CACHE_SECONDS: 15, MARKETS_HTTP_STALE_SECONDS: 60,
     ...overrides,
   };
 }
@@ -103,6 +106,29 @@ test('home bootstrap is public, schema-valid, cacheable, and conditionally reval
     const second = await get(env.app, '/v1/home', { 'if-none-match': String(first.response.headers.etag) });
     assert.equal(second.response.statusCode, 304);
     assert.equal(second.response.payload, '');
+  } finally { await env.close(); }
+});
+
+test('Home and mover queries rank the full catalogue by 24-hour percentage change without a volume filter', async () => {
+  const env = setup({ companies: [
+    company({ assetId: 'gain-five', companyName: 'Gain Five', changePercent: 5 }),
+    company({ assetId: 'loss-twenty', companyName: 'Loss Twenty', changePercent: -20 }),
+    company({ assetId: 'gain-ten', companyName: 'Gain Ten', changePercent: 10 }),
+    company({ assetId: 'loss-two', companyName: 'Loss Two', changePercent: -2 }),
+    company({ assetId: 'missing-change', companyName: 'Missing Change', changePercent: null, changeAsOf: null, changeDataState: 'unavailable' }),
+  ] });
+  try {
+    const home = await get(env.app, '/v1/home');
+    assert.deepEqual(home.body.companies.map((item: CompanySummary) => item.assetId), [
+      'gain-ten', 'gain-five', 'loss-two', 'loss-twenty',
+    ]);
+
+    const losers = await get(env.app, '/v1/assets?sort=change_asc&limit=24');
+    const parsed = assetsResponseSchema.parse(losers.body);
+    assert.equal(parsed.query.sort, 'change_asc');
+    assert.deepEqual(parsed.items.map((item) => item.assetId), [
+      'loss-twenty', 'loss-two', 'gain-five', 'gain-ten',
+    ]);
   } finally { await env.close(); }
 });
 
@@ -153,6 +179,8 @@ test('assets pagination uses a validated opaque cursor without duplicates', asyn
     const invalid = await get(env.app, '/v1/assets?cursor=bm90LWEtY3Vyc29y');
     assert.equal(invalid.response.statusCode, 400);
     assert.equal(homeApiErrorSchema.parse(invalid.body).error.code, 'INVALID_REQUEST');
+    const mismatchedSort = await get(env.app, `/v1/assets?sort=change_desc&cursor=${first.body.pageInfo.nextCursor}`);
+    assert.equal(mismatchedSort.response.statusCode, 400);
   } finally { await env.close(); }
 });
 
@@ -196,10 +224,13 @@ test('invalid catalogue query combinations return the shared error shape', async
       '/v1/assets?limit=0',
       '/v1/assets?limit=37',
       '/v1/assets?view=bad',
+      '/v1/assets?sort=bad',
       '/v1/assets?ids=bad%20id',
       `/v1/assets?ids=${tooManyIds}`,
       '/v1/assets?q=nvda&ids=nvidia',
       '/v1/assets?ids=nvidia&cursor=eyJ2IjoxLCJvZmZzZXQiOjF9',
+      '/v1/assets?ids=nvidia&sort=change_desc',
+      '/v1/assets?view=earnings&sort=change_asc',
     ]) {
       const result = await get(env.app, url);
       assert.equal(result.response.statusCode, 400);
