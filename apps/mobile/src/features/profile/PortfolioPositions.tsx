@@ -46,6 +46,15 @@ type PositionDetail =
   | { kind: 'position'; value: PortfolioPosition }
   | null;
 
+type PositionFilter = 'all' | 'holdings' | 'perpetuals' | 'orders';
+
+const POSITION_FILTERS: { label: string; value: PositionFilter }[] = [
+  { label: 'All', value: 'all' },
+  { label: 'Holdings', value: 'holdings' },
+  { label: 'Perpetuals', value: 'perpetuals' },
+  { label: 'Orders', value: 'orders' },
+];
+
 export function PortfolioPositions({
   getAccessToken,
   onOpenCompany,
@@ -147,6 +156,8 @@ function PositionsContent({
 }) {
   const theme = useTheme();
   const [detail, setDetail] = useState<PositionDetail>(null);
+  const [filter, setFilter] = useState<PositionFilter>('all');
+  const gainColor = theme.canvas === '#131918' ? '#8BC4A1' : '#286440';
   const pnlPositive = (data.summary.unrealizedPnlUsd.amount ?? 0) >= 0;
   const hasPhoenixRecovery = data.perpetuals.accountState !== 'ready';
   const visibleWarnings = data.warnings.filter((warning) => !isPhoenixRecoveryWarning(warning));
@@ -164,7 +175,24 @@ function PositionsContent({
 
   return (
     <>
-      {presentationState === 'full' ? <View style={[styles.exposureBlock, { backgroundColor: theme.surface }]}>
+      <View accessibilityLabel="Position categories" accessibilityRole="tablist" style={styles.positionFilters}>
+        {POSITION_FILTERS.map((option) => (
+          <Pressable
+            accessibilityRole="tab"
+            accessibilityState={{ selected: filter === option.value }}
+            key={option.value}
+            onPress={() => setFilter(option.value)}
+            style={({ pressed }) => [
+              styles.positionFilter,
+              { backgroundColor: filter === option.value ? theme.proofWash : 'transparent', borderColor: filter === option.value ? theme.proof : `${theme.muted}33` },
+              pressed && styles.rowPressed,
+            ]}>
+            <Text style={[styles.positionFilterText, { color: filter === option.value ? theme.proof : theme.muted }]}>{option.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {presentationState === 'full' && (filter === 'all' || filter === 'perpetuals') ? <View style={styles.exposureBlock}>
         <View style={styles.exposureHeading}>
           <View style={styles.exposureCopy}>
             <Text accessibilityRole="header" style={[styles.exposureTitle, { color: theme.ink }]}>Current exposure</Text>
@@ -174,9 +202,9 @@ function PositionsContent({
             <Text style={[styles.textButton, { color: theme.proof }]}>{refreshing ? 'Refreshing…' : 'Refresh'}</Text>
           </Pressable>
         </View>
-        <View style={styles.summaryGrid}>
+        <View style={[styles.summaryGrid, { backgroundColor: theme.surface, borderColor: `${theme.muted}33` }]}>
           <SummaryMetric
-            color={data.summary.unrealizedPnlUsd.amount === null ? theme.muted : pnlPositive ? theme.proof : theme.caution}
+            color={data.summary.unrealizedPnlUsd.amount === null ? theme.muted : pnlPositive ? gainColor : theme.caution}
             label="Unrealized PnL"
             state={data.summary.unrealizedPnlUsd.dataState}
             value={formatPortfolioMoney(data.summary.unrealizedPnlUsd, { signed: true })}
@@ -209,31 +237,31 @@ function PositionsContent({
         </View>
       ) : null}
 
-      <Section count={countLabel(data.openOrders.length, 'order')} title="Open orders">
+      {filter === 'all' || filter === 'orders' ? <Section count={countLabel(data.openOrders.length, 'order')} title="Open orders">
         {data.openOrders.length
           ? data.openOrders.map((order) => <OrderRow key={order.orderId} onPress={() => setDetail({ kind: 'order', value: order })} order={order} />)
           : <EmptyRow message="No orders waiting to fill · not counted as positions" />}
-      </Section>
+      </Section> : null}
 
-      <Section count={countLabel(data.openPositions.length, 'perpetual')} title="Open positions">
+      {filter === 'all' || filter === 'perpetuals' ? <Section count={countLabel(data.openPositions.length, 'perpetual')} title="Open positions">
         {data.openPositions.length
           ? data.openPositions.map((position) => <PositionCard key={position.positionId} onPress={() => setDetail({ kind: 'position', value: position })} position={position} />)
           : <EmptyRow message="No open Phoenix stock positions" />}
-      </Section>
+      </Section> : null}
 
-      <Section count={holdingsCountLabel(data)} title="Holdings">
+      {filter === 'all' || filter === 'holdings' ? <Section count={holdingsCountLabel(data)} title="Holdings">
         {data.holdings.length
-          ? <View style={[styles.register, { borderTopColor: theme.outline }]}>{data.holdings.map((holding) => <HoldingRow holding={holding} key={holding.holdingId} onPress={() => onOpenCompany(holding.assetId)} />)}</View>
+          ? <View style={[styles.register, { borderTopColor: `${theme.muted}33` }]}>{data.holdings.map((holding) => <HoldingRow holding={holding} key={holding.holdingId} onPress={() => onOpenCompany(holding.assetId)} />)}</View>
           : <EmptyRow message="No supported Spot or PreStock holdings" />}
-      </Section>
+      </Section> : null}
 
-      <Section count={countLabel(data.cashBalances.length, 'balance')} title="Cash & network balance">
+      {filter === 'all' || filter === 'holdings' ? <Section count={countLabel(data.cashBalances.length, 'balance')} title="Cash & network balance">
         {data.cashBalances.length
-          ? <View style={[styles.register, { borderTopColor: theme.outline }]}>{data.cashBalances.map((balance) => <CashRow balance={balance} key={balance.cashId} />)}</View>
+          ? <View style={[styles.register, { borderTopColor: `${theme.muted}33` }]}>{data.cashBalances.map((balance) => <CashRow balance={balance} key={balance.cashId} />)}</View>
           : <EmptyRow message="No cash or network balance yet" />}
-      </Section>
+      </Section> : null}
 
-      <Text style={[styles.disclosure, { color: theme.muted }]}>Position and order details are read-only. Warren does not expose lifecycle controls until their complete execution contracts are available.</Text>
+      <Text style={[styles.disclosure, { color: theme.muted }]}>Position and order details are read-only in this release.</Text>
 
       <PositionDetailSheet detail={detail} onClose={() => setDetail(null)} />
     </>
@@ -302,7 +330,7 @@ function OrderRow({ onPress, order }: { onPress: () => void; order: PortfolioOrd
       accessibilityLabel={`View ${order.companyName} open order`}
       accessibilityRole="button"
       onPress={onPress}
-      style={({ pressed }) => [styles.orderRow, { borderColor: theme.outline }, pressed && styles.rowPressed]}>
+      style={({ pressed }) => [styles.orderRow, { borderColor: `${theme.muted}33` }, pressed && styles.rowPressed]}>
       <Logo logoUrl={order.logoUrl} name={order.companyName} />
       <View style={styles.rowCopy}>
         <Text style={[styles.rowTitle, { color: theme.ink }]}>{capitalize(order.side)} {order.companyName} perpetual</Text>
@@ -315,13 +343,14 @@ function OrderRow({ onPress, order }: { onPress: () => void; order: PortfolioOrd
 
 function PositionCard({ onPress, position }: { onPress: () => void; position: PortfolioPosition }) {
   const theme = useTheme();
+  const gainColor = theme.canvas === '#131918' ? '#8BC4A1' : '#286440';
   const pnlPositive = (position.unrealizedPnlUsd ?? 0) >= 0;
   return (
     <Pressable
       accessibilityLabel={`View ${position.companyName} ${position.direction} position`}
       accessibilityRole="button"
       onPress={onPress}
-      style={({ pressed }) => [styles.positionCard, { backgroundColor: theme.surface }, pressed && styles.rowPressed]}>
+      style={({ pressed }) => [styles.positionCard, { backgroundColor: theme.surface, borderColor: `${theme.muted}33` }, pressed && styles.rowPressed]}>
       <View style={styles.positionHeader}>
         <Logo logoUrl={position.logoUrl} name={position.companyName} />
         <View style={styles.rowCopy}>
@@ -331,13 +360,14 @@ function PositionCard({ onPress, position }: { onPress: () => void; position: Po
         <View style={[styles.statusBadge, { backgroundColor: theme.proofWash }]}><Text style={[styles.statusText, { color: theme.proof }]}>Open</Text></View>
       </View>
       <View style={styles.positionNumbers}>
-        <Text style={[styles.positionPnl, { color: position.unrealizedPnlUsd === null ? theme.muted : pnlPositive ? theme.proof : theme.caution }]}>{formatNullableUsd(position.unrealizedPnlUsd, { signed: true })}{position.unrealizedPnlPercent === null ? '' : ` · ${signedPercent(position.unrealizedPnlPercent)}`}</Text>
-        <Text style={[styles.positionExposure, { color: theme.ink }]}>{formatNullableUsd(position.notionalUsd)} exposure</Text>
-      </View>
-      <View style={styles.factGrid}>
-        <Fact label="Entry" value={formatNullableUsd(position.entryPriceUsd)} />
-        <Fact label="Mark" value={formatNullableUsd(position.markPriceUsd)} />
-        <Fact label="Collateral" value={formatNullableUsd(position.collateralUsd)} />
+        <View style={styles.positionPnlGroup}>
+          <Text adjustsFontSizeToFit minimumFontScale={0.75} numberOfLines={1} style={[styles.positionPnl, { color: position.unrealizedPnlUsd === null ? theme.muted : pnlPositive ? gainColor : theme.caution }]}>{formatNullableUsd(position.unrealizedPnlUsd, { signed: true })}</Text>
+          {position.unrealizedPnlPercent === null ? null : <Text numberOfLines={1} style={[styles.positionPnlPercent, { color: position.unrealizedPnlUsd === null ? theme.muted : pnlPositive ? gainColor : theme.caution }]}>· {signedPercent(position.unrealizedPnlPercent)}</Text>}
+        </View>
+        <View style={styles.positionExposure}>
+          <Text adjustsFontSizeToFit minimumFontScale={0.8} numberOfLines={1} style={[styles.positionExposureValue, { color: theme.ink }]}>{formatNullableUsd(position.notionalUsd)}</Text>
+          <Text style={[styles.positionExposureLabel, { color: theme.muted }]}>exposure</Text>
+        </View>
       </View>
       <Text style={[styles.riskLine, { color: theme.muted }]}>Liquidation {liquidationSummary(position)} · {fundingSummary(position)}</Text>
       <Text style={[styles.viewDetail, { color: theme.proof }]}>View position</Text>
@@ -345,17 +375,13 @@ function PositionCard({ onPress, position }: { onPress: () => void; position: Po
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
-  const theme = useTheme();
-  return <View style={styles.fact}><Text style={[styles.factLabel, { color: theme.muted }]}>{label}</Text><Text style={[styles.factValue, { color: theme.ink }]}>{value}</Text></View>;
-}
-
 function HoldingRow({ holding, onPress }: { holding: PortfolioHolding; onPress: () => void }) {
   const theme = useTheme();
+  const gainColor = theme.canvas === '#131918' ? '#8BC4A1' : '#286440';
   const unpriced = !holding.valuationIncluded || holding.marketValueUsd.amount === null;
   const positive = (holding.changePercent.value ?? 0) >= 0;
   return (
-    <Pressable accessibilityLabel={`Open ${holding.companyName} holding`} accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.registerRow, { borderBottomColor: theme.outline }, pressed && styles.rowPressed]}>
+    <Pressable accessibilityLabel={`Open ${holding.companyName} holding`} accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.registerRow, { borderBottomColor: `${theme.muted}33` }, pressed && styles.rowPressed]}>
       <Logo logoUrl={holding.logoUrl} name={holding.companyName} />
       <View style={styles.rowCopy}>
         <Text numberOfLines={1} style={[styles.rowTitle, { color: theme.ink }]}>{holding.companyName}</Text>
@@ -363,7 +389,7 @@ function HoldingRow({ holding, onPress }: { holding: PortfolioHolding; onPress: 
       </View>
       <View style={styles.registerValue}>
         <Text style={[styles.registerAmount, { color: theme.ink }]}>{unpriced ? 'Unpriced' : formatPortfolioMoney(holding.marketValueUsd)}</Text>
-        <Text style={[styles.registerMeta, { color: unpriced || holding.changePercent.value === null ? theme.muted : positive ? theme.proof : theme.caution }]}>{unpriced ? 'Excluded from equity' : formatPortfolioPercent(holding.changePercent, { signed: true })}</Text>
+        <Text style={[styles.registerMeta, { color: unpriced || holding.changePercent.value === null ? theme.muted : positive ? gainColor : theme.caution }]}>{unpriced ? 'Excluded from equity' : formatPortfolioPercent(holding.changePercent, { signed: true })}</Text>
       </View>
     </Pressable>
   );
@@ -372,7 +398,7 @@ function HoldingRow({ holding, onPress }: { holding: PortfolioHolding; onPress: 
 function CashRow({ balance }: { balance: PortfolioCashBalance }) {
   const theme = useTheme();
   return (
-    <View style={[styles.registerRow, { borderBottomColor: theme.outline }]}>
+    <View style={[styles.registerRow, { borderBottomColor: `${theme.muted}33` }]}>
       <View style={[styles.cashLogo, { backgroundColor: theme.proofWash }]}><Text style={[styles.cashLogoText, { color: theme.proof }]}>{balance.symbol}</Text></View>
       <View style={styles.rowCopy}>
         <Text style={[styles.rowTitle, { color: theme.ink }]}>{balance.label}</Text>
@@ -399,7 +425,7 @@ function Logo({ logoUrl, name }: { logoUrl: string | null; name: string }) {
 
 function EmptyRow({ message }: { message: string }) {
   const theme = useTheme();
-  return <View style={[styles.emptyRow, { borderColor: theme.outline }]}><Text style={[styles.emptyRowText, { color: theme.muted }]}>{message}</Text></View>;
+  return <View style={[styles.emptyRow, { borderColor: `${theme.muted}33` }]}><Text style={[styles.emptyRowText, { color: theme.muted }]}>{message}</Text></View>;
 }
 
 function PositionDetailSheet({ detail, onClose }: { detail: PositionDetail; onClose: () => void }) {
@@ -410,7 +436,7 @@ function PositionDetailSheet({ detail, onClose }: { detail: PositionDetail; onCl
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent visible={detail !== null}>
       <View style={styles.modalLayer}>
         <Pressable accessibilityLabel="Close details" accessibilityRole="button" onPress={onClose} style={styles.backdrop} />
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.sheet, { backgroundColor: theme.surface }]}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.sheet, { backgroundColor: theme.canvas, borderTopColor: theme.outline }]}>
           <View style={[styles.sheetHandle, { backgroundColor: theme.outline }]} />
           <View style={styles.sheetHeader}>
             <View style={styles.sheetTitleRow}>
@@ -473,7 +499,7 @@ function DetailIdentity({ logoUrl, name, subtitle }: { logoUrl: string | null; n
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   const theme = useTheme();
-  return <View style={[styles.detailRow, { borderBottomColor: theme.outline }]}><Text style={[styles.detailLabel, { color: theme.muted }]}>{label}</Text><Text selectable style={[styles.detailValue, { color: theme.ink }]}>{value}</Text></View>;
+  return <View style={[styles.detailRow, { borderBottomColor: `${theme.muted}33` }]}><Text style={[styles.detailLabel, { color: theme.muted }]}>{label}</Text><Text selectable style={[styles.detailValue, { color: theme.ink }]}>{value}</Text></View>;
 }
 
 function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
@@ -516,16 +542,19 @@ const styles = StyleSheet.create({
   emptyKicker: { fontFamily: Fonts.mono, fontSize: 10, fontWeight: '700', letterSpacing: 0.75 },
   cleanEmptyTitle: { fontFamily: Fonts.sans, fontSize: 27, fontWeight: '800', letterSpacing: -1.3, marginTop: 10 },
   cleanEmptyBody: { fontFamily: Fonts.sans, fontSize: 13, lineHeight: 20, marginTop: 9, maxWidth: 345 },
-  exposureBlock: { borderRadius: 20, marginTop: 18, padding: 17 },
+  positionFilters: { flexDirection: 'row', gap: 5, paddingTop: 16 },
+  positionFilter: { alignItems: 'center', borderRadius: 10, borderWidth: 1, flex: 1, justifyContent: 'center', minHeight: 40, minWidth: 0, paddingHorizontal: 8 },
+  positionFilterText: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '500' },
+  exposureBlock: { marginTop: 18 },
   exposureHeading: { alignItems: 'flex-start', flexDirection: 'row', gap: 12, justifyContent: 'space-between' },
   exposureCopy: { flex: 1, minWidth: 0 },
-  exposureTitle: { fontFamily: Fonts.sans, fontSize: 19, fontWeight: '800', letterSpacing: -0.6 },
+  exposureTitle: { fontFamily: Fonts.sans, fontSize: 17, fontWeight: '500', letterSpacing: -0.4 },
   exposureBody: { fontFamily: Fonts.sans, fontSize: 11, lineHeight: 17, marginTop: 5 },
   textButton: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '800' },
-  summaryGrid: { flexDirection: 'row', gap: 22, marginTop: 20 },
+  summaryGrid: { borderRadius: 12, borderWidth: 1, flexDirection: 'row', gap: 20, marginTop: 10, padding: 14 },
   summaryMetric: { flex: 1 },
   metricLabel: { fontFamily: Fonts.sans, fontSize: 10 },
-  metricValue: { fontFamily: Fonts.mono, fontSize: 18, fontWeight: '700', marginTop: 5 },
+  metricValue: { fontFamily: Fonts.mono, fontSize: 18, fontWeight: '500', marginTop: 5 },
   metricState: { fontFamily: Fonts.sans, fontSize: 9, fontWeight: '700', marginTop: 5, textTransform: 'uppercase' },
   updatedText: { fontFamily: Fonts.sans, fontSize: 9, lineHeight: 14, marginTop: 18 },
   noticeRow: { alignItems: 'center', borderRadius: 14, flexDirection: 'row', gap: 12, marginTop: 18, padding: 13 },
@@ -538,36 +567,36 @@ const styles = StyleSheet.create({
   emptyTitle: { fontFamily: Fonts.sans, fontSize: 15, fontWeight: '700' },
   emptyBody: { fontFamily: Fonts.sans, fontSize: 11, lineHeight: 17, marginTop: 5 },
   onboardingAction: { alignSelf: 'flex-start', marginTop: 14 },
-  section: { marginTop: 26 },
+  section: { marginTop: 20 },
   sectionHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, minHeight: 28 },
-  sectionTitle: { fontFamily: Fonts.sans, fontSize: 17, fontWeight: '700', letterSpacing: -0.4 },
+  sectionTitle: { fontFamily: Fonts.sans, fontSize: 17, fontWeight: '500', letterSpacing: -0.4 },
   sectionCount: { fontFamily: Fonts.sans, fontSize: 10 },
-  orderRow: { alignItems: 'center', borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 10, minHeight: 66, padding: 12 },
-  logo: { alignItems: 'center', borderRadius: 12, height: 40, justifyContent: 'center', overflow: 'hidden', width: 40 },
-  logoImage: { height: 40, width: 40 },
-  logoText: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '800' },
-  cashLogo: { alignItems: 'center', borderRadius: 12, height: 40, justifyContent: 'center', width: 40 },
+  orderRow: { alignItems: 'center', borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 10, minHeight: 66, padding: 11 },
+  logo: { alignItems: 'center', borderRadius: 10, height: 34, justifyContent: 'center', overflow: 'hidden', width: 34 },
+  logoImage: { height: 34, width: 34 },
+  logoText: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '500' },
+  cashLogo: { alignItems: 'center', borderRadius: 10, height: 34, justifyContent: 'center', width: 34 },
   cashLogoText: { fontFamily: Fonts.mono, fontSize: 9, fontWeight: '800' },
   rowCopy: { flex: 1, minWidth: 0 },
-  rowTitle: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '700' },
+  rowTitle: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '500' },
   rowSubtitle: { fontFamily: Fonts.sans, fontSize: 10, lineHeight: 15, marginTop: 4 },
   statusBadge: { borderRadius: 999, maxWidth: 92, paddingHorizontal: 9, paddingVertical: 5 },
   statusText: { fontFamily: Fonts.sans, fontSize: 9, fontWeight: '800' },
-  positionCard: { borderRadius: 17, marginBottom: 9, padding: 14 },
+  positionCard: { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, marginBottom: 9, padding: 14 },
   positionHeader: { alignItems: 'center', flexDirection: 'row', gap: 10 },
-  positionNumbers: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 },
-  positionPnl: { flex: 1, fontFamily: Fonts.mono, fontSize: 13, fontWeight: '700' },
-  positionExposure: { fontFamily: Fonts.mono, fontSize: 10 },
-  factGrid: { flexDirection: 'row', gap: 8, marginTop: 14 },
-  fact: { flex: 1 },
-  factLabel: { fontFamily: Fonts.sans, fontSize: 9 },
-  factValue: { fontFamily: Fonts.mono, fontSize: 10, fontWeight: '600', marginTop: 4 },
-  riskLine: { fontFamily: Fonts.sans, fontSize: 10, lineHeight: 15, marginTop: 13 },
-  viewDetail: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '800', marginTop: 12 },
+  positionNumbers: { alignItems: 'flex-start', flexDirection: 'row', gap: 10, justifyContent: 'space-between', marginTop: 15 },
+  positionPnlGroup: { alignItems: 'baseline', flex: 1, flexDirection: 'row', gap: 6, minWidth: 0 },
+  positionPnl: { flexShrink: 1, fontFamily: Fonts.mono, fontSize: 22, fontWeight: '500' },
+  positionPnlPercent: { flexShrink: 1, fontFamily: Fonts.mono, fontSize: 12, fontWeight: '500' },
+  positionExposure: { alignItems: 'flex-end', flexShrink: 1, maxWidth: 102, minWidth: 64 },
+  positionExposureValue: { fontFamily: Fonts.mono, fontSize: 10, textAlign: 'right' },
+  positionExposureLabel: { fontFamily: Fonts.sans, fontSize: 9, marginTop: 3 },
+  riskLine: { fontFamily: Fonts.sans, fontSize: 11, lineHeight: 18, marginTop: 13 },
+  viewDetail: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '500', marginTop: 12 },
   register: { borderTopWidth: StyleSheet.hairlineWidth },
-  registerRow: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 10, minHeight: 64, paddingVertical: 10 },
+  registerRow: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 10, minHeight: 66, paddingVertical: 10 },
   registerValue: { alignItems: 'flex-end', maxWidth: 122 },
-  registerAmount: { fontFamily: Fonts.mono, fontSize: 11, fontWeight: '700' },
+  registerAmount: { fontFamily: Fonts.mono, fontSize: 13, fontWeight: '500' },
   registerMeta: { fontFamily: Fonts.sans, fontSize: 9, marginTop: 4, textAlign: 'right' },
   emptyRow: { alignItems: 'center', borderRadius: 14, borderStyle: 'dashed', borderWidth: StyleSheet.hairlineWidth, justifyContent: 'center', minHeight: 58, padding: 12 },
   emptyRowText: { fontFamily: Fonts.sans, fontSize: 11 },
@@ -576,11 +605,11 @@ const styles = StyleSheet.create({
   primaryButtonText: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '800' },
   modalLayer: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(3,7,6,0.76)' },
-  sheet: { borderTopLeftRadius: 26, borderTopRightRadius: 26, maxHeight: '88%', paddingBottom: 8, paddingHorizontal: 20, paddingTop: 10 },
+  sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, maxHeight: '88%', paddingBottom: 8, paddingHorizontal: 20, paddingTop: 10 },
   sheetHandle: { alignSelf: 'center', borderRadius: 2, height: 4, marginBottom: 14, width: 40 },
   sheetHeader: { alignItems: 'center', flexDirection: 'row', gap: 12, justifyContent: 'space-between' },
-  sheetTitleRow: { alignItems: 'center', flexDirection: 'row', flexShrink: 1, gap: 9 },
-  sheetTitle: { fontFamily: Fonts.sans, fontSize: 22, fontWeight: '800', letterSpacing: -0.8 },
+  sheetTitleRow: { alignItems: 'center', flex: 1, flexDirection: 'row', flexShrink: 1, gap: 9, minWidth: 0 },
+  sheetTitle: { flexShrink: 1, fontFamily: Fonts.sans, fontSize: 21, fontWeight: '500', letterSpacing: -0.6 },
   readOnlyBadge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5 },
   readOnlyText: { fontFamily: Fonts.sans, fontSize: 8, fontWeight: '800', textTransform: 'uppercase' },
   closeButton: { alignItems: 'center', borderRadius: 14, height: 44, justifyContent: 'center', width: 44 },

@@ -16,6 +16,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -82,6 +83,7 @@ export function PortfolioActivity({
   walletAddress: string;
 }) {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [kind, setKind] = useState<ActivityFilters['kind']>('all');
@@ -245,7 +247,7 @@ export function PortfolioActivity({
   return (
     <View style={styles.screen}>
       <FlatList
-        contentContainerStyle={[styles.listContent, rows.length === 0 && styles.emptyListContent]}
+        contentContainerStyle={[styles.listContent, { paddingHorizontal: width < 360 ? 14 : 18 }, rows.length === 0 && styles.emptyListContent]}
         data={rows}
         initialNumToRender={14}
         keyboardDismissMode="on-drag"
@@ -336,7 +338,7 @@ function ActivityHeader({
   const theme = useTheme();
   return (
     <View>
-      <View style={[styles.searchField, { backgroundColor: theme.surface, borderColor: theme.outline }]}>
+      <View style={[styles.searchField, { backgroundColor: theme.surface, borderColor: `${theme.muted}33` }]}>
         <SearchIcon color={theme.muted} />
         <TextInput
           accessibilityLabel="Search Portfolio activity"
@@ -361,12 +363,12 @@ function ActivityHeader({
         ))}
       </ScrollView>
 
-      <View style={styles.toolRow}>
-        <View style={[styles.walletScope, { borderColor: theme.outline }]}>
+      <View style={[styles.toolRow, { borderBottomColor: `${theme.muted}33` }]}>
+        <View style={styles.walletScope}>
           <View style={[styles.walletDot, { backgroundColor: theme.proof }]} />
           <Text numberOfLines={1} style={[styles.walletScopeText, { color: theme.muted }]}>Active wallet {shortAddress(walletAddress)}</Text>
         </View>
-        <Pressable accessibilityRole="button" onPress={onOpenStatus} style={({ pressed }) => [styles.statusFilter, { borderColor: theme.outline }, pressed && styles.pressed]}>
+        <Pressable accessibilityRole="button" onPress={onOpenStatus} style={({ pressed }) => [styles.statusFilter, pressed && styles.pressed]}>
           <Text style={[styles.statusFilterText, { color: theme.ink }]}>{statusFilterLabel(filters.status)} ▾</Text>
         </Pressable>
       </View>
@@ -384,7 +386,7 @@ function FilterChip({ active, label, onPress }: { active: boolean; label: string
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      style={({ pressed }) => [styles.filterChip, { backgroundColor: active ? theme.proofWash : 'transparent', borderColor: active ? theme.proof : theme.outline }, pressed && styles.pressed]}>
+      style={({ pressed }) => [styles.filterChip, { backgroundColor: active ? theme.proofWash : 'transparent', borderColor: active ? theme.proof : `${theme.muted}33` }, pressed && styles.pressed]}>
       <Text style={[styles.filterChipText, { color: active ? theme.proof : theme.muted }]}>{label}</Text>
     </Pressable>
   );
@@ -414,7 +416,7 @@ function ActivityRow({ item, onPress }: { item: PortfolioActivityItem; onPress: 
       accessibilityLabel={`View ${item.title}, ${activityStatusLabel(item.status)}`}
       accessibilityRole="button"
       onPress={onPress}
-      style={({ pressed }) => [styles.activityRow, { borderBottomColor: theme.outline }, pressed && styles.rowPressed]}>
+      style={({ pressed }) => [styles.activityRow, { borderBottomColor: `${theme.muted}33` }, pressed && styles.rowPressed]}>
       <View style={[styles.activityIcon, { backgroundColor: item.kind === 'perpetual' || item.kind === 'funding' ? theme.proofWash : theme.surface }]}>
         <Text style={[styles.activityIconText, { color: item.kind === 'transfer' ? theme.muted : theme.proof }]}>{activityIcon(item)}</Text>
       </View>
@@ -443,7 +445,7 @@ function ActivityEmpty({
 }) {
   const theme = useTheme();
   if (loading) {
-    return <View accessibilityLiveRegion="polite" style={styles.emptyState}><ActivityIndicator color={theme.proof} size="small" /><Text style={[styles.emptyTitle, { color: theme.ink }]}>Loading activity</Text><Text style={[styles.emptyBody, { color: theme.muted }]}>Searching Warren-recognized wallet and Phoenix events.</Text></View>;
+    return <View accessibilityLiveRegion="polite" style={styles.emptyState}><ActivityIndicator color={theme.proof} size="small" /><Text style={[styles.emptyTitle, { color: theme.ink }]}>Loading activity</Text><Text style={[styles.emptyBody, { color: theme.muted }]}>Searching your wallet and Phoenix events.</Text></View>;
   }
   return (
     <View accessibilityLiveRegion="polite" style={styles.emptyState}>
@@ -461,8 +463,8 @@ function ActivityFooter({ error, hasNextPage, loading, onLoadMore }: { error?: s
   const theme = useTheme();
   if (loading) return <View style={styles.footer}><ActivityIndicator color={theme.proof} size="small" /><Text style={[styles.footerText, { color: theme.muted }]}>Loading earlier activity…</Text></View>;
   if (error) return <View style={styles.footer}><Text style={[styles.footerText, { color: theme.caution }]}>{error}</Text><Pressable accessibilityRole="button" onPress={onLoadMore}><Text style={[styles.noticeAction, { color: theme.proof }]}>Try again</Text></Pressable></View>;
-  if (!hasNextPage) return <Text style={[styles.endLabel, { color: theme.muted }]}>You’re caught up with Warren-recognized activity.</Text>;
-  return <Pressable accessibilityRole="button" onPress={onLoadMore} style={({ pressed }) => [styles.loadMore, { borderColor: theme.outline }, pressed && styles.pressed]}><Text style={[styles.loadMoreText, { color: theme.ink }]}>Load earlier activity</Text></Pressable>;
+  if (!hasNextPage) return <Text style={[styles.endLabel, { color: theme.muted }]}>You’re caught up with your activity.</Text>;
+  return <Pressable accessibilityRole="button" onPress={onLoadMore} style={({ pressed }) => [styles.loadMore, { borderColor: `${theme.muted}33` }, pressed && styles.pressed]}><Text style={[styles.loadMoreText, { color: theme.ink }]}>Load earlier activity</Text></Pressable>;
 }
 
 function StatusFilterSheet({
@@ -481,23 +483,23 @@ function StatusFilterSheet({
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent visible={visible}>
       <View style={styles.modalLayer}>
         <Pressable accessibilityLabel="Close status filters" accessibilityRole="button" onPress={onClose} style={styles.backdrop} />
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.sheet, { backgroundColor: theme.surface }]}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.sheet, { backgroundColor: theme.canvas, borderTopColor: theme.outline }]}>
           <View style={[styles.sheetHandle, { backgroundColor: theme.outline }]} />
           <View style={styles.sheetHeader}>
             <Text accessibilityRole="header" style={[styles.sheetTitle, { color: theme.ink }]}>Activity status</Text>
             <CloseButton onPress={onClose} />
           </View>
-          <Text style={[styles.sheetCopy, { color: theme.muted }]}>Filter server-backed results by their latest known settlement state.</Text>
-          <View style={[styles.statusOptions, { borderTopColor: theme.outline }]}>
+          <Text style={[styles.sheetCopy, { color: theme.muted }]}>Filter activity by its latest known status.</Text>
+          <View style={[styles.statusOptions, { borderTopColor: `${theme.muted}33` }]}>
             {STATUS_FILTERS.map((option) => (
               <Pressable
                 accessibilityRole="button"
                 accessibilityState={{ selected: selected === option.value }}
                 key={option.value}
                 onPress={() => onSelect(option.value)}
-                style={({ pressed }) => [styles.statusOption, { borderBottomColor: theme.outline }, pressed && styles.pressed]}>
-                <Text style={[styles.statusOptionText, { color: theme.ink }]}>{option.label}</Text>
-                <Text style={[styles.statusOptionMark, { color: selected === option.value ? theme.proof : theme.muted }]}>{selected === option.value ? '●' : '○'}</Text>
+                style={({ pressed }) => [styles.statusOption, { borderBottomColor: `${theme.muted}33` }, pressed && styles.pressed]}>
+                <Text style={[styles.statusOptionText, { color: selected === option.value ? theme.proof : theme.ink }]}>{option.label}</Text>
+                <Text style={[styles.statusOptionMark, { color: selected === option.value ? theme.proof : theme.muted }]}>{selected === option.value ? '✓' : ''}</Text>
               </Pressable>
             ))}
           </View>
@@ -528,7 +530,7 @@ function ActivityDetailSheet({ item, onClose, walletAddress }: { item: Portfolio
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent visible={item !== null}>
       <View style={styles.modalLayer}>
         <Pressable accessibilityLabel="Close activity details" accessibilityRole="button" onPress={onClose} style={styles.backdrop} />
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.sheet, styles.detailSheet, { backgroundColor: theme.surface }]}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.sheet, styles.detailSheet, { backgroundColor: theme.canvas, borderTopColor: theme.outline }]}>
           <View style={[styles.sheetHandle, { backgroundColor: theme.outline }]} />
           <View style={styles.sheetHeader}>
             <Text accessibilityRole="header" numberOfLines={2} style={[styles.sheetTitle, styles.detailSheetTitle, { color: theme.ink }]}>{item?.title ?? 'Activity details'}</Text>
@@ -563,7 +565,7 @@ function ActivityDetailSheet({ item, onClose, walletAddress }: { item: Portfolio
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   const theme = useTheme();
-  return <View style={[styles.detailRow, { borderBottomColor: theme.outline }]}><Text style={[styles.detailLabel, { color: theme.muted }]}>{label}</Text><Text selectable style={[styles.detailValue, { color: theme.ink }]}>{value}</Text></View>;
+  return <View style={[styles.detailRow, { borderBottomColor: `${theme.muted}33` }]}><Text style={[styles.detailLabel, { color: theme.muted }]}>{label}</Text><Text selectable style={[styles.detailValue, { color: theme.ink }]}>{value}</Text></View>;
 }
 
 function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
@@ -573,7 +575,7 @@ function PrimaryButton({ label, onPress }: { label: string; onPress: () => void 
 
 function SecondaryButton({ label, onPress }: { label: string; onPress: () => void }) {
   const theme = useTheme();
-  return <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.secondaryButton, { borderColor: theme.outline }, pressed && styles.pressed]}><Text style={[styles.secondaryButtonText, { color: theme.ink }]}>{label}</Text></Pressable>;
+  return <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.secondaryButton, { borderColor: `${theme.muted}33` }, pressed && styles.pressed]}><Text style={[styles.secondaryButtonText, { color: theme.ink }]}>{label}</Text></Pressable>;
 }
 
 function CloseButton({ onPress }: { onPress: () => void }) {
@@ -635,28 +637,28 @@ const styles = StyleSheet.create({
   clearButton: { alignItems: 'center', height: 38, justifyContent: 'center', width: 38 },
   clearText: { fontFamily: Fonts.sans, fontSize: 22, lineHeight: 24 },
   filterStrip: { gap: 7, paddingBottom: 12, paddingTop: 12 },
-  filterChip: { alignItems: 'center', borderRadius: 999, borderWidth: 1, justifyContent: 'center', minHeight: 38, paddingHorizontal: 13 },
-  filterChipText: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '700' },
-  toolRow: { flexDirection: 'row', gap: 8, marginBottom: 4 },
-  walletScope: { alignItems: 'center', borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, flex: 1, flexDirection: 'row', gap: 7, minHeight: 42, paddingHorizontal: 11 },
+  filterChip: { alignItems: 'center', borderRadius: 10, borderWidth: 1, justifyContent: 'center', minHeight: 40, paddingHorizontal: 13 },
+  filterChipText: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '500' },
+  toolRow: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 8, minHeight: 50 },
+  walletScope: { alignItems: 'center', flex: 1, flexDirection: 'row', gap: 7, minHeight: 40 },
   walletDot: { borderRadius: 4, height: 7, width: 7 },
   walletScopeText: { flex: 1, fontFamily: Fonts.mono, fontSize: 9 },
-  statusFilter: { alignItems: 'center', borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, justifyContent: 'center', minHeight: 42, paddingHorizontal: 11 },
-  statusFilterText: { fontFamily: Fonts.sans, fontSize: 10, fontWeight: '700' },
+  statusFilter: { alignItems: 'center', justifyContent: 'center', minHeight: 40, paddingHorizontal: 0 },
+  statusFilterText: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '500' },
   notice: { alignItems: 'center', borderRadius: 13, flexDirection: 'row', gap: 10, marginTop: 8, padding: 11 },
   noticeText: { flex: 1, fontFamily: Fonts.sans, fontSize: 10, lineHeight: 15 },
   noticeAction: { fontFamily: Fonts.sans, fontSize: 10, fontWeight: '800' },
   dateHeader: { justifyContent: 'flex-end', minHeight: 47, paddingBottom: 8 },
   dateLabel: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase' },
-  activityRow: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 11, minHeight: 68, paddingVertical: 10 },
-  activityIcon: { alignItems: 'center', borderRadius: 12, height: 40, justifyContent: 'center', width: 40 },
+  activityRow: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 10, minHeight: 66, paddingVertical: 9 },
+  activityIcon: { alignItems: 'center', borderRadius: 10, height: 34, justifyContent: 'center', width: 34 },
   activityIconText: { fontFamily: Fonts.mono, fontSize: 11, fontWeight: '800' },
   activityCopy: { flex: 1, minWidth: 0 },
-  activityTitle: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '700' },
-  activitySubtitle: { fontFamily: Fonts.sans, fontSize: 10, marginTop: 5 },
-  activityValue: { alignItems: 'flex-end', maxWidth: 110 },
-  activityAmount: { fontFamily: Fonts.mono, fontSize: 11, fontWeight: '700' },
-  activityStatus: { fontFamily: Fonts.sans, fontSize: 9, fontWeight: '700', marginTop: 5 },
+  activityTitle: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '500' },
+  activitySubtitle: { fontFamily: Fonts.sans, fontSize: 11, marginTop: 5 },
+  activityValue: { alignItems: 'flex-end', maxWidth: 110, minWidth: 76 },
+  activityAmount: { fontFamily: Fonts.mono, fontSize: 12, fontWeight: '500' },
+  activityStatus: { fontFamily: Fonts.sans, fontSize: 10, fontWeight: '500', marginTop: 5 },
   emptyState: { alignItems: 'center', flex: 1, justifyContent: 'center', minHeight: 260, paddingHorizontal: 24 },
   emptyEyebrow: { fontFamily: Fonts.mono, fontSize: 9, fontWeight: '800', letterSpacing: 1.2 },
   emptyTitle: { fontFamily: Fonts.sans, fontSize: 17, fontWeight: '700', marginTop: 14, textAlign: 'center' },
@@ -672,19 +674,19 @@ const styles = StyleSheet.create({
   secondaryButtonText: { fontFamily: Fonts.sans, fontSize: 12, fontWeight: '700' },
   modalLayer: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(3,7,6,0.76)' },
-  sheet: { borderTopLeftRadius: 26, borderTopRightRadius: 26, maxHeight: '88%', paddingBottom: 10, paddingHorizontal: 20, paddingTop: 10 },
+  sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, maxHeight: '88%', paddingBottom: 10, paddingHorizontal: 20, paddingTop: 10 },
   detailSheet: { flexShrink: 1 },
   sheetHandle: { alignSelf: 'center', borderRadius: 2, height: 4, marginBottom: 14, width: 40 },
   sheetHeader: { alignItems: 'center', flexDirection: 'row', gap: 12, justifyContent: 'space-between' },
-  sheetTitle: { flexShrink: 1, fontFamily: Fonts.sans, fontSize: 22, fontWeight: '800', letterSpacing: -0.8 },
+  sheetTitle: { flexShrink: 1, fontFamily: Fonts.sans, fontSize: 21, fontWeight: '500', letterSpacing: -0.6 },
   detailSheetTitle: { maxWidth: '82%' },
   closeButton: { alignItems: 'center', borderRadius: 14, height: 44, justifyContent: 'center', width: 44 },
   closeText: { fontFamily: Fonts.sans, fontSize: 25, lineHeight: 27 },
   sheetCopy: { fontFamily: Fonts.sans, fontSize: 12, lineHeight: 18, marginTop: 7 },
   statusOptions: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: 14 },
   statusOption: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', justifyContent: 'space-between', minHeight: 50 },
-  statusOptionText: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '600' },
-  statusOptionMark: { fontFamily: Fonts.sans, fontSize: 15 },
+  statusOptionText: { fontFamily: Fonts.sans, fontSize: 14, fontWeight: '400' },
+  statusOptionMark: { fontFamily: Fonts.sans, fontSize: 18, fontWeight: '500', minWidth: 24, textAlign: 'right' },
   detailContent: { paddingBottom: 12 },
   detailStatus: { borderRadius: 14, marginTop: 10, padding: 13 },
   detailStatusText: { fontFamily: Fonts.sans, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
