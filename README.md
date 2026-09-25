@@ -44,8 +44,6 @@ Warren's API binds actions to the verified instrument and the user's wallet. A d
 | Lending | Kamino xStocks markets and terms are visible; lending actions are paused by default. |
 | PreStocks | Discovery and instrument inspection; trading is not part of this flow. |
 
-This repository is a working project build. Real-money readiness still depends on provider configuration, wallet recovery and export validation, transaction reconciliation, accessibility checks, and physical-device QA. The [Milestone 1 plan](docs/milestone/milestone-one.md) describes the first end-to-end spot purchase goal.
-
 ## Run the guest demo
 
 Requires Node.js 22 or later and pnpm 10.
@@ -68,12 +66,44 @@ Open `http://localhost:8081`. Explore Home, switch to Markets, and select a comp
 
 For native development, use `pnpm dev` to start the API and Expo together. Privy sign-in requires an iOS or Android development build, not Expo Go or the browser preview. Copy `apps/mobile/.env.example` to `apps/mobile/.env.local`, add the public Privy App ID and mobile Client ID, and configure the `warren` URL scheme and `com.warren.app` identifier in Privy. On a physical phone, set `EXPO_PUBLIC_API_URL` to an API address the phone can reach. Never put a Privy app secret in an `EXPO_PUBLIC_*` variable.
 
-## How it is built
+## Technology stack
 
-- **Mobile:** Expo SDK 57, React Native, Expo Router, and Privy.
-- **API:** Fastify, SQLite, and shared request/response contracts in `packages/*-contract`.
-- **Market data and actions:** Warren's API integrates with Tokens.xyz, PreStocks, Phoenix, Jupiter, Kamino, and Solana data sources. Provider keys stay on the server.
-- **Project docs:** Product requirements, API contracts, and QA notes live in [`docs/modules`](docs/modules).
+| Layer | Technologies and responsibility |
+| --- | --- |
+| Mobile app | React Native, Expo SDK 57, TypeScript, Expo Router, and Tamagui. Provides guest discovery and native account, market, and portfolio screens. |
+| API | Node.js 22+, TypeScript, Fastify, and Zod. Serves app endpoints, validates requests, and connects to market and execution providers. |
+| Wallet and identity | Privy embedded Solana wallets; Mobile Wallet Adapter for supported external-wallet sign-in. |
+| Persistence | SQLite for Warren-owned sessions, execution intents, action journals, and portfolio snapshots. |
+| Market data | Tokens.xyz, PreStocks, Phoenix, and Kamino data normalized behind Warren API contracts. |
+| Transactions | Jupiter Swap V2 for spot swaps, Phoenix for equity perpetuals, and Kamino for xStocks lending. Solana RPC handles transaction submission and status checks. |
+| Shared contracts | TypeScript packages with Zod schemas keep request and response shapes consistent between the mobile app and API. |
+
+The mobile app talks to Warren's API rather than calling execution providers directly. The API resolves the selected company to a verified instrument, fetches current provider terms, and validates wallet-bound transaction requests. Provider secrets stay on the server.
+
+## Repository layout
+
+```text
+apps/
+  mobile/
+    src/app/             Expo Router routes and navigation
+    src/features/        Home, markets, portfolio, session, and Privy flows
+    src/components/      Shared interface components
+  api/
+    src/server.ts        Fastify setup and route registration
+    src/home/            Home feed and search
+    src/markets/         Instrument registry and company details
+    src/execution/       Spot and perpetual order lifecycle
+    src/lending/         Kamino market and lending actions
+    src/portfolio/       Wallet holdings, positions, and activity
+packages/
+  *-contract/            Shared API schemas and types
+  test-wallet-provider/  Deterministic adapter for development and tests
+docs/
+  modules/               Product requirements, API contracts, and QA guides
+  screenshots/           README app screenshots
+```
+
+The API's feature folders own provider adapters and business rules. The mobile app is organized around user-facing features, while the shared contracts define the boundary between them. Product requirements, API contracts, and QA notes are indexed in [`docs/modules`](docs/modules).
 
 ## Checks
 
