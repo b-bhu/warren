@@ -55,7 +55,9 @@ export default function MainTabLayout() {
         options={{
           title: 'Markets',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color as string} focused={focused} name="markets" />
+            <View style={{ alignItems: 'center', backgroundColor: focused ? theme.proofWash : 'transparent', borderRadius: 999, height: 30, justifyContent: 'center', width: 58 }}>
+              <TabIcon color={color as string} focused={focused} name="markets" />
+            </View>
           ),
         }}
       />
