@@ -1,65 +1,84 @@
 # Warren
 
-Mobile-first spot trading for tokenized stocks. Milestone 1 is split into a design
-foundation, wallet onboarding, and the later spot/profile experience. The current
-mobile entry point is the approved Liquid Ledger Privy onboarding foundation.
+**Tokenized stock markets on Solana, organized around companies.**
 
-## What is runnable
+Stock-linked products are spread across issuers, trading venues, and lending protocols. The same company can have a spot token, private-market exposure, an equity perpetual, and a lending route—each with different prices and risks. Warren brings those markets into one mobile app while keeping the exact instrument, provider, network, and availability visible.
 
-- An Expo SDK 57 Liquid Ledger sign-in experience with Apple and Google OAuth.
-- Automatic Privy embedded EVM and Solana wallet provisioning and wallet-ready UI.
-- Server-issued ERC-4361 and SIWS-compatible challenges with server-side proof
-  verification.
-- Opaque access/refresh sessions, secure native storage, session restoration, sign-out,
-  and second-chain wallet linking.
-- A deterministic EVM/Solana wallet provider for local development and automated tests.
+Start with a company. Understand the market behind it. Sign in only when you are ready to act.
 
-The deterministic provider and API remain as an earlier provider-neutral security
-prototype. Privy is now the selected mobile foundation, but it is not release-ready
-until dashboard setup, backend profile binding, recovery/export, and physical-device
-validation are complete.
+## See the app
 
-## Workspace
+<table>
+  <tr>
+    <th>Home</th>
+    <th>Markets</th>
+    <th>Company detail</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/home-dark.jpg" alt="Warren Home in dark mode with market status, indices, search, and market movers" width="250"></td>
+    <td><img src="docs/screenshots/markets-dark.jpg" alt="Warren Markets in dark mode with the spot stock catalog" width="250"></td>
+    <td><img src="docs/screenshots/stock-detail-dark.jpg" alt="Apple company detail in dark mode with token price history and available instruments" width="250"></td>
+  </tr>
+</table>
 
-- `apps/mobile` — Expo mobile application
-- `apps/api` — Fastify API and SQLite persistence
-- `packages/auth-contract` — request schemas and canonical signing messages
-- `packages/provider-contract` — provider-neutral signing adapter
-- `packages/test-wallet-provider` — deterministic development/test adapter
-- `docs/modules/user-onboarding` — PRD, architecture, and Paybox feasibility spike
+These are dark-mode captures of the running app's guest web preview at a phone-sized viewport. Market values change, and values labeled *Sample* are sample data. Native wallet signing is not shown in these screenshots.
 
-## Development
+## The Warren experience
+
+1. **Discover without a wallet.** Home shows market context, movers, news, search, and locally saved companies.
+2. **Choose the right market.** Markets separates Spot, PreStocks, Perpetuals, and Lending rather than treating them as interchangeable versions of a stock.
+3. **Inspect the instrument.** A company page shows the relevant price history, provider, network, liquidity, and available instruments before a trade begins.
+4. **Review before signing.** A supported spot or perpetual ticket can be configured as a guest. Executable terms require sign-in and a fresh provider quote; a wallet signature is requested only after review.
+5. **Return to your portfolio.** The signed-in workspace is designed to show verified wallet holdings, positions, and Warren activity together.
+
+Warren's API binds actions to the verified instrument and the user's wallet. A displayed market price is never reused as an executable quote.
+
+## What is available today
+
+| Area | Current state |
+| --- | --- |
+| Home, Markets, and company details | Runnable guest experience in the Expo web preview and mobile app. |
+| Spot trading | Jupiter Swap V2 client and server flow implemented; physical-device transaction QA pending. |
+| Equity perpetuals | Phoenix client and server flow implemented; physical-device transaction QA pending. |
+| Sign-in and portfolio | Privy embedded Solana wallet integration and portfolio views are implemented; native configuration and device validation are required. |
+| Lending | Kamino xStocks markets and terms are visible; lending actions are paused by default. |
+| PreStocks | Discovery and instrument inspection; trading is not part of this flow. |
+
+This repository is a working project build. Real-money readiness still depends on provider configuration, wallet recovery and export validation, transaction reconciliation, accessibility checks, and physical-device QA. The [Milestone 1 plan](docs/milestone/milestone-one.md) describes the first end-to-end spot purchase goal.
+
+## Run the guest demo
 
 Requires Node.js 22 or later and pnpm 10.
 
 ```bash
 pnpm install
-pnpm dev
 ```
 
-`pnpm dev` starts the API on `http://localhost:3000` and Expo on its normal development
-port (typically `http://localhost:8081`). For an explicitly web-only client, use
-`pnpm web`; or run the services separately with `pnpm dev:api` and `pnpm dev:mobile`.
+Start the API and web preview in separate terminals:
 
-For real Privy sign-in, copy `apps/mobile/.env.example` to `apps/mobile/.env.local`,
-add the public Privy App ID and mobile Client ID, and restart Expo. In the Privy
-dashboard, enable Apple and Google, allow the `warren` URL scheme, and register
-`com.warren.app` as both the iOS bundle identifier and Android application ID.
-Use an iOS/Android development build; Privy's Expo SDK does not support web or Expo Go.
-Never add a Privy app secret to an `EXPO_PUBLIC_*` variable.
+```bash
+pnpm dev:api
+```
 
-For a physical phone, set `EXPO_PUBLIC_API_URL` to a reachable HTTPS or LAN API address;
-`localhost` points to the phone itself. Server configuration is documented in
-`.env.example`. Environment variables must be supplied by the shell or deployment
-runtime; the API does not implicitly load `.env` files.
+```bash
+pnpm web
+```
 
-## Verification
+Open `http://localhost:8081`. Explore Home, switch to Markets, and select a company such as Apple. The API runs at `http://localhost:3000`. Without a Tokens.xyz key, Home and Spot use fixture data and some detail history is unavailable. To use provider-backed stock data like the screenshots, set `TOKENS_API_KEY` in `apps/api/.env.providers.local`. Other API settings are described in [`.env.example`](.env.example); the API development scripts load `apps/api/.env.local` and `apps/api/.env.providers.local` when present.
+
+For native development, use `pnpm dev` to start the API and Expo together. Privy sign-in requires an iOS or Android development build, not Expo Go or the browser preview. Copy `apps/mobile/.env.example` to `apps/mobile/.env.local`, add the public Privy App ID and mobile Client ID, and configure the `warren` URL scheme and `com.warren.app` identifier in Privy. On a physical phone, set `EXPO_PUBLIC_API_URL` to an API address the phone can reach. Never put a Privy app secret in an `EXPO_PUBLIC_*` variable.
+
+## How it is built
+
+- **Mobile:** Expo SDK 57, React Native, Expo Router, and Privy.
+- **API:** Fastify, SQLite, and shared request/response contracts in `packages/*-contract`.
+- **Market data and actions:** Warren's API integrates with Tokens.xyz, PreStocks, Phoenix, Jupiter, Kamino, and Solana data sources. Provider keys stay on the server.
+- **Project docs:** Product requirements, API contracts, and QA notes live in [`docs/modules`](docs/modules).
+
+## Checks
 
 ```bash
 pnpm test:api
 pnpm typecheck
 pnpm lint
 ```
-
-Physical iOS/Android OAuth return, wallet restoration, accessibility, recovery, and
-export validation remain release gates; they cannot be replaced by the browser preview.
