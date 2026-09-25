@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { useTheme } from '@/hooks/use-theme';
 
 import { PrivyEntry } from './PrivyEntry';
 import { canResumePrivateIntent } from './auth-navigation';
@@ -8,28 +10,30 @@ import { useTransactionWallet } from './transaction-wallet';
 
 type PrivyAuthSheetProps = {
   contextLabel?: string;
+  continueLabel?: string;
   onAuthenticated?: () => void;
   onClose: () => void;
   visible: boolean;
 };
 
-export function PrivyAuthSheet({ contextLabel, onAuthenticated, onClose, visible }: PrivyAuthSheetProps) {
+export function PrivyAuthSheet({ contextLabel, continueLabel, onAuthenticated, onClose, visible }: PrivyAuthSheetProps) {
   const wallet = useTransactionWallet();
+  const theme = useTheme();
   const completionReported = useRef(false);
 
   useEffect(() => {
-    if (!visible) {
-      completionReported.current = false;
-      return;
-    }
+    if (!visible) completionReported.current = false;
+  }, [visible]);
+
+  const continueAfterReady = () => {
     if (
-      completionReported.current
+      !visible || completionReported.current
       || !canResumePrivateIntent(wallet.viewerStatus, wallet.status)
     ) return;
 
     completionReported.current = true;
-    onAuthenticated?.();
-  }, [onAuthenticated, visible, wallet.status, wallet.viewerStatus]);
+    (onAuthenticated ?? onClose)();
+  };
 
   if (!visible) return null;
 
@@ -40,21 +44,23 @@ export function PrivyAuthSheet({ contextLabel, onAuthenticated, onClose, visible
       statusBarTranslucent
       transparent
       visible>
-      <View style={styles.layer}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.layer}>
         <Pressable
           accessibilityLabel="Close sign in"
           accessibilityRole="button"
           onPress={onClose}
           style={styles.backdrop}
         />
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.sheet}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.sheet, { backgroundColor: theme.canvas, borderColor: theme.outline }]}>
           <PrivyEntry
             contextLabel={contextLabel}
+            continueLabel={continueLabel}
+            onContinue={continueAfterReady}
             onCancel={onClose}
             presentation="sheet"
           />
         </SafeAreaView>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -63,10 +69,11 @@ const styles = StyleSheet.create({
   layer: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(3,7,6,0.76)' },
   sheet: {
-    backgroundColor: '#1C2523',
-    borderTopLeftRadius: 26,
-    borderTopRightRadius: 26,
-    maxHeight: '88%',
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '94%',
     overflow: 'hidden',
   },
 });

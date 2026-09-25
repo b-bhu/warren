@@ -25,6 +25,7 @@ export type TransactionWallet = {
   status: 'guest' | 'loading' | 'ready' | 'recovery-required' | 'error' | 'unsupported';
   viewerStatus: 'guest' | 'loading' | 'signed-in';
   address: string | null;
+  accountIdentityLabel?: string;
   getAccessToken: () => Promise<string>;
   signTransaction: (unsignedTransaction: string) => Promise<string>;
   signOut: () => Promise<void>;
@@ -74,6 +75,8 @@ function ConfiguredTransactionWallet({ children }: PropsWithChildren) {
   const [reconciliationPending, setReconciliationPending] = useState(true);
   const wallet = isConnected(solanaWallet) ? solanaWallet.wallets[0] : undefined;
   const address = wallet?.address ?? null;
+  const accountEmail = user?.linked_accounts.find((account) => account.type === 'email');
+  const accountIdentityLabel = accountEmail ? `Account email · ${accountEmail.address}` : undefined;
 
   useEffect(() => {
     if (!isReady) return;
@@ -128,6 +131,7 @@ function ConfiguredTransactionWallet({ children }: PropsWithChildren) {
     status,
     viewerStatus,
     address,
+    accountIdentityLabel,
     getAccessToken: async () => {
       const token = await readAccessToken();
       if (!token) throw new Error('Your sign-in session is no longer available.');
@@ -144,7 +148,7 @@ function ConfiguredTransactionWallet({ children }: PropsWithChildren) {
       return Buffer.from(response.signedTransaction.serialize()).toString('base64');
     },
     signOut: logout,
-  }), [address, logout, readAccessToken, status, viewerStatus, wallet]);
+  }), [accountIdentityLabel, address, logout, readAccessToken, status, viewerStatus, wallet]);
 
   return <TransactionWalletContext.Provider value={value}>{children}</TransactionWalletContext.Provider>;
 }

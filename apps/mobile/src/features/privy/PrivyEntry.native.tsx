@@ -12,11 +12,14 @@ import { getAddressCodec, getBase64Encoder } from '@solana/kit';
 import { useCallback, useEffect, useState } from 'react';
 
 import { LiquidLedgerScreen } from './LiquidLedgerScreen';
+import { authProgressMode } from './auth-navigation';
 import { usePrivyRuntimeStatus } from './config';
 
 type Provider = 'email' | 'external-wallet';
 type PrivyEntryProps = {
   contextLabel?: string;
+  continueLabel?: string;
+  onContinue?: () => void;
   onCancel?: () => void;
   presentation?: 'screen' | 'sheet';
 };
@@ -34,7 +37,7 @@ const mobileWalletIdentity: AppIdentity = {
   uri: walletIdentity.mobileWalletUri,
 };
 
-export function PrivyEntry({ contextLabel, onCancel, presentation = 'screen' }: PrivyEntryProps) {
+export function PrivyEntry({ contextLabel, continueLabel, onContinue, onCancel, presentation = 'screen' }: PrivyEntryProps) {
   const runtimeStatus = usePrivyRuntimeStatus();
 
   if (runtimeStatus === 'unsupported-platform') {
@@ -44,6 +47,8 @@ export function PrivyEntry({ contextLabel, onCancel, presentation = 'screen' }: 
         mode="unsupported-platform"
         onCancel={onCancel}
         presentation={presentation}
+        continueLabel={continueLabel}
+        onContinue={onContinue}
       />
     );
   }
@@ -55,14 +60,16 @@ export function PrivyEntry({ contextLabel, onCancel, presentation = 'screen' }: 
         mode="missing-config"
         onCancel={onCancel}
         presentation={presentation}
+        continueLabel={continueLabel}
+        onContinue={onContinue}
       />
     );
   }
 
-  return <ConfiguredPrivyEntry contextLabel={contextLabel} onCancel={onCancel} presentation={presentation} />;
+  return <ConfiguredPrivyEntry contextLabel={contextLabel} onCancel={onCancel} presentation={presentation} continueLabel={continueLabel} onContinue={onContinue} />;
 }
 
-function ConfiguredPrivyEntry({ contextLabel, onCancel, presentation = 'screen' }: PrivyEntryProps) {
+function ConfiguredPrivyEntry({ contextLabel, continueLabel, onContinue, onCancel, presentation = 'screen' }: PrivyEntryProps) {
   const { error: initializationError, isReady, logout, refreshUser, user } = usePrivy();
   const { loginWithCode, sendCode } = useLoginWithEmail();
   const { generateMessage, login: loginWithSiws } = useLoginWithSiws();
@@ -72,6 +79,7 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel, presentation = 'screen' 
   const [email, setEmail] = useState('');
   const [emailCode, setEmailCode] = useState('');
   const [emailCodeSent, setEmailCodeSent] = useState(false);
+  const [resendAvailableAt, setResendAvailableAt] = useState(0);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [recoveringWallet, setRecoveringWallet] = useState(false);
@@ -170,6 +178,7 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel, presentation = 'screen' 
   }, [generateMessage, loginWithSiws, refreshUser]);
 
   const requestEmailCode = useCallback(async () => {
+    if (activeProvider || (emailCodeSent && Date.now() < resendAvailableAt)) return;
     const normalizedEmail = email.trim().toLowerCase();
     setEmailError(null);
     setLocalError(null);
@@ -185,6 +194,7 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel, presentation = 'screen' 
       setEmail(normalizedEmail);
       setEmailCode('');
       setEmailCodeSent(true);
+      setResendAvailableAt(Date.now() + 30_000);
     } catch (error) {
       const message = errorMessage(error);
       logDevelopmentAuthError('email code request', message);
@@ -192,9 +202,10 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel, presentation = 'screen' 
     } finally {
       setActiveProvider(null);
     }
-  }, [email, sendCode]);
+  }, [activeProvider, email, emailCodeSent, resendAvailableAt, sendCode]);
 
   const verifyEmailCode = useCallback(async () => {
+    if (activeProvider) return;
     const normalizedCode = emailCode.replace(/\D/g, '');
     setEmailError(null);
     setLocalError(null);
@@ -228,7 +239,7 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel, presentation = 'screen' 
     } finally {
       setActiveProvider(null);
     }
-  }, [email, emailCode, loginWithCode, refreshUser]);
+  }, [activeProvider, email, emailCode, loginWithCode, refreshUser]);
 
   const resetEmail = useCallback(() => {
     setEmailCode('');
@@ -309,6 +320,8 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel, presentation = 'screen' 
         onRecover={() => void recoverWallet()}
         onSignOut={() => void signOut()}
         presentation={presentation}
+        continueLabel={continueLabel}
+        onContinue={onContinue}
         recoveryBusy={recoveringWallet}
         solanaAddress={solanaAddress}
       />
@@ -325,19 +338,24 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel, presentation = 'screen' 
         onRetry={initializationError ? undefined : () => void retry()}
         onSignOut={user ? () => void signOut() : undefined}
         presentation={presentation}
+        continueLabel={continueLabel}
+        onContinue={onContinue}
         solanaAddress={solanaAddress}
       />
     );
   }
 
-  if (!isReady || activeProvider || (!user && awaitingSession) || (user && !walletReady)) {
+  const progressMode = authProgressMode({ activeProvider, awaitingSession, hasUser: Boolean(user), isReady, walletReady });
+  if (progressMode) {
     return (
       <LiquidLedgerScreen
         activeProvider={activeProvider}
         contextLabel={contextLabel}
-        mode="preparing"
+        mode={progressMode}
         onCancel={onCancel}
         presentation={presentation}
+        continueLabel={continueLabel}
+        onContinue={onContinue}
         solanaAddress={solanaAddress}
       />
     );
@@ -351,6 +369,8 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel, presentation = 'screen' 
         onCancel={onCancel}
         onSignOut={() => void signOut()}
         presentation={presentation}
+        continueLabel={continueLabel}
+        onContinue={onContinue}
         solanaAddress={solanaAddress}
       />
     );
@@ -365,6 +385,7 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel, presentation = 'screen' 
         codeSent: emailCodeSent,
         email,
         message: emailError,
+        resendAvailableAt,
         onCodeChange: (value) => setEmailCode(value.replace(/\D/g, '').slice(0, 6)),
         onEmailChange: setEmail,
         onReset: resetEmail,
@@ -374,6 +395,8 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel, presentation = 'screen' 
       mode="sign-in"
       onCancel={onCancel}
       presentation={presentation}
+      continueLabel={continueLabel}
+      onContinue={onContinue}
       walletAuth={{
         onConnect: () => void beginExternalWalletLogin(),
       }}

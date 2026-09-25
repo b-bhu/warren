@@ -4,26 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
-  <title>Warren · Portfolio workspace concept</title>
+  <title>Warren · Portfolio</title>
   <style>
     :root {
-      --canvas: #0c1211;
-      --surface: #151e1c;
-      --surface-raised: #1b2724;
+      --canvas: #131918;
+      --surface: #1c2523;
+      --surface-raised: #222d2a;
       --ink: #f1f5f2;
-      --muted: #9eaca7;
-      --proof: #69cdea;
+      --muted: #b8c4bf;
+      --proof: #74c7df;
       --on-proof: #071113;
       --proof-wash: rgba(105, 205, 234, 0.11);
       --outline: rgba(241, 245, 242, 0.16);
       --outline-soft: rgba(241, 245, 242, 0.09);
-      --gain: #79d5a3;
+      --gain: #8bc4a1;
       --gain-wash: rgba(121, 213, 163, 0.1);
-      --caution: #ff817a;
+      --caution: #ffaaa2;
       --caution-wash: rgba(255, 129, 122, 0.11);
       --private: #aab8b3;
       --private-wash: rgba(170, 184, 179, 0.09);
-      --font-sans: Manrope, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-sans: "Spline Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       --font-serif: Fraunces, "Iowan Old Style", Georgia, serif;
       --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
       color: var(--ink);
@@ -41,7 +41,7 @@
       outline: 3px solid rgba(116, 199, 223, 0.42);
       outline-offset: 2px;
     }
-    button:disabled { cursor: not-allowed; }
+    button:disabled { cursor: not-allowed; opacity: .45; }
     h1, h2, h3, p { margin: 0; }
     svg { display: block; }
     [hidden] { display: none !important; }
@@ -727,8 +727,8 @@
     .position-history { margin-top: 18px; }
     .position-history h3 { font-size: 14px; }
 
-    .receive-address { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center; gap: 13px; margin-top: 14px; }
-    .qr-mark { width: 76px; height: 76px; padding: 7px; border-radius: 10px; color: var(--canvas); background: var(--ink); }
+    .receive-address { display: grid; grid-template-columns: 1fr; justify-items: center; text-align: center; align-items: center; gap: 16px; margin-top: 18px; }
+    .qr-mark { width: 176px; height: 176px; padding: 0; border-radius: 10px; color: var(--canvas); background: var(--ink); }
     .address-copy { min-width: 0; }
     .address-copy span { color: var(--muted); font-size: 12px; }
     .address-copy strong { display: block; margin-top: 7px; overflow-wrap: anywhere; font: 650 12px/1.45 var(--font-mono); }
@@ -745,7 +745,7 @@
     .app-header {
       min-height: 64px;
       padding: 8px 18px;
-      background: rgba(12, 18, 17, .96);
+      background: var(--canvas);
     }
     .brand { gap: 9px; }
     .brand-mark {
@@ -781,7 +781,7 @@
     .portfolio-shell {
       border-top: 0;
       border-bottom-color: var(--outline-soft);
-      background: rgba(12, 18, 17, .96);
+      background: var(--canvas);
     }
     .portfolio-titlebar { min-height: 57px; padding: 5px 18px 4px; }
     .portfolio-titlebar h1 { font: 750 26px/1.05 var(--font-sans); letter-spacing: -.045em; }
@@ -969,7 +969,7 @@
       min-height: 76px;
       padding-top: 9px;
       border-top-color: var(--outline-soft);
-      background: rgba(21, 30, 28, .96);
+      background: var(--surface);
       backdrop-filter: blur(18px);
     }
     .nav-item { font-size: 11px; font-weight: 650; }
@@ -1123,6 +1123,158 @@
     .registration-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
     .registration-status { color: var(--muted); font: 650 10px/1 var(--font-mono); }
 
+
+    /* Portfolio hierarchy: value, attention, holdings, then perpetual exposure. */
+    .view-tabs{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .view-tab{font-weight:550;min-height:46px}
+    .view-tab[aria-selected="true"]::after{height:2px}
+    .balance-hero{padding:16px 0 20px}
+    .balance-heading{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px}
+    .balance-heading .privacy-button{width:44px;height:44px;border:0;background:transparent;color:var(--muted)}
+    .balance-total{font:500 38px/1.2 var(--font-mono);letter-spacing:-.065em;margin-top:0}
+    .balance-change{display:flex;align-items:center;gap:9px;margin-top:10px;font:400 12px/1.5 var(--font-mono);color:var(--gain)}
+    .balance-change>span:last-child{font:400 11px/1.5 var(--font-sans);color:var(--muted)}
+    .balance-updated{margin-top:7px;font-size:10px;color:var(--muted)}
+    .balance-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+    .balance-actions button{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:46px;margin:0;padding:0 12px;border-radius:12px;font-size:13px;font-weight:550}
+    .balance-actions .primary-button{background:var(--proof);color:var(--on-proof);border:0}
+    .balance-actions .secondary-button{border:1px solid var(--outline);background:transparent;color:var(--ink)}
+    .overview-attention{width:100%;min-height:62px;border:1px solid rgba(255,170,162,.15);border-radius:12px;padding:11px 12px}
+    .section{padding-top:20px}
+    .section-heading h2{font-weight:550;font-size:17px}
+    .section-heading .text-button{min-height:40px;font-weight:500;font-size:12px}
+    .register-row{min-height:66px}
+    .register-copy strong,.activity-copy strong,.order-row strong{font-weight:550}.register-copy>span{font:400 11px/1.5 var(--font-sans)}
+    .register-value strong{font:500 13px/1.4 var(--font-mono)}
+    .register-value span{font-size:11px}
+    .company-logo{width:34px;height:34px;border-radius:10px;font-weight:500}
+    .mini-position{display:flex;align-items:center;gap:11px;width:100%;min-height:76px;padding:14px;border:1px solid var(--outline-soft);border-radius:13px;background:var(--surface);text-align:left}
+    .mini-position .register-copy{flex:1;min-width:0}
+    .mini-position .register-value{flex-shrink:0;text-align:right}
+    .positive{color:var(--gain)}
+    .empty-account{padding:30px 0}
+    .empty-account>.balance-total{margin-top:9px;color:var(--muted)}
+    .empty-account h2{font-size:23px;line-height:1.2;font-weight:550;letter-spacing:-.035em;margin-top:36px}
+    .empty-account>p:not(.equity-label){font-size:13px;line-height:1.6;color:var(--muted);margin-top:10px}
+    .empty-account>.primary-button{width:100%;margin-top:20px;min-height:49px;justify-content:center}
+    .setup-option{display:flex;align-items:center;gap:14px;border-top:1px solid var(--outline-soft);margin-top:30px;padding-top:20px}
+    .setup-option>div{flex:1}.setup-option strong{font-size:14px;font-weight:550}.setup-option p{font-size:12px;line-height:1.5;color:var(--muted);margin-top:5px}
+    .setup-option button{flex-shrink:0;min-height:44px}
+    .position-filters{display:flex;gap:5px;padding-top:16px}
+    .position-filters button{flex:1;min-width:0;min-height:40px;padding:0 8px;border:1px solid var(--outline-soft);border-radius:10px;background:transparent;color:var(--muted);font-size:11px}
+    .position-filters button[aria-pressed="true"]{border-color:var(--proof);background:var(--proof-wash);color:var(--proof)}
+    .exposure-summary{padding:18px 0 0}
+    .exposure-numbers{margin-top:0;border:1px solid var(--outline-soft);border-radius:12px;background:var(--surface);padding:14px;gap:20px}
+    .exposure-numbers>div{min-width:0}.exposure-numbers strong{font:500 18px/1.4 var(--font-mono)}
+    .position-card{border:1px solid var(--outline-soft);border-radius:14px;box-shadow:none}
+    .position-pnl strong{font-weight:500;font-size:22px}
+    .position-grid{display:none}
+    .risk-line{font-size:11px;line-height:1.6}
+    .activity-tools{align-items:center;gap:8px;padding-block:8px}
+    .activity-tools>span{color:var(--muted);font-size:10px}
+    .activity-tools button{min-height:40px;font-size:11px;color:var(--ink)}
+    .activity-filter-summary{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted)}
+    .activity-filter-summary button{min-height:40px}
+    .sheet-status-option{display:flex;align-items:center;justify-content:space-between;min-height:50px;width:100%;border:0;border-bottom:1px solid var(--outline-soft);background:none;color:var(--ink);font-size:14px;text-align:left}
+    .sheet-status-option[aria-pressed="true"]{color:var(--proof)}
+    .sheet-status-option[aria-pressed="true"]::after{content:'✓'}
+    .bottom-sheet{background:var(--canvas);border:1px solid var(--outline);border-bottom:0;max-height:88%;border-radius:24px 24px 0 0}
+    .sheet-header h2{font-size:21px;font-weight:550}.sheet-close{background:none}
+    .sheet-copy:empty,.sheet-fact:empty{display:none}
+    .risk-row strong,.reconcile-row strong{font-weight:500}
+    .value.is-private{color:var(--muted)!important;text-shadow:none;letter-spacing:.05em;user-select:none}
+    .value.is-private *{visibility:hidden}
+    .filter-chip{min-height:40px;font-weight:500}
+    .hero-copy{grid-template-columns:38px minmax(0,1fr);gap:12px;padding:18px 14px}
+    .hero-copy .primary-button{grid-column:1/-1;width:100%;justify-content:center}
+    @media(max-width:359px){.pane{padding-inline:14px}.app-header{padding-inline:14px}.balance-total{font-size:35px}.register-row{gap:9px}.register-copy strong{font-size:13px}.activity-copy strong{font-size:12px}.activity-row{gap:9px}.activity-value strong{font-size:12px}.sheet-content{padding-inline:16px}}
+
+    /* One account surface, from first sign-in to everyday wallet controls. */
+    .bottom-sheet.onboarding-sheet{max-height:94%;display:flex;flex-direction:column}
+    .onboarding-sheet .sheet-content{max-height:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-top:18px}
+    .onboarding-sheet .sheet-header{align-items:center;gap:8px}
+    .onboarding-sheet .sheet-header h2{flex:1;font:550 25px/1.18 var(--font-sans);letter-spacing:-.045em;outline:none}
+    .onboarding-sheet[data-step="sign-in"] .sheet-header h2{font-size:29px}
+    .sheet-back{width:36px;height:44px;flex-shrink:0;border:0;background:none;color:var(--muted);font-size:24px;margin-left:-7px}
+    .onboarding-sheet .sheet-copy{font-size:13px;line-height:1.55;margin-top:8px}
+    .onboarding-sheet .sheet-close{width:36px;height:44px;border:0;font-size:24px}
+    .onboarding-sheet .sheet-fact{margin-top:18px;padding:0;border:0;background:none;font:400 11px/1.6 var(--font-sans)}
+    .onboarding-sheet .sheet-actions{display:flex;flex-direction:column;gap:4px;margin-top:22px}
+    .onboarding-sheet .sheet-button{width:100%;min-height:50px;font-weight:600;border-radius:14px}
+    .onboarding-sheet .sheet-button:not(.primary){min-height:44px;border:0;background:none;color:var(--muted);font-size:12px}
+    .onboarding-sheet .auth-choices{gap:10px;margin-top:26px}
+    .onboarding-sheet .auth-choice{min-height:82px;padding:15px 14px;border-radius:16px;grid-template-columns:32px minmax(0,1fr) 12px;gap:11px;background:var(--surface)}
+    .onboarding-sheet .auth-choice.primary{background:var(--proof-wash);border-color:rgba(116,199,223,.4)}
+    .onboarding-sheet .auth-choice-icon{width:32px;height:36px;background:none;border-radius:0;font-size:22px;font-weight:400}
+    .onboarding-sheet .auth-choice strong{font-size:14px;line-height:1.35;font-weight:550}
+    .onboarding-sheet .auth-choice small{font-size:11px;line-height:1.5;margin-top:5px}
+    .onboarding-sheet .auth-not-now{margin-top:20px;font-weight:500}
+    .auth-trust{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:14px;font-size:10px;color:var(--muted)}
+    .auth-form{margin-top:26px}
+    .onboarding-sheet[data-step="auth-code"] .auth-form{margin-top:5px}
+    .auth-label{display:block;font-size:12px;font-weight:500;margin-bottom:9px}
+    .auth-input{width:100%;height:57px;padding:0 15px;border:1px solid var(--outline);border-radius:13px;background:var(--surface);font-size:16px;outline-offset:3px}
+    .auth-input:focus{border-color:var(--proof)}
+    .auth-input[aria-invalid="true"]{border-color:var(--caution)}
+    .auth-input::placeholder{color:var(--muted);opacity:.6}
+    .auth-code{font:500 29px/1 var(--font-mono);letter-spacing:.32em;text-align:center;padding-left:24px}
+    .auth-code::placeholder{letter-spacing:.22em;font-size:24px}
+    .auth-error{color:var(--caution);font-size:12px;line-height:1.5;margin-top:10px}
+    .auth-error:empty{display:none}
+    .auth-email-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:19px}
+    .auth-email-line strong{min-width:0;overflow-wrap:anywhere;font-size:13px;font-weight:500}
+    .auth-link{flex-shrink:0;min-height:44px;padding:0 3px;border:0;background:none;color:var(--proof);font-size:12px}
+    .resend-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;font-size:11px;color:var(--muted)}
+    .resend-row .auth-link:disabled{color:var(--muted);opacity:1}
+    .method-switch{width:100%;min-height:44px;border:0;background:none;color:var(--muted);font-size:12px}
+    .wallet-card{position:relative;overflow:hidden;margin-top:24px;padding:20px;border:1px solid var(--outline);border-radius:20px;background:var(--surface);text-align:left;animation:wallet-arrive 350ms cubic-bezier(.2,.75,.25,1) both}
+    .wallet-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .wallet-card-brand{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:550}
+    .wallet-card-mark{display:grid;place-items:center;width:29px;height:29px;border-radius:9px;background:var(--proof-wash);color:var(--proof);font:600 17px var(--font-serif)}
+    .wallet-network{font-size:10px;color:var(--muted);border:1px solid var(--outline);padding:5px 8px;border-radius:6px}
+    .wallet-card-address{display:block;margin-top:26px;font:400 22px/1.3 var(--font-mono);letter-spacing:-.03em}
+    .wallet-card-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;padding-top:13px;border-top:1px solid var(--outline-soft);font-size:10px;color:var(--muted)}
+    .wallet-card-state{display:flex;align-items:center;gap:6px;color:var(--gain);font-size:11px}
+    .wallet-card-state::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+    .wallet-card.preparing .wallet-card-state{color:var(--proof)}
+    .wallet-card.preparing .wallet-card-address{font:400 17px/1.6 var(--font-sans);color:var(--muted);letter-spacing:-.02em}
+    .wallet-card.preparing::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--proof);transform-origin:left;animation:wallet-pulse 1.2s ease-in-out infinite alternate}
+    .wallet-card.expanded{padding-bottom:17px}
+    .wallet-card.expanded .receive-address{margin-top:16px;display:flex;flex-direction:column;gap:17px;padding:0;background:none;border:0}
+    .wallet-card.expanded .qr-mark{width:168px;height:168px;margin:0 auto;border-radius:12px}
+    .wallet-card.expanded .address-copy{width:100%;text-align:left}
+    .wallet-card.expanded .address-copy span{font-size:10px}
+    .wallet-card.expanded .address-copy strong{display:block;margin-top:7px;overflow-wrap:anywhere;font:400 12px/1.6 var(--font-mono)}
+    .network-note{display:flex;gap:9px;align-items:flex-start;margin-top:15px;color:var(--muted);font-size:11px;line-height:1.5}
+    .network-note svg{flex-shrink:0;margin-top:1px}
+    .onboarding-sheet .wallet-actions{gap:9px;margin-top:14px}
+    .onboarding-sheet .wallet-action{min-height:48px;font-weight:550;border:1px solid var(--outline);border-radius:13px;background:none}
+    .onboarding-sheet .wallet-action.primary{background:var(--proof);border-color:var(--proof);color:var(--on-proof)}
+    .account-signin{margin-top:13px;color:var(--muted);font-size:11px;overflow-wrap:anywhere}
+    .onboarding-sheet .sheet-list{margin-top:24px}
+    .onboarding-sheet .sheet-row{min-height:63px;gap:12px}
+    .onboarding-sheet .sheet-row>span{flex:1}
+    .onboarding-sheet .sheet-row strong{display:block;font-size:13px;font-weight:500}
+    .onboarding-sheet .sheet-row small{display:block;margin-top:5px;font:400 10px/1.4 var(--font-sans)}
+    .onboarding-sheet .sheet-row .row-arrow{flex:0;color:var(--muted);font-size:18px}
+    .wallet-handoff{margin-top:24px;padding:25px 18px;border:1px solid var(--outline-soft);border-radius:18px;background:var(--surface)}
+    .handoff-icons{display:flex;align-items:center;justify-content:center;gap:21px;margin:2px 0 23px;color:var(--muted)}
+    .handoff-icons .wallet-card-mark{width:48px;height:48px;font-size:27px;border-radius:15px}
+    .handoff-icons .native-wallet-mark{display:grid;place-items:center;width:48px;height:48px;border:1px solid var(--outline);border-radius:15px;color:var(--ink)}
+    .handoff-copy{text-align:center;font-size:13px;line-height:1.6;color:var(--muted)}
+    .native-choice{display:flex;align-items:center;gap:12px;width:100%;min-height:76px;padding:14px;border:1px solid var(--outline);border-radius:13px;background:var(--surface);text-align:left;margin-top:24px}
+    .native-choice>span:nth-child(2){flex:1}.native-choice strong{display:block;font-size:14px;font-weight:550}.native-choice small{display:block;font-size:11px;color:var(--muted);margin-top:5px}
+    .native-caption{margin-top:14px;color:var(--muted);font-size:11px;line-height:1.6}
+    .identity-note{margin-top:18px;font-size:12px;line-height:1.6;color:var(--muted)}
+    .identity-note strong{color:var(--ink);font-weight:500}
+    .export-warning{display:flex;gap:10px;margin-top:18px;padding:14px;border:1px solid rgba(255,170,162,.2);border-radius:12px;background:var(--caution-wash);color:var(--caution);font-size:12px;line-height:1.55}
+    .export-warning svg{flex-shrink:0;margin-top:2px}
+    .auth-context{padding:11px 12px;margin-top:17px;border-left:2px solid var(--proof);background:var(--proof-wash);color:var(--muted);font-size:12px}
+    .auth-context:empty{display:none}
+    @keyframes wallet-arrive{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes wallet-pulse{from{opacity:.3;transform:scaleX(.2)}to{opacity:1;transform:scaleX(1)}}
+    @media(max-width:359px){.onboarding-sheet .sheet-header h2{font-size:23px}.onboarding-sheet[data-step="sign-in"] .sheet-header h2{font-size:27px}.onboarding-sheet .auth-choice{padding:12px 11px;gap:8px;grid-template-columns:25px minmax(0,1fr) 10px}.onboarding-sheet .auth-choice strong{font-size:13px}.wallet-card{padding:17px}.wallet-card-brand{font-size:12px}.wallet-card.expanded .qr-mark{width:148px;height:148px}.auth-code{font-size:25px}}
+
     @media (max-width: 760px) { .prototype-switcher { display: none; } }
     @media (max-width: 600px) {
       .prototype-stage { display: block; padding: 0; background: var(--canvas); }
@@ -1137,22 +1289,7 @@
 </head>
 <body>
   <main class="prototype-stage">
-    <aside class="prototype-switcher" aria-label="Prototype account state">
-      <span>Session</span>
-      <div class="switcher-buttons">
-        <button type="button" data-state-switch="signed-out" aria-pressed="false">Signed out</button>
-        <button type="button" data-state-switch="ready" aria-pressed="true">Signed in</button>
-      </div>
-      <span>Signed-in data</span>
-      <div class="switcher-buttons">
-        <button type="button" data-portfolio-switch="new" aria-pressed="true">New wallet</button>
-        <button type="button" data-portfolio-switch="spot" aria-pressed="false">Spot only</button>
-        <button type="button" data-portfolio-switch="phoenix" aria-pressed="false">Phoenix only</button>
-        <button type="button" data-portfolio-switch="full" aria-pressed="false">Full account</button>
-      </div>
-    </aside>
-
-    <section class="phone" aria-label="Warren Portfolio prototype">
+<section class="phone" aria-label="Warren Portfolio">
       <div class="dynamic-island" aria-hidden="true"></div>
       <div class="status-bar" aria-hidden="true">
         <span>9:41</span>
@@ -1204,41 +1341,17 @@
               <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>AAPL · AAPLx</span></span><span class="register-value"><strong>$238.47</strong><span>+0.62%</span></span></button>
               <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>TSLA · TSLAx</span></span><span class="register-value"><strong>$426.08</strong><span class="negative">−1.14%</span></span></button>
             </div>
-            <p class="local-note">Saved companies are device-local. They are not holdings and are not synced to an account.</p>
+            <p class="local-note">Saved on this device. Sign in to see your holdings.</p>
           </section>
 
           <nav class="utility-list" aria-label="Portfolio information">
-            <button class="utility-row" type="button" data-toast="Warren prototype · version 2"><span>About Warren</span><span>›</span></button>
+            <button class="utility-row" type="button" data-open-sheet="about"><span>About Warren</span><span>›</span></button>
           </nav>
-          <p class="sample-note">Prototype only. Prices use controlled sample data. No wallet or transaction is created here.</p>
+
         </section>
 
         <section class="pane" data-pane="signed-overview" aria-label="Signed-in Portfolio overview">
-          <div data-portfolio-when="new">
-            <section class="account-state" aria-labelledby="new-wallet-heading">
-              <span class="account-state-kicker">Your capital</span>
-              <h2 id="new-wallet-heading">Choose your first move.</h2>
-              <p>Your Warren wallet is active. Owned stocks and Phoenix perpetuals stay separate, so you always know where your money is.</p>
-              <div class="capital-map" aria-label="Warren account setup">
-                <div class="capital-origin">
-                  <span class="capital-origin-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="6" width="17" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M16.5 13.5h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-                  <span class="capital-origin-copy"><small>ORIGIN</small><strong>Warren wallet</strong><span>8xK2…mP4q · No funds yet</span></span>
-                  <span class="capital-status">Active</span>
-                </div>
-                <div class="capital-routes">
-                  <div class="capital-route">
-                    <span class="capital-route-copy"><small>OWN</small><strong>Tokenized stocks</strong><span>No holdings</span></span>
-                    <button class="route-action primary" type="button" data-open-sheet="account">Deposit</button>
-                  </div>
-                  <div class="capital-route perps">
-                    <span class="capital-route-copy"><small>TRADE</small><strong>Stock perpetuals</strong><span>Phoenix not created</span></span>
-                    <button class="route-action" type="button" data-open-sheet="phoenix-setup">Create</button>
-                  </div>
-                </div>
-              </div>
-              <p class="state-note">Deposit shows your wallet address. Phoenix setup is a separate, one-time Solana transaction that never opens a trade.</p>
-            </section>
-          </div>
+          <div data-portfolio-when="new" hidden><section class="empty-account"><p class="equity-label">Net account equity</p><div class="balance-total">$0.00</div><h2>Make your first investment</h2><p>Deposit funds to buy tokenized stocks.</p><button class="primary-button" type="button" data-open-sheet="receive">Deposit</button><div class="setup-option"><div><strong>Trade perpetuals</strong><p>Create a Phoenix account to get started.</p></div><button class="text-button" type="button" data-open-sheet="phoenix-setup">Set up <span aria-hidden="true">›</span></button></div></section></div>
 
           <div data-portfolio-when="spot" hidden>
             <section class="equity-block compact-equity" aria-labelledby="spot-equity-heading">
@@ -1250,107 +1363,56 @@
                 <div class="exposure-track" aria-hidden="true"><span class="exposure-owned"></span></div>
                 <div class="exposure-legend"><div><span class="rail-key owned"></span><small>Owned stocks</small><strong class="value">$1,011.08</strong></div></div>
               </div>
-              <div class="quick-actions"><button class="quiet-button primary" type="button" data-open-sheet="account" data-wallet-action>Deposit</button></div>
+              <div class="quick-actions"><button class="quiet-button primary" type="button" data-open-sheet="receive" data-wallet-action>Deposit</button></div>
             </section>
 
             <section class="section" aria-labelledby="spot-holdings-heading">
               <div class="section-heading"><h2 id="spot-holdings-heading">Holdings</h2><span class="label">3 assets</span></div>
               <div class="register">
-                <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>OWN · 2.3704 NVDAx</span></span><span class="register-value"><strong class="value">$435.24</strong><span>+3.18%</span></span></button>
-                <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>OWN · 1.4260 AAPLx</span></span><span class="register-value"><strong class="value">$340.06</strong><span>+0.71%</span></span></button>
-                <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>OWN · 0.5534 TSLAx</span></span><span class="register-value"><strong class="value">$235.78</strong><span class="negative">−0.84%</span></span></button>
+                <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>Spot · 2.3704 NVDAx</span></span><span class="register-value"><strong class="value">$435.24</strong><span>+3.18%</span></span></button>
+                <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>Spot · 1.4260 AAPLx</span></span><span class="register-value"><strong class="value">$340.06</strong><span>+0.71%</span></span></button>
+                <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>Spot · 0.5534 TSLAx</span></span><span class="register-value"><strong class="value">$235.78</strong><span class="negative">−0.84%</span></span></button>
               </div>
             </section>
 
             <section class="phoenix-prompt" aria-labelledby="spot-phoenix-heading">
               <span class="phoenix-prompt-label">Perpetuals</span>
-              <h3 id="spot-phoenix-heading">Phoenix is not set up yet.</h3>
-              <p>Create a trading account inside Warren when you want to trade stock perpetuals. Your owned tokens stay separate.</p>
+              <h3 id="spot-phoenix-heading">Trade perpetuals</h3>
+              <p>Set up a Phoenix account to open perpetual positions.</p>
               <button class="state-action" type="button" data-open-sheet="phoenix-setup">Create Phoenix account</button>
             </section>
           </div>
 
-          <div data-portfolio-when="phoenix" hidden>
-            <section class="account-state" aria-labelledby="phoenix-ready-heading">
-              <span class="account-state-kicker">Your capital</span>
-              <h2 id="phoenix-ready-heading">Phoenix is set up.</h2>
-              <p>Your perpetual account is ready. The Warren wallet does not hold any supported assets yet.</p>
-              <div class="capital-map" aria-label="Warren account setup">
-                <div class="capital-origin">
-                  <span class="capital-origin-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="6" width="17" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M16.5 13.5h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-                  <span class="capital-origin-copy"><small>ORIGIN</small><strong>Warren wallet</strong><span>8xK2…mP4q · No funds yet</span></span>
-                  <span class="capital-status">Active</span>
-                </div>
-                <div class="capital-routes">
-                  <div class="capital-route">
-                    <span class="capital-route-copy"><small>OWN</small><strong>Tokenized stocks</strong><span>No holdings</span></span>
-                    <button class="route-action primary" type="button" data-open-sheet="account">Deposit</button>
-                  </div>
-                  <div class="capital-route perps">
-                    <span class="capital-route-copy"><small>TRADE</small><strong>Stock perpetuals</strong><span>No open positions</span></span>
-                    <span class="route-status">Ready</span>
-                  </div>
-                </div>
-              </div>
-              <p class="state-note">Deposit supported assets into the Warren wallet before funding a trade.</p>
-            </section>
-          </div>
+          <div data-portfolio-when="phoenix" hidden><section class="empty-account"><p class="equity-label">Net account equity</p><div class="balance-total">$0.00</div><h2>Your perpetual account is ready</h2><p>Deposit funds to start trading. Your positions will appear here.</p><button class="primary-button" type="button" data-open-sheet="receive">Deposit</button><div class="phoenix-ready-line"><span>Phoenix account</span><strong>Ready</strong></div></section></div>
 
           <div data-portfolio-when="full" hidden>
-          <section class="equity-block">
-            <div class="equity-top">
-              <div><span class="equity-label">Net account equity</span><div class="equity-value value">$1,355.39</div></div>
-              <div class="equity-change value"><small>Today</small>+$34.81 · 2.64%</div>
-            </div>
-            <div class="equity-meta"><span id="equity-updated">Updated moments ago</span><div class="equity-meta-actions"><button class="equity-info" type="button" data-open-sheet="equity" aria-label="See how account equity is calculated">How it adds up</button><button class="privacy-button" id="privacy-toggle" type="button" aria-label="Hide portfolio values" aria-pressed="false">
+          <section class="balance-hero" aria-label="Account value">
+            <div class="balance-heading"><span>Net account equity</span><button class="privacy-button" id="privacy-toggle" type="button" aria-label="Hide portfolio values" aria-pressed="false">
                 <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.8 12s3.3-5.5 9.2-5.5 9.2 5.5 9.2 5.5-3.3 5.5-9.2 5.5S2.8 12 2.8 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.7" stroke="currentColor" stroke-width="1.8"/></svg>
                 <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" hidden><path d="m4 4 16 16M10.6 6.7c.5-.1.9-.2 1.4-.2 5.9 0 9.2 5.5 9.2 5.5a14 14 0 0 1-2.2 2.8M6.7 7.7A14.4 14.4 0 0 0 2.8 12s3.3 5.5 9.2 5.5c1 0 1.9-.2 2.7-.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-              </button></div></div>
-            <div class="exposure-rail" aria-label="Account equity: 74.6 percent owned stocks, 8.4 percent perps equity, and 17 percent cash">
-              <div class="exposure-track" aria-hidden="true"><span class="exposure-owned"></span><span class="exposure-perps"></span><span class="exposure-cash"></span></div>
-              <div class="exposure-legend">
-                <div><span class="rail-key owned"></span><small>Owned stocks</small><strong class="value">$1,011.08</strong></div>
-                <div><span class="rail-key perps"></span><small>Perps equity</small><strong class="value">$113.22</strong></div>
-                <div><span class="rail-key cash"></span><small>Cash</small><strong class="value">$231.09</strong></div>
-              </div>
-              <div class="exposure-branch"><p><strong>Gross perp exposure</strong><span class="value">$300.00</span></p></div>
-            </div>
-            <div class="quick-actions"><button class="quiet-button primary" type="button" data-open-sheet="account" data-wallet-action>Deposit</button></div>
+              </button></div>
+            <div class="balance-total value">$1,355.39</div>
+            <p class="balance-change"><span class="value">+$34.81 · 2.64%</span><span>Today</span></p>
+            <p class="balance-updated" id="equity-updated">Updated 9:41 AM</p>
+            <div class="balance-actions"><button class="primary-button" type="button" data-open-sheet="receive" data-wallet-action>↓ Deposit</button><button class="secondary-button" type="button" data-open-sheet="equity">Breakdown <span aria-hidden="true">↗</span></button></div>
           </section>
-
-          <section class="section" aria-labelledby="attention-heading">
-            <div class="section-heading"><h2 id="attention-heading">Needs attention</h2><span class="label">1 unresolved</span></div>
-            <button class="attention-row" type="button" data-event="Apple purchase" data-event-detail="Transaction submitted, but its final state has not reconciled yet. Do not resubmit while Warren checks the chain.">
-              <span class="attention-dot"></span><span class="attention-copy"><strong>Apple purchase status unknown</strong><span>Submitted 7 min ago · Do not resubmit</span></span><span class="arrow">›</span>
-            </button>
-          </section>
-
-          <section class="section" aria-labelledby="overview-position-heading">
-            <div class="section-heading"><h2 id="overview-position-heading">Open positions</h2><button class="text-button" type="button" data-view-link="positions">See all</button></div>
-            <article class="position-card">
-              <div class="position-title"><div class="position-identity"><span class="company-logo nvda">NV</span><div><strong>NVIDIA</strong><span>NVDA-PERP · LONG · 3× ISOLATED</span></div></div><span class="open-tag">Open</span></div>
-              <div class="position-pnl"><strong class="value">+$6.67 · 6.67%</strong><span class="value">$300.00<br>exposure</span></div>
-              <div class="position-grid"><div class="position-fact"><span>Entry</span><strong>$185.50</strong></div><div class="position-fact"><span>Mark</span><strong>$189.72</strong></div><div class="position-fact"><span>Collateral</span><strong>$100.00</strong></div></div>
-              <p class="risk-line"><strong>Liquidation $125.20 · 34% away</strong><br>Funding: You pay 0.0062% · next in 42 min</p>
-              <button class="position-button" type="button" data-position>View position</button>
-            </article>
-          </section>
-
-          <section class="section" aria-labelledby="overview-orders-heading">
-            <div class="section-heading"><h2 id="overview-orders-heading">Open orders</h2><button class="text-button" type="button" data-view-link="positions">See all</button></div>
-            <button class="order-row" type="button" data-order><span><strong>Buy Tesla perpetual</strong><span>Limit · 1.5× isolated · $398.00</span></span><span class="status-tag">Placed</span></button>
-          </section>
-
+          <button class="attention-row overview-attention" type="button" data-event="Apple purchase" data-event-detail="The transaction was submitted, but its final status is not confirmed yet. Do not resubmit while we check it."><span class="attention-dot"></span><span class="attention-copy"><strong>Apple purchase status unknown</strong><span>7 min ago · Do not resubmit</span></span><span class="arrow" aria-hidden="true">›</span></button>
           <section class="section" aria-labelledby="overview-holdings-heading">
-            <div class="section-heading"><h2 id="overview-holdings-heading">Holdings</h2><button class="text-button" type="button" data-view-link="positions">See all</button></div>
+            <div class="section-heading"><h2 id="overview-holdings-heading">Holdings</h2><button class="text-button" type="button" data-view-link="positions" data-position-target="holdings">View all</button></div>
             <div class="register">
-              <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>OWN · 2.3704 NVDAx</span></span><span class="register-value"><strong class="value">$435.24</strong><span>+3.18%</span></span></button>
-              <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>OWN · 1.4260 AAPLx</span></span><span class="register-value"><strong class="value">$340.06</strong><span>+0.71%</span></span></button>
-              <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>OWN · 0.5534 TSLAx</span></span><span class="register-value"><strong class="value">$235.78</strong><span class="negative">−0.84%</span></span></button>
+              <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>Spot · 2.3704 NVDAx</span></span><span class="register-value"><strong class="value">$435.24</strong><span>+3.18%</span></span></button>
+              <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>Spot · 1.4260 AAPLx</span></span><span class="register-value"><strong class="value">$340.06</strong><span>+0.71%</span></span></button>
+              <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>Spot · 0.5534 TSLAx</span></span><span class="register-value"><strong class="value">$235.78</strong><span class="negative">−0.84%</span></span></button>
             </div>
           </section>
-
-          <p class="sample-note">Sample account. Perpetual values are venue-backed concepts; the current release supports opening only, not position management.</p>
+          <section class="section" aria-labelledby="overview-position-heading">
+            <div class="section-heading"><h2 id="overview-position-heading">Perpetuals</h2><button class="text-button" type="button" data-view-link="positions" data-position-target="perpetuals">View all</button></div>
+            <button class="mini-position" type="button" data-position aria-label="View NVIDIA long position"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>Long · 3× isolated</span></span><span class="register-value"><strong class="value positive">+$6.67</strong><span class="value">$300 exposure</span></span></button>
+          </section>
+          <section class="section" aria-labelledby="overview-orders-heading">
+            <div class="section-heading"><h2 id="overview-orders-heading">Open orders</h2><button class="text-button" type="button" data-view-link="positions" data-position-target="orders">View all</button></div>
+            <button class="order-row" type="button" data-order><span><strong>Tesla · Buy limit</strong><span>Perpetual · $398.00</span></span><span class="status-tag">Open</span></button>
+          </section>
           </div>
         </section>
 
@@ -1361,7 +1423,7 @@
               <h2 id="new-positions-heading">No positions or holdings yet.</h2>
               <p>Deposit into your wallet to buy tokenized stocks, or create Phoenix when you are ready to trade perpetuals.</p>
               <div class="state-actions">
-                <button class="state-action primary" type="button" data-open-sheet="account">Deposit</button>
+                <button class="state-action primary" type="button" data-open-sheet="receive">Deposit</button>
                 <button class="state-action" type="button" data-open-sheet="phoenix-setup">Create Phoenix account</button>
               </div>
             </section>
@@ -1371,15 +1433,15 @@
             <section class="section" aria-labelledby="spot-position-holdings-heading">
               <div class="section-heading"><h2 id="spot-position-holdings-heading">Holdings</h2><span class="label">3 assets</span></div>
               <div class="register">
-                <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>SPOT · 2.3704 NVDAx</span></span><span class="register-value"><strong class="value">$435.24</strong><span>+3.18%</span></span></button>
-                <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>SPOT · 1.4260 AAPLx</span></span><span class="register-value"><strong class="value">$340.06</strong><span>+0.71%</span></span></button>
-                <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>SPOT · 0.5534 TSLAx</span></span><span class="register-value"><strong class="value">$235.78</strong><span class="negative">−0.84%</span></span></button>
+                <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>Spot · 2.3704 NVDAx</span></span><span class="register-value"><strong class="value">$435.24</strong><span>+3.18%</span></span></button>
+                <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>Spot · 1.4260 AAPLx</span></span><span class="register-value"><strong class="value">$340.06</strong><span>+0.71%</span></span></button>
+                <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>Spot · 0.5534 TSLAx</span></span><span class="register-value"><strong class="value">$235.78</strong><span class="negative">−0.84%</span></span></button>
               </div>
             </section>
             <section class="phoenix-prompt" aria-labelledby="spot-position-phoenix-heading">
               <span class="phoenix-prompt-label">Perpetuals</span>
-              <h3 id="spot-position-phoenix-heading">No Phoenix account yet.</h3>
-              <p>Your holdings are here. Create Phoenix separately only when you want perpetual positions and orders.</p>
+              <h3 id="spot-position-phoenix-heading">Trade perpetuals</h3>
+              <p>Set up a Phoenix account to open perpetual positions.</p>
               <button class="state-action" type="button" data-open-sheet="phoenix-setup">Create Phoenix account</button>
             </section>
           </div>
@@ -1390,25 +1452,25 @@
               <h2 id="phoenix-empty-positions-heading">No open positions.</h2>
               <p>Your Phoenix account is ready. Positions and orders will appear here after your first perpetual trade.</p>
               <div class="phoenix-ready-line"><span>Phoenix trading account</span><strong>Ready</strong></div>
-              <div class="state-actions"><button class="state-action primary full" type="button" data-open-sheet="account">Deposit</button></div>
+              <div class="state-actions"><button class="state-action primary full" type="button" data-open-sheet="receive">Deposit</button></div>
             </section>
           </div>
 
           <div data-portfolio-when="full" hidden>
-          <div class="exposure-summary">
-            <h2>Current exposure</h2><p>Perpetual risk and owned assets stay distinct, even when they belong to the same company.</p>
-            <div class="exposure-numbers"><div><span>Unrealized PnL</span><strong class="value">+$6.67</strong></div><div><span>Gross exposure</span><strong class="value">$300.00</strong></div></div>
+          <div class="position-filters" role="group" aria-label="Position categories"><button type="button" data-position-filter="all" aria-pressed="true">All</button><button type="button" data-position-filter="holdings" aria-pressed="false">Holdings</button><button type="button" data-position-filter="perpetuals" aria-pressed="false">Perpetuals</button><button type="button" data-position-filter="orders" aria-pressed="false">Orders</button></div><div class="exposure-summary" data-position-section="perpetuals">
+
+            <div class="exposure-numbers"><div><span>Unrealized PnL</span><strong class="value">+$6.67</strong></div><div><span>Perpetual exposure</span><strong class="value">$300.00</strong></div></div>
           </div>
 
-          <section class="section" aria-labelledby="orders-heading">
-            <div class="section-heading"><h2 id="orders-heading">Open orders</h2><span class="label">1 order · not a position</span></div>
+          <section class="section" aria-labelledby="orders-heading" data-position-section="orders">
+            <div class="section-heading"><h2 id="orders-heading">Open orders</h2><span class="label">1 order</span></div>
             <button class="order-row" type="button" data-order><span><strong>Buy Tesla perpetual</strong><span>TSLA-PERP · Limit $398.00 · 1.5× isolated</span></span><span class="status-tag">Placed</span></button>
           </section>
 
-          <section class="section" aria-labelledby="positions-heading">
+          <section class="section" aria-labelledby="positions-heading" data-position-section="perpetuals">
             <div class="section-heading"><h2 id="positions-heading">Open positions</h2><span class="label">1 perpetual</span></div>
             <article class="position-card">
-              <div class="position-title"><div class="position-identity"><span class="company-logo nvda">NV</span><div><strong>NVIDIA</strong><span>NVDA-PERP · LONG · 3× ISOLATED</span></div></div><span class="open-tag">Open</span></div>
+              <div class="position-title"><div class="position-identity"><span class="company-logo nvda">NV</span><div><strong>NVIDIA</strong><span>Long · 3× isolated</span></div></div><span class="open-tag">Open</span></div>
               <div class="position-pnl"><strong class="value">+$6.67 · 6.67%</strong><span class="value">$300.00<br>exposure</span></div>
               <div class="position-grid"><div class="position-fact"><span>Entry</span><strong>$185.50</strong></div><div class="position-fact"><span>Mark</span><strong>$189.72</strong></div><div class="position-fact"><span>Collateral</span><strong>$100.00</strong></div></div>
               <p class="risk-line"><strong>Liquidation $125.20 · 34% away</strong><br>Funding: You pay 0.0062% · next in 42 min</p>
@@ -1416,16 +1478,17 @@
             </article>
           </section>
 
-          <section class="section" aria-labelledby="all-holdings-heading">
+          <section class="section" aria-labelledby="all-holdings-heading" data-position-section="holdings">
             <div class="section-heading"><h2 id="all-holdings-heading">Holdings</h2><span class="label">3 priced · 1 unpriced</span></div>
             <div class="register">
-              <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>SPOT · 2.3704 NVDAx</span></span><span class="register-value"><strong class="value">$435.24</strong><span>+3.18%</span></span></button>
-              <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>SPOT · 1.4260 AAPLx</span></span><span class="register-value"><strong class="value">$340.06</strong><span>+0.71%</span></span></button>
-              <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>SPOT · 0.5534 TSLAx</span></span><span class="register-value"><strong class="value">$235.78</strong><span class="negative">−0.84%</span></span></button>
-              <button class="register-row" type="button" data-company="Anthropic"><span class="company-logo anthropic">AI</span><span class="register-copy"><strong>Anthropic</strong><span>PRESTOCK · 12.00 units</span></span><span class="register-value"><strong>Unpriced</strong><span class="private">Indicative only</span></span></button>
+              <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>Spot · 2.3704 NVDAx</span></span><span class="register-value"><strong class="value">$435.24</strong><span>+3.18%</span></span></button>
+              <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>Spot · 1.4260 AAPLx</span></span><span class="register-value"><strong class="value">$340.06</strong><span>+0.71%</span></span></button>
+              <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>Spot · 0.5534 TSLAx</span></span><span class="register-value"><strong class="value">$235.78</strong><span class="negative">−0.84%</span></span></button>
+              <button class="register-row" type="button" data-company="Anthropic"><span class="company-logo anthropic">AI</span><span class="register-copy"><strong>Anthropic</strong><span>PreStocks · 12.00 units</span></span><span class="register-value"><strong>Unpriced</strong><span class="private">Excluded from total</span></span></button>
             </div>
           </section>
-          <p class="sample-note">Unpriced private-market exposure stays outside net account equity until Warren has a sufficiently reliable valuation.</p>
+
+<section class="section" data-position-section="holdings" aria-labelledby="cash-heading"><div class="section-heading"><h2 id="cash-heading">Wallet balances</h2></div><div class="register"><div class="register-row"><span class="company-logo">$</span><span class="register-copy"><strong>Available to trade</strong><span>225 USDC</span></span><span class="register-value"><strong class="value">$225.00</strong></span></div><div class="register-row"><span class="company-logo">◎</span><span class="register-copy"><strong>Network fee balance</strong><span>0.0321 SOL</span></span><span class="register-value"><strong class="value">$6.09</strong></span></div></div></section>
           </div>
         </section>
 
@@ -1455,7 +1518,7 @@
           <div data-portfolio-when="full" hidden>
           <label class="search-field">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            <input id="activity-search" type="search" placeholder="Search company, ticker, or transaction" autocomplete="off">
+            <input id="activity-search" aria-label="Search activity" type="search" placeholder="Search company, ticker, or transaction" autocomplete="off">
           </label>
           <div class="filter-strip" aria-label="Activity filters">
             <button class="filter-chip" type="button" data-filter="all" aria-pressed="true">All</button>
@@ -1464,13 +1527,9 @@
             <button class="filter-chip" type="button" data-filter="transfers" aria-pressed="false">Transfers</button>
             <button class="filter-chip" type="button" data-filter="funding" aria-pressed="false">Funding</button>
           </div>
-          <div class="activity-tools"><button type="button" data-open-sheet="activity-filters">All Warren wallets ▾</button><button type="button" data-open-sheet="activity-filters">Filters 0</button></div>
+          <div class="activity-tools"><span>Active wallet · 8xK2…mP4q</span><button type="button" data-open-sheet="activity-filters" id="status-filter-label">All statuses ⌄</button></div>
 
-          <button class="attention-strip" type="button" data-event="Apple purchase" data-event-detail="Submitted but not reconciled. This stays in chronological history below while its unresolved state is surfaced here.">
-            <strong>1 item needs attention</strong><span>Apple purchase status unknown · Do not resubmit ›</span>
-          </button>
-
-          <div class="activity-groups" id="activity-groups">
+<div class="activity-filter-summary" id="activity-filter-summary" hidden><span id="activity-result-count"></span><button class="text-button" type="button" id="reset-activity">Reset filters</button></div><div class="activity-groups" id="activity-groups">
             <section data-activity-group>
               <div class="date-label">Today</div>
               <div class="activity-list">
@@ -1494,14 +1553,14 @@
               <div class="activity-list">
                 <button class="activity-row" type="button" data-kind="trades" data-search="apple aapl aaplx sell" data-event="Sold Apple" data-event-detail="Confirmed · 0.2500 AAPLx sold"><span class="activity-icon">A</span><span class="activity-copy"><strong>Sold Apple</strong><span>AAPLx · 5:42 PM</span></span><span class="activity-value"><strong class="value">+$59.10</strong><span>Confirmed</span></span></button>
                 <button class="activity-row" type="button" data-kind="funding perps" data-search="nvidia nvda perp funding received" data-event="Funding received" data-event-detail="Confirmed · NVDA-PERP · Previous funding period"><span class="activity-icon perp">ƒ</span><span class="activity-copy"><strong>Funding received</strong><span>NVDA-PERP · 4:00 PM</span></span><span class="activity-value"><strong class="value">+$0.01</strong><span>Confirmed</span></span></button>
-                <button class="activity-row" type="button" data-kind="trades" data-search="anthropic prestock commitment failed" data-event="Anthropic commitment failed" data-event-detail="Failed before settlement. No financial change occurred."><span class="activity-icon transfer">AI</span><span class="activity-copy"><strong>Anthropic commitment</strong><span>PreStock · 1:35 PM</span></span><span class="activity-value"><strong class="value">$120.00</strong><span class="failed">Failed</span></span></button>
+                <button class="activity-row" type="button" data-kind="trades" data-search="apple aaplx spot sale failed" data-event="Apple sale failed" data-event-detail="Failed before settlement. No financial change occurred."><span class="activity-icon sell">A</span><span class="activity-copy"><strong>Apple sale</strong><span>Spot · 1:35 PM</span></span><span class="activity-value"><strong class="value">$120.00</strong><span class="failed">Failed</span></span></button>
                 <button class="activity-row" type="button" data-kind="transfers" data-search="sol received network fee" data-event="SOL received" data-event-detail="Confirmed · 0.035 SOL received for network fees"><span class="activity-icon transfer">◎</span><span class="activity-copy"><strong>SOL received</strong><span>Network fee balance · 10:18 AM</span></span><span class="activity-value"><strong class="value">+0.035</strong><span>Confirmed</span></span></button>
               </div>
             </section>
           </div>
-          <div class="empty-results" id="empty-results" hidden>No Warren activity matches this search and filter.</div>
-          <button class="load-more" type="button" data-toast="Older activity would load with the next cursor. The mobile app will virtualize this list.">Load earlier activity</button>
-          <p class="sample-note">Only Warren-recognized trades, transfers, funding, and position events appear here. Raw wallet history remains available through the explorer.</p>
+          <div class="empty-results" id="empty-results" hidden>No activity matches your filters.</div>
+          <button class="load-more" type="button" id="load-activity">Load earlier activity</button>
+
           </div>
         </section>
       </div>
@@ -1516,7 +1575,7 @@
         <section class="bottom-sheet" id="account-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
           <div class="sheet-handle" aria-hidden="true"></div>
           <div class="sheet-content">
-            <div class="sheet-header"><h2 id="sheet-title" tabindex="-1">Account</h2><button class="sheet-close" id="sheet-close" type="button" aria-label="Close">×</button></div>
+            <div class="sheet-header"><button class="sheet-back" id="sheet-back" type="button" aria-label="Back" hidden>‹</button><h2 id="sheet-title" tabindex="-1">Account</h2><button class="sheet-close" id="sheet-close" type="button" aria-label="Close">×</button></div>
             <p class="sheet-copy" id="sheet-copy"></p>
             <div id="sheet-extra"></div>
             <div class="sheet-fact" id="sheet-fact"></div>
@@ -1533,6 +1592,8 @@
 
   <script>
     (() => {
+      // Developer handoff: visual fixtures only. Preserve the app API, auth, wallet signing,
+      // account-state and cursor-pagination adapters when implementing this layout.
       const $ = (selector, root = document) => root.querySelector(selector);
       const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
       const scroll = $('#portfolio-scroll');
@@ -1548,6 +1609,8 @@
       const privacyToggle = $('#privacy-toggle');
       const sheetBackdrop = $('#sheet-backdrop');
       const sheetTitle = $('#sheet-title');
+      const sheetBack = $('#sheet-back');
+      const accountSheet = $('#account-sheet');
       const sheetCopy = $('#sheet-copy');
       const sheetExtra = $('#sheet-extra');
       const sheetFact = $('#sheet-fact');
@@ -1557,16 +1620,33 @@
       const sheetSecondary = $('#sheet-secondary');
       const toast = $('#toast');
       const sessionAlert = $('#session-alert');
+      // Design data only. Bind the connected wallet, prices, balances, timestamps and account capabilities to app responses.
       const walletAddress = '8xK2Wq7nV4DtB9sA6yF1cR5hJ3uL7eM2pZ6mP4q';
       let accountState = 'ready';
-      let portfolioState = 'new';
+      let portfolioState = 'full';
       let currentView = 'overview';
       let returnView = 'overview';
       let valuesPrivate = false;
       let activeFilter = 'all';
+      let activeStatus = 'all';
+      let activePositionFilter = 'all';
+      let earlierLoaded = false;
       let toastTimer;
       let lastSheetTrigger = null;
       let accountReturnAction = null;
+      let currentSheet = null;
+      let authEmail = '';
+      let authCode = '';
+      let signInMethod = 'email';
+      let accountKnown = false;
+      let flowTimer = null;
+      let resendTimer = null;
+      let resendAvailableAt = 0;
+      let authErrorConsumed = false;
+      let depositReturn = 'account';
+      const walletIcon = '<svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M4 6V4h14v2M16 12h5v5h-5a2.5 2.5 0 0 1 0-5Z" stroke="currentColor" stroke-width="1.6"/></svg>';
+      const shieldIcon = '<svg width="16" height="18" viewBox="0 0 20 22" fill="none" aria-hidden="true"><path d="m10 2 7 3v6c0 4-4 7-7 9-3-2-7-5-7-9V5l7-3Z" stroke="currentColor" stroke-width="1.5"/><path d="m6 10 3 3 5-5" stroke="currentColor" stroke-width="1.5"/></svg>';
+      const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
       const content = {
         receive: { title: 'Deposit to wallet', copy: 'Send only supported Solana assets to this address. Assets sent on another network may not be recoverable.', fact: 'A deposit does not approve a trade. Confirm the asset and network before sending.', primary: 'Copy address', action: 'copy', extra: 'receive' },
@@ -1629,27 +1709,24 @@
           accountChip.setAttribute('aria-label', 'Sign in to Warren');
         }
         $('#wallet-issue-strip').hidden = accountState !== 'issue';
-        $('#equity-updated').textContent = accountState === 'issue' ? 'Last updated 9:34 AM' : 'Updated moments ago';
+        $('#equity-updated').textContent = accountState === 'issue' ? 'Last updated 9:34 AM' : 'Updated 9:41 AM';
         signedOutPrimary.disabled = accountState === 'checking';
         signedOutPrimary.setAttribute('aria-busy', String(accountState === 'checking'));
         signedOutPrimaryLabel.textContent = accountState === 'checking' ? 'Restoring…' : accountState === 'unverified' ? 'Confirm wallet' : accountState === 'wallet-setup' ? 'Finish setup' : accountState === 'expired' ? 'Sign in again' : 'Sign in';
         signedOutPrimary.dataset.openSheet = accountState === 'unverified' ? 'verify-account' : accountState === 'wallet-setup' ? 'wallet-setup' : 'sign-in';
         signedOutPrimaryArrow.hidden = accountState === 'checking';
-        $$('[data-wallet-action]').forEach(button => {
-          button.hidden = accountState === 'issue';
-          button.disabled = accountState === 'issue';
-          button.textContent = 'Deposit';
-        });
+        $$('[data-open-sheet="receive"], [data-open-sheet="phoenix-setup"]').forEach(button => {button.disabled=accountState==='issue';});
         privacyToggle.hidden = !privateSession || portfolioState !== 'full';
         scroll.scrollTo({ top: 0, behavior: announce ? 'smooth' : 'auto' });
         closeSheet();
         if (announce) {
-          const message = accountState === 'ready' ? `${portfolioState} account · ${currentView}.` : accountState === 'issue' ? 'Wallet issue preview. Your signed-in Portfolio remains visible.' : accountState === 'unverified' ? 'Account verification required.' : accountState === 'wallet-setup' ? 'Wallet setup required.' : accountState === 'expired' ? 'Session expired. Private portfolio data hidden.' : accountState === 'checking' ? 'Checking account status.' : 'Signed-out Portfolio preview.';
+          const message = accountState === 'ready' ? 'Wallet ready.' : accountState === 'issue' ? 'Wallet data needs a refresh.' : accountState === 'unverified' ? 'Account verification required.' : accountState === 'wallet-setup' ? 'Wallet setup required.' : accountState === 'expired' ? 'Session expired. Private portfolio data hidden.' : accountState === 'checking' ? 'Checking account status.' : 'Signed out.';
           showToast(message);
         }
       }
 
       function selectView(view, { announce = false } = {}) {
+        if (accountState === 'checking') { showToast('Getting your wallet ready…'); return; }
         if (!hasPrivateSession() && view !== 'overview') {
           returnView = view;
           openSheet('sign-in');
@@ -1660,16 +1737,138 @@
         renderState({ announce });
       }
 
+      function walletCardMarkup({ preparing = false, expanded = false } = {}) {
+        return `<div class="wallet-card ${preparing ? 'preparing' : ''} ${expanded ? 'expanded' : ''}" aria-label="Warren Solana wallet">
+          <div class="wallet-card-top"><span class="wallet-card-brand"><span class="wallet-card-mark" aria-hidden="true">W</span>Warren wallet</span><span class="wallet-network">Solana</span></div>
+          ${expanded ? receiveMarkup() : `<span class="wallet-card-address">${preparing ? 'Preparing your wallet…' : '8xK2…mP4q'}</span>`}
+          ${expanded ? '' : `<div class="wallet-card-footer"><span>${preparing ? 'Your account is verified' : 'Your wallet for investing'}</span><span class="wallet-card-state">${preparing ? 'Preparing' : 'Ready'}</span></div>`}
+        </div>`;
+      }
+
       function receiveMarkup() {
-        return `<div class="receive-address"><svg class="qr-mark" viewBox="0 0 72 72" aria-label="Sample wallet QR code"><rect width="72" height="72" fill="currentColor"/><g fill="#f2f5f1"><rect x="5" y="5" width="20" height="20"/><rect x="9" y="9" width="12" height="12" fill="#131918"/><rect x="47" y="5" width="20" height="20"/><rect x="51" y="9" width="12" height="12" fill="#131918"/><rect x="5" y="47" width="20" height="20"/><rect x="9" y="51" width="12" height="12" fill="#131918"/><rect x="31" y="7" width="6" height="6"/><rect x="37" y="13" width="6" height="12"/><rect x="29" y="29" width="8" height="8"/><rect x="41" y="29" width="7" height="7"/><rect x="51" y="31" width="6" height="12"/><rect x="61" y="29" width="6" height="8"/><rect x="29" y="41" width="6" height="12"/><rect x="37" y="39" width="8" height="7"/><rect x="47" y="47" width="8" height="8"/><rect x="57" y="45" width="10" height="6"/><rect x="39" y="57" width="7" height="10"/><rect x="51" y="59" width="6" height="8"/><rect x="61" y="55" width="6" height="12"/></g></svg><div class="address-copy"><span>Solana wallet address</span><strong>${walletAddress}</strong></div></div>`;
+        return `<div class="receive-address"><svg class="qr-mark" role="img" aria-label="Wallet address QR code" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h37v37H0z"/><path stroke="#000000" d="M4 4.5h7m2 0h4m1 0h3m2 0h1m2 0h7M4 5.5h1m5 0h1m2 0h1m1 0h2m2 0h2m5 0h1m5 0h1M4 6.5h1m1 0h3m1 0h1m1 0h1m2 0h1m3 0h2m2 0h1m2 0h1m1 0h3m1 0h1M4 7.5h1m1 0h3m1 0h1m1 0h6m3 0h1m2 0h1m1 0h1m1 0h3m1 0h1M4 8.5h1m1 0h3m1 0h1m1 0h4m2 0h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h1M4 9.5h1m5 0h1m1 0h1m1 0h1m1 0h1m1 0h2m2 0h1m1 0h1m1 0h1m5 0h1M4 10.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M12 11.5h2m2 0h1m3 0h1m1 0h2M4 12.5h1m1 0h5m4 0h6m5 0h5M5 13.5h3m1 0h1m4 0h1m1 0h1m1 0h1m2 0h5m1 0h2m3 0h1M4 14.5h1m2 0h2m1 0h6m3 0h1m1 0h2m1 0h2m2 0h1m1 0h2M5 15.5h2m1 0h1m2 0h3m1 0h1m2 0h1m3 0h1m2 0h5m2 0h1M5 16.5h2m1 0h1m1 0h1m2 0h1m2 0h1m3 0h3m1 0h2m1 0h1m1 0h1m1 0h2M5 17.5h2m4 0h1m1 0h1m2 0h2m1 0h2m2 0h1m2 0h4m1 0h1M5 18.5h2m3 0h2m1 0h1m1 0h1m1 0h3m1 0h2m2 0h2m1 0h3M4 19.5h3m4 0h2m1 0h4m1 0h1m3 0h2m2 0h3m1 0h1M4 20.5h1m1 0h1m2 0h3m1 0h4m1 0h4m6 0h5M4 21.5h1m3 0h2m1 0h2m2 0h1m4 0h1m3 0h1m1 0h3m3 0h1M4 22.5h1m2 0h2m1 0h1m1 0h1m1 0h1m1 0h1m2 0h1m4 0h2m2 0h2M4 23.5h1m1 0h3m2 0h2m1 0h3m1 0h1m7 0h3m2 0h1M4 24.5h1m3 0h1m1 0h1m2 0h1m1 0h2m2 0h2m2 0h10M12 25.5h1m4 0h2m2 0h4m3 0h2m2 0h1M4 26.5h7m2 0h2m2 0h4m2 0h2m1 0h1m1 0h4M4 27.5h1m5 0h1m1 0h1m4 0h1m1 0h2m1 0h3m3 0h2m2 0h1M4 28.5h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h1m2 0h2m1 0h5m1 0h1M4 29.5h1m1 0h3m1 0h1m1 0h1m2 0h3m1 0h2m3 0h1m2 0h1m1 0h4M4 30.5h1m1 0h3m1 0h1m1 0h1m3 0h2m1 0h3m1 0h1m1 0h1m2 0h1m1 0h2M4 31.5h1m5 0h1m3 0h1m3 0h3m2 0h3m3 0h1m1 0h1M4 32.5h7m1 0h2m4 0h2m1 0h1m5 0h3"/></svg><div class="address-copy"><span>Wallet address</span><strong>${walletAddress}</strong></div></div>`;
       }
 
       function accountMarkup() {
-        return `<div class="wallet-identity"><span class="wallet-identity-mark" aria-hidden="true">W</span><span class="wallet-identity-copy"><small>Active wallet</small><strong>Warren wallet</strong><span>Embedded · Solana</span></span><span class="wallet-ready">Ready</span></div><div class="selectable-address" aria-label="Full Solana wallet address">${walletAddress}</div><div class="wallet-actions"><button class="wallet-action" type="button" data-sheet-action="copy" aria-label="Copy Solana wallet address ending mP4q"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.8"/></svg>Copy address</button><button class="wallet-action" type="button" data-sheet-action="receive"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v12m0 0 4-4m-4 4-4-4M5 20h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Show QR</button></div><div class="sheet-list"><button class="sheet-row" type="button" data-sheet-action="security"><span>Security & recovery</span><small>Email sign-in</small></button><button class="sheet-row danger" type="button" data-sheet-action="sign-out"><span>Sign out</span><small>Ends Warren session</small></button></div>`;
+        return `${walletCardMarkup()}<div class="wallet-actions">
+          <button class="wallet-action primary" type="button" data-sheet-action="receive">↓ Deposit</button>
+          <button class="wallet-action" type="button" data-sheet-action="copy">Copy address</button>
+        </div><p class="account-signin">${signInMethod === 'email' ? `Signed in with ${authEmail ? escapeHtml(authEmail) : 'email'}` : 'Signed in with a Solana wallet'}</p>
+        <div class="sheet-list">
+          <button class="sheet-row" type="button" data-sheet-action="security"><span><strong>Security & recovery</strong><small>Manage access to your account</small></span><span class="row-arrow" aria-hidden="true">›</span></button>
+          <button class="sheet-row" type="button" data-sheet-action="export"><span><strong>Export wallet</strong><small>Use this wallet in another app</small></span><span class="row-arrow" aria-hidden="true">›</span></button>
+          <button class="sheet-row danger" type="button" data-sheet-action="sign-out"><span><strong>Sign out</strong></span><span class="row-arrow" aria-hidden="true">›</span></button>
+        </div>`;
       }
 
       function signInMarkup() {
-        return `<div class="auth-choices"><button class="auth-choice primary" type="button" data-sheet-action="auth-email"><span class="auth-choice-icon" aria-hidden="true">@</span><span><strong>Continue with email</strong><small>Create or restore your account and Warren wallet.</small></span><span class="auth-choice-arrow" aria-hidden="true">›</span></button><button class="auth-choice" type="button" data-sheet-action="auth-wallet"><span class="auth-choice-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="6" width="17" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M16.5 13.5h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span><strong>Use an existing wallet</strong><small>Connect a Solana wallet, then confirm control with a message.</small></span><span class="auth-choice-arrow" aria-hidden="true">›</span></button></div><button class="auth-not-now" type="button" data-sheet-action="close">Not now</button>`;
+        return `${returnView !== 'overview' ? `<div class="auth-context">Continue to your ${returnView} after signing in.</div>` : ''}<div class="auth-choices">
+          <button class="auth-choice primary" type="button" data-sheet-action="auth-email"><span class="auth-choice-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.6"/></svg></span><span><strong>Continue with email</strong><small>We’ll send you a verification code.</small></span><span class="auth-choice-arrow" aria-hidden="true">›</span></button>
+          <button class="auth-choice" type="button" data-sheet-action="auth-wallet"><span class="auth-choice-icon" aria-hidden="true">${walletIcon}</span><span><strong>Continue with existing wallet</strong><small>Use a Solana wallet on this phone.</small></span><span class="auth-choice-arrow" aria-hidden="true">›</span></button>
+        </div><button class="auth-not-now" type="button" data-sheet-action="close">Keep exploring</button><div class="auth-trust">${shieldIcon}<span>Secured by Privy</span></div>`;
+      }
+
+      function emailMarkup() {
+        return `<form class="auth-form" id="auth-form" novalidate><label class="auth-label" for="auth-email-input">Email address</label><input class="auth-input" id="auth-email-input" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="you@example.com" value="${escapeHtml(authEmail)}" aria-describedby="auth-error"><p class="auth-error" id="auth-error" role="alert"></p><button type="submit" hidden>Send code</button></form>`;
+      }
+
+      function codeMarkup() {
+        return `<form class="auth-form" id="auth-form" novalidate><div class="auth-email-line"><strong>${escapeHtml(authEmail)}</strong><button class="auth-link" type="button" data-sheet-action="edit-email">Change</button></div><label class="auth-label" for="auth-code-input">Verification code</label><input class="auth-input auth-code" id="auth-code-input" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" aria-describedby="auth-error" value="${authCode}"><p class="auth-error" id="auth-error" role="alert"></p><div class="resend-row"><span>Didn’t receive a code?</span><button class="auth-link" id="resend-code" type="button" data-sheet-action="resend-code">Resend code</button></div><button type="submit" hidden>Verify email</button></form>`;
+      }
+
+      function setAuthError(message) {
+        const field = currentSheet === 'auth-code' ? $('#auth-code-input') : $('#auth-email-input');
+        $('#auth-error').textContent = message;
+        field.setAttribute('aria-invalid', 'true');
+        field.focus();
+      }
+
+      function updateResend() {
+        const button = $('#resend-code');
+        if (!button) return;
+        const remaining = Math.max(0, Math.ceil((resendAvailableAt - Date.now()) / 1000));
+        button.disabled = remaining > 0;
+        button.textContent = remaining ? `Resend in ${remaining}s` : 'Resend code';
+        if (!remaining) clearInterval(resendTimer);
+      }
+
+      // DESIGN ADAPTER: no email is sent, no code is authenticated and no native wallet is
+      // connected by this file. Any six digits advance the visual walkthrough. Replace these
+      // transitions with Privy's native callbacks; never copy them into production auth.
+      function sendDesignCode() {
+        authEmail = $('#auth-email-input').value.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authEmail)) { setAuthError('Enter a valid email address.'); return; }
+        signInMethod = 'email';
+        authCode = '';
+        resendAvailableAt = Date.now() + 30000;
+        openSheet('auth-code', undefined, accountChip);
+      }
+
+      function verifyDesignCode() {
+        authCode = $('#auth-code-input').value.replace(/\D/g, '').slice(0, 6);
+        if (authCode.length !== 6) { setAuthError('Enter the 6-digit code from your email.'); return; }
+        if (params.get('auth-error') === 'code' && !authErrorConsumed) {
+          authErrorConsumed = true;
+          setAuthError('That code has expired. Request a new code.');
+          resendAvailableAt = 0;
+          updateResend();
+          return;
+        }
+        prepareDesignWallet();
+      }
+
+      function prepareDesignWallet() {
+        accountState = 'checking';
+        renderState({ announce: false });
+        openSheet('wallet-preparing', undefined, accountChip);
+        flowTimer = setTimeout(() => {
+          flowTimer = null;
+          const showReady = sheetBackdrop.classList.contains('open') && currentSheet === 'wallet-preparing';
+          const returning = accountKnown;
+          accountKnown = true;
+          accountState = 'ready';
+          if (!returning) portfolioState = 'new';
+          currentView = returnView;
+          renderState({ announce: false });
+          if (returning) { showToast('Welcome back.'); accountChip.focus(); }
+          else if (showReady) openSheet('wallet-ready', undefined, accountChip);
+          else showToast('Your Warren wallet is ready.');
+        }, 1100);
+      }
+
+      function goBackInSheet() {
+        const target = sheetBack.dataset.target;
+        if (target === 'account') returnToAccount();
+        else if (target) openSheet(target, undefined, accountChip);
+      }
+
+      function handleFlowAction(action) {
+        if (action === 'send-code') sendDesignCode();
+        else if (action === 'verify-code') verifyDesignCode();
+        else if (action === 'edit-email') openSheet('auth-email', undefined, accountChip);
+        else if (action === 'resend-code') {
+          if (Date.now() < resendAvailableAt) return true;
+          authCode = ''; resendAvailableAt = Date.now() + 30000;
+          openSheet('auth-code', undefined, accountChip);
+          showToast('A new code has been sent.');
+        }
+        else if (action === 'wallet-open') openSheet('wallet-approval', undefined, accountChip);
+        else if (action === 'back-wallet') openSheet('auth-wallet', undefined, accountChip);
+        else if (action === 'wallet-confirm') { signInMethod = 'wallet'; prepareDesignWallet(); }
+        else if (action === 'ready-deposit') { depositReturn = 'wallet-ready'; openSheet('receive', undefined, accountChip); }
+        else if (action === 'explore-markets') location.href = './markets_mock.html';
+        else if (action === 'export-wallet') {
+          // Native host integration boundary: launch the approved Privy export WebView.
+          // The host prevents this event's default only when it handles the request.
+          // Never pass credentials, private keys or recovery material through this event.
+          const request = new CustomEvent('warren:export-wallet', { cancelable: true, detail: { address: walletAddress, chain: 'solana', source: 'portfolio-account' } });
+          if (window.dispatchEvent(request)) {
+            sheetAlert.textContent = 'Secure export is unavailable right now. Please try again later.';
+            sheetAlert.hidden = false;
+          }
+        }
+        else return false;
+        return true;
       }
 
       function walletIssueMarkup() {
@@ -1677,56 +1876,130 @@
       }
 
       function equityMarkup() {
-        return `<div class="reconcile-list"><div class="reconcile-row"><span>Priced token holdings</span><strong>$1,011.08</strong></div><div class="reconcile-row"><span>Available USDC + SOL</span><strong>$231.09</strong></div><div class="reconcile-row"><span>NVDA position equity</span><strong>$106.67</strong></div><div class="reconcile-row"><span>Phoenix available collateral</span><strong>$6.55</strong></div><div class="reconcile-row"><span>Liabilities</span><strong>$0.00</strong></div><div class="reconcile-row"><span>Net account equity</span><strong>$1,355.39</strong></div></div>`;
+        return `<div class="reconcile-list"><div class="reconcile-row"><span>Priced token holdings</span><strong>$1,011.08</strong></div><div class="reconcile-row"><span>Available to trade · USDC</span><strong>$225.00</strong></div><div class="reconcile-row"><span>Network fee balance · SOL</span><strong>$6.09</strong></div><div class="reconcile-row"><span>NVDA position equity</span><strong>$106.67</strong></div><div class="reconcile-row"><span>Phoenix available collateral</span><strong>$6.55</strong></div><div class="reconcile-row"><span>Liabilities</span><strong>$0.00</strong></div><div class="reconcile-row"><span>Net account equity</span><strong>$1,355.39</strong></div></div>`;
       }
 
       function activityFiltersMarkup() {
-        return `<div class="sheet-list"><button class="sheet-row" type="button"><span>Wallet</span><small>All Warren wallets</small></button><button class="sheet-row" type="button"><span>Status</span><small>Any status</small></button><button class="sheet-row" type="button"><span>Action</span><small>Any action</small></button><button class="sheet-row" type="button"><span>Date</span><small>All time</small></button></div>`;
+        return `<div class="sheet-list">${Object.entries({all:'All statuses',pending:'Pending',confirmed:'Confirmed',failed:'Failed',unknown:'Unknown'}).map(([status,label])=>`<button class="sheet-status-option" type="button" data-status-filter="${status}" aria-pressed="${activeStatus===status}">${label}</button>`).join('')}</div>`;
       }
 
       function positionMarkup() {
-        return `<div class="risk-table"><div class="risk-row"><span>Status</span><strong>Open</strong></div><div class="risk-row"><span>Unrealized PnL</span><strong style="color:var(--gain)">+$6.67 · 6.67%</strong></div><div class="risk-row"><span>Entry / mark</span><strong>$185.50 / $189.72</strong></div><div class="risk-row"><span>Exposure</span><strong>$300.00</strong></div><div class="risk-row"><span>Collateral</span><strong>$100.00</strong></div><div class="risk-row"><span>Leverage</span><strong>3× isolated</strong></div><div class="risk-row"><span>Liquidation</span><strong>$125.20 · 34% away</strong></div><div class="risk-row"><span>Funding</span><strong>You pay 0.0062% · 42m</strong></div><div class="risk-row"><span>Venue update</span><strong>8 sec ago</strong></div></div><div class="concept-banner"><strong>Future position management · Concept only</strong><br>Add collateral, reduce, close, and risk orders are not available in the current release.</div><div class="planned-actions"><button type="button" disabled>Add collateral</button><button type="button" disabled>Reduce position</button><button type="button" disabled>Close position</button><button type="button" disabled>TP / SL</button></div><div class="position-history"><h3>Position activity</h3><div class="sheet-list"><button class="sheet-row" type="button" data-sheet-action="activity"><span>Position opened</span><small>Confirmed · 9:32 AM</small></button><button class="sheet-row" type="button" data-sheet-action="activity"><span>Funding paid</span><small>−$0.03 · 8:00 AM</small></button></div></div>`;
+        return `<div class="risk-table"><div class="risk-row"><span>Status</span><strong>Open</strong></div><div class="risk-row"><span>Unrealized PnL</span><strong style="color:var(--gain)">+$6.67 · 6.67%</strong></div><div class="risk-row"><span>Entry / mark</span><strong>$185.50 / $189.72</strong></div><div class="risk-row"><span>Exposure</span><strong>$300.00</strong></div><div class="risk-row"><span>Collateral</span><strong>$100.00</strong></div><div class="risk-row"><span>Leverage</span><strong>3× isolated</strong></div><div class="risk-row"><span>Liquidation</span><strong>$125.20 · 34% away</strong></div><div class="risk-row"><span>Funding</span><strong>You pay 0.0062% · 42m</strong></div><div class="risk-row"><span>Venue update</span><strong>8 sec ago</strong></div></div><div class="position-history"><h3>Position activity</h3><div class="sheet-list"><button class="sheet-row" type="button" data-sheet-action="activity"><span>Position opened</span><small>Confirmed · 9:32 AM</small></button><button class="sheet-row" type="button" data-sheet-action="activity"><span>Funding paid</span><small>−$0.03 · 8:00 AM</small></button></div></div>`;
       }
 
       function openSheet(kind, override, trigger = document.activeElement) {
-        lastSheetTrigger = trigger instanceof HTMLElement ? trigger : accountChip;
+        lastSheetTrigger = trigger instanceof HTMLElement && trigger!==document.body && trigger!==document.documentElement && trigger.isConnected ? trigger : accountChip;
+        clearTimeout(flowTimer); flowTimer = null;
+        clearInterval(resendTimer);
+        currentSheet = kind;
+        const flowSheets = ['sign-in','auth-email','auth-code','auth-wallet','wallet-approval','wallet-preparing','wallet-ready','account','receive','export','security','sign-out','wallet-setup','verify-account'];
+        accountSheet.classList.toggle('onboarding-sheet', flowSheets.includes(kind));
+        sheetActions.replaceChildren(...(flowSheets.includes(kind) ? [sheetPrimary, sheetSecondary] : [sheetSecondary, sheetPrimary]));
+        accountSheet.dataset.step = kind;
+        const backTarget = { 'auth-email':'sign-in','auth-code':'auth-email','auth-wallet':'sign-in','wallet-approval':'auth-wallet', 'receive':depositReturn,'export':'account','security':'account','sign-out':'account' }[kind];
+        sheetBack.hidden = !backTarget;
+        sheetBack.dataset.target = backTarget || '';
         sheetActions.hidden = false;
+        sheetPrimary.disabled = false;
+        sheetPrimary.hidden = false;
         sheetPrimary.classList.remove('danger');
         sheetSecondary.dataset.action = 'close';
         sheetAlert.hidden = true;
         sheetAlert.textContent = '';
-        if (kind === 'sign-in') {
-          sheetTitle.textContent = 'Sign in to Warren';
-          sheetCopy.textContent = 'Restore your portfolio or create an account. Signing in never approves a trade or moves funds.';
+        if(kind==='about'){sheetTitle.textContent='About Warren';sheetCopy.textContent='Invest in tokenized stocks and trade perpetuals from your Solana wallet.';sheetExtra.innerHTML='';sheetFact.textContent='';sheetPrimary.textContent='Done';sheetPrimary.dataset.action='close';sheetSecondary.hidden=true;} else if (kind === 'sign-in') {
+          sheetTitle.textContent = 'Welcome to Warren';
+          sheetCopy.textContent = 'Sign in or create your account.';
           sheetExtra.innerHTML = signInMarkup();
-          sheetFact.textContent = 'Secure wallet infrastructure by Privy. Companies saved on this device remain available.';
+          sheetFact.textContent = '';
           sheetActions.hidden = true;
         } else if (kind === 'auth-email') {
-          sheetTitle.textContent = 'Continue with email';
-          sheetCopy.textContent = 'Warren will send a code to create or restore your private account and embedded Solana wallet.';
-          sheetExtra.innerHTML = '';
-          sheetFact.textContent = 'This prototype stops before contacting Privy. No wallet or transaction will be created.';
-          sheetPrimary.textContent = 'Continue';
-          sheetPrimary.dataset.action = 'preview-wallet-setup';
-          sheetSecondary.textContent = 'Choose another method';
+          sheetTitle.textContent = 'What’s your email?';
+          sheetCopy.textContent = 'We’ll send a code to sign you in. No password needed.';
+          sheetExtra.innerHTML = emailMarkup();
+          sheetFact.textContent = '';
+          sheetPrimary.textContent = 'Send code';
+          sheetPrimary.dataset.action = 'send-code';
+          sheetSecondary.textContent = 'Use another method';
           sheetSecondary.dataset.action = 'choose-method';
           sheetSecondary.hidden = false;
+        } else if (kind === 'auth-code') {
+          sheetTitle.textContent = 'Check your email';
+          sheetCopy.textContent = 'Enter the 6-digit code sent to';
+          sheetExtra.innerHTML = codeMarkup();
+          sheetFact.textContent = '';
+          sheetPrimary.textContent = 'Verify email';
+          sheetPrimary.dataset.action = 'verify-code';
+          sheetSecondary.hidden = true;
+          updateResend();
+          resendTimer = setInterval(updateResend, 1000);
         } else if (kind === 'auth-wallet') {
-          sheetTitle.textContent = 'Use an existing wallet';
-          sheetCopy.textContent = 'Connect a compatible wallet, then sign a message to confirm control of the address.';
-          sheetExtra.innerHTML = '';
-          sheetFact.textContent = 'The signature is not a transaction and has no network fee. This wallet becomes the active wallet for balances and approvals.';
-          sheetPrimary.textContent = 'Connect wallet';
-          sheetPrimary.dataset.action = 'preview-unverified';
-          sheetSecondary.textContent = 'Choose another method';
+          sheetTitle.textContent = 'Choose a wallet';
+          sheetCopy.textContent = 'Use a Solana wallet on this phone to sign in.';
+          // The installed-wallet choice and approval below represent OS/provider-owned
+          // surfaces. Native implementation must use the Android MWA picker, not a fixed list.
+          const walletUnavailable = params.get('wallet') === 'unavailable';
+          sheetExtra.innerHTML = walletUnavailable
+            ? '<div class="wallet-handoff"><p class="handoff-copy">No compatible Solana wallet was found on this phone.</p></div>'
+            : `<button class="native-choice" type="button" data-sheet-action="wallet-open"><span class="auth-choice-icon">${walletIcon}</span><span><strong>Solana wallet</strong><small>Continue in your wallet app</small></span><span aria-hidden="true">›</span></button>`;
+          sheetFact.textContent = 'Your connected wallet signs you in. Warren prepares a separate wallet for your investments.';
+          sheetPrimary.textContent = 'Continue with email';
+          sheetPrimary.dataset.action = 'auth-email';
+          sheetPrimary.hidden = !walletUnavailable;
+          sheetSecondary.textContent = 'Use another method';
           sheetSecondary.dataset.action = 'choose-method';
+          sheetSecondary.hidden = false;
+        } else if (kind === 'wallet-approval') {
+          sheetTitle.textContent = 'Sign in to Warren';
+          sheetCopy.textContent = 'Confirm this request in your Solana wallet.';
+          sheetExtra.innerHTML = `<div class="wallet-handoff"><div class="handoff-icons"><span class="wallet-card-mark">W</span><span aria-hidden="true">↔</span><span class="native-wallet-mark">${walletIcon}</span></div><p class="handoff-copy">Sign a message to confirm this wallet belongs to you.</p><div class="risk-table"><div class="risk-row"><span>Request</span><strong>Sign-in message</strong></div><div class="risk-row"><span>Network fee</span><strong>None</strong></div></div></div>`;
+          sheetFact.textContent = 'This signature does not move funds or approve a trade.';
+          sheetPrimary.textContent = 'Confirm sign-in';
+          sheetPrimary.dataset.action = 'wallet-confirm';
+          sheetSecondary.textContent = 'Cancel';
+          sheetSecondary.dataset.action = 'back-wallet';
+          sheetSecondary.hidden = false;
+        } else if (kind === 'wallet-preparing' || kind === 'wallet-setup') {
+          sheetTitle.textContent = accountKnown ? 'Welcome back' : 'You’re signed in';
+          sheetCopy.textContent = accountKnown ? 'Restoring your Warren wallet.' : 'Getting your Warren wallet ready.';
+          sheetExtra.innerHTML = walletCardMarkup({ preparing: true });
+          sheetFact.textContent = '';
+          sheetActions.hidden = true;
+        } else if (kind === 'wallet-ready') {
+          sheetTitle.textContent = 'Your wallet is ready';
+          sheetCopy.textContent = 'Deposit funds when you’re ready to invest.';
+          sheetExtra.innerHTML = walletCardMarkup();
+          sheetFact.textContent = signInMethod === 'wallet' ? 'This is your Warren wallet. It is separate from the wallet you used to sign in.' : '';
+          sheetPrimary.textContent = 'Deposit funds';
+          sheetPrimary.dataset.action = 'ready-deposit';
+          sheetSecondary.textContent = 'Explore markets';
+          sheetSecondary.dataset.action = 'explore-markets';
+          sheetSecondary.hidden = false;
+        } else if (kind === 'receive') {
+          sheetTitle.textContent = 'Deposit to Warren';
+          sheetCopy.textContent = '';
+          sheetExtra.innerHTML = `${walletCardMarkup({ expanded: true })}<div class="network-note">${shieldIcon}<span>Send only supported assets on the <strong>Solana network</strong> to this address.</span></div>`;
+          sheetFact.textContent = '';
+          sheetPrimary.textContent = 'Copy address';
+          sheetPrimary.dataset.action = 'copy';
+          sheetSecondary.textContent = 'Done';
           sheetSecondary.hidden = false;
         } else if (kind === 'account') {
-          sheetTitle.textContent = 'Warren wallet';
-          sheetCopy.textContent = 'Copy this Solana address or show its QR code to deposit supported assets.';
+          depositReturn = 'account';
+          sheetTitle.textContent = 'Account & wallet';
+          sheetCopy.textContent = '';
           sheetExtra.innerHTML = accountMarkup();
-          sheetFact.textContent = 'Signed in with email · Wallet infrastructure by Privy';
+          sheetFact.textContent = '';
           sheetActions.hidden = true;
+        } else if (kind === 'export') {
+          sheetTitle.textContent = 'Export your wallet';
+          sheetCopy.textContent = 'Use your Warren wallet in another compatible app. Your address and funds stay the same.';
+          sheetExtra.innerHTML = `${walletCardMarkup()}<div class="export-warning">${shieldIcon}<span>Anyone with your private key can access your funds. Keep it private.</span></div>`;
+          sheetFact.textContent = 'You’ll verify your identity in Privy’s secure export window. Your private key stays inside that window.';
+          sheetPrimary.textContent = 'Continue to secure export';
+          sheetPrimary.dataset.action = 'export-wallet';
+          sheetSecondary.textContent = 'Back to wallet';
+          sheetSecondary.dataset.action = 'back-account';
+          sheetSecondary.hidden = false;
         } else if (kind === 'phoenix-setup') {
           sheetTitle.textContent = 'Create Phoenix account';
           sheetCopy.textContent = 'Set up the trading account Warren uses for stock perpetuals without leaving the app.';
@@ -1746,23 +2019,8 @@
           sheetSecondary.textContent = 'Close';
           sheetSecondary.hidden = false;
         } else if (kind === 'verify-account') {
-          sheetTitle.textContent = 'Confirm wallet control';
-          sheetCopy.textContent = 'The wallet provider is connected, but Warren still needs a signed message to confirm control of the address.';
-          sheetExtra.innerHTML = '';
-          sheetFact.textContent = 'This signature is not a transaction and has no network fee.';
-          sheetPrimary.textContent = 'Confirm message';
-          sheetPrimary.dataset.action = 'preview-ready';
-          sheetSecondary.textContent = 'Not now';
-          sheetSecondary.hidden = false;
-        } else if (kind === 'wallet-setup') {
-          sheetTitle.textContent = 'Set up Warren wallet';
-          sheetCopy.textContent = 'Your account is verified. Warren is ready to create or restore the embedded Solana wallet used for balances and approvals.';
-          sheetExtra.innerHTML = '';
-          sheetFact.textContent = 'This prototype does not contact Privy or create a real wallet.';
-          sheetPrimary.textContent = 'Create Warren wallet';
-          sheetPrimary.dataset.action = 'preview-ready';
-          sheetSecondary.textContent = 'Not now';
-          sheetSecondary.hidden = false;
+          openSheet('wallet-approval', undefined, accountChip);
+          return;
         } else if (kind === 'session-expired') {
           sheetTitle.textContent = 'Session expired';
           sheetCopy.textContent = 'Private portfolio data is hidden until you sign in again. Warren will return you to the view you were using.';
@@ -1773,26 +2031,26 @@
           sheetSecondary.textContent = 'Not now';
           sheetSecondary.hidden = false;
         } else if (kind === 'equity') {
-          sheetTitle.textContent = 'How equity adds up';
-          sheetCopy.textContent = 'Perpetual notional is exposure, not portfolio value. Isolated collateral is counted once through venue equity.';
+          sheetTitle.textContent = 'Equity breakdown';
+          sheetCopy.textContent = 'Your holdings, wallet balances and Phoenix account equity.';
           sheetExtra.innerHTML = equityMarkup();
-          sheetFact.textContent = 'Anthropic PreStock exposure is unpriced and excluded from this total.';
+          sheetFact.textContent = 'Anthropic is unpriced and excluded. Perpetual exposure is shown separately from account equity.';
           sheetPrimary.textContent = 'Done';
           sheetPrimary.dataset.action = 'close';
           sheetSecondary.hidden = true;
         } else if (kind === 'position') {
           sheetTitle.textContent = 'NVIDIA long';
-          sheetCopy.textContent = 'NVDA-PERP · Phoenix · Position nv-042 · Long · 3× isolated';
+          sheetCopy.textContent = 'NVDA-PERP · Phoenix · 3× isolated';
           sheetExtra.innerHTML = positionMarkup();
-          sheetFact.textContent = 'Risk values must come from the venue. Warren will never estimate liquidation in the client.';
+          sheetFact.textContent = '';
           sheetPrimary.textContent = 'Done';
           sheetPrimary.dataset.action = 'close';
           sheetSecondary.hidden = true;
         } else if (kind === 'activity-filters') {
-          sheetTitle.textContent = 'Activity filters';
-          sheetCopy.textContent = 'Narrow hundreds of Warren-recognized events without changing the canonical chronological ledger.';
+          sheetTitle.textContent = 'Activity status';
+          sheetCopy.textContent = 'Choose which statuses to show.';
           sheetExtra.innerHTML = activityFiltersMarkup();
-          sheetFact.textContent = 'Search also matches company, ticker, instrument, and transaction reference.';
+          sheetFact.textContent = '';
           sheetPrimary.textContent = 'Done';
           sheetPrimary.dataset.action = 'close';
           sheetSecondary.hidden = true;
@@ -1801,7 +2059,7 @@
           if (!item) return;
           sheetTitle.textContent = item.title;
           sheetCopy.textContent = item.copy;
-          sheetExtra.innerHTML = item.extra === 'receive' ? receiveMarkup() : '';
+          sheetExtra.innerHTML = item.extra === 'receive' ? receiveMarkup() : (item.markup||'');
           sheetFact.textContent = item.fact;
           sheetPrimary.textContent = item.primary || 'Close';
           sheetPrimary.dataset.action = item.action || 'close';
@@ -1809,20 +2067,26 @@
           sheetSecondary.textContent = item.secondary || 'Cancel';
           sheetSecondary.hidden = false;
         }
+        if(valuesPrivate&&['position','event','holding','order'].includes(kind))sheetCopy.textContent='Values hidden';
+        applyPrivacy();
         sheetBackdrop.classList.add('open');
         sheetBackdrop.setAttribute('aria-hidden', 'false');
         accountChip.setAttribute('aria-expanded', 'true');
         $$('.phone > :not(#sheet-backdrop):not(#toast):not(#privacy-status):not(#session-alert)').forEach(element => { element.inert = true; });
-        setTimeout(() => sheetTitle.focus(), 10);
+        $('.sheet-content').scrollTop = 0;
+        const initialFocus = kind === 'auth-email' ? $('#auth-email-input') : kind === 'auth-code' ? $('#auth-code-input') : sheetTitle;
+        initialFocus.focus({preventScroll:true});
       }
 
       function closeSheet({ restoreFocus = true } = {}) {
+        if (currentSheet !== 'wallet-preparing') { clearTimeout(flowTimer); flowTimer = null; }
+        clearInterval(resendTimer);
         const wasOpen = sheetBackdrop.classList.contains('open');
         sheetBackdrop.classList.remove('open');
         sheetBackdrop.setAttribute('aria-hidden', 'true');
         accountChip.setAttribute('aria-expanded', 'false');
         $$('.phone > :not(#sheet-backdrop):not(#toast):not(#privacy-status):not(#session-alert)').forEach(element => { element.inert = false; });
-        if (wasOpen && restoreFocus) setTimeout(() => lastSheetTrigger?.focus(), 10);
+        if (wasOpen && restoreFocus && lastSheetTrigger?.isConnected) lastSheetTrigger.focus({preventScroll:true});
       }
 
       async function copyAddress() {
@@ -1831,7 +2095,7 @@
         try {
           await navigator.clipboard.writeText(walletAddress);
           sheetAlert.hidden = true;
-          showToast('Solana wallet address copied.');
+          showToast('Address copied.');
         } catch (error) {
           sheetAlert.textContent = 'Couldn’t copy. Select the full address above or try again.';
           sheetAlert.hidden = false;
@@ -1857,15 +2121,41 @@
 
       function filterActivity() {
         const query = $('#activity-search').value.trim().toLowerCase();
+        const filtered = Boolean(query || activeFilter !== 'all' || activeStatus !== 'all');
         let visible = 0;
         $$('.activity-row[data-kind]').forEach(row => {
-          const matchesKind = activeFilter === 'all' || row.dataset.kind.split(' ').includes(activeFilter);
-          const matchesQuery = !query || row.dataset.search.includes(query);
-          row.classList.toggle('filtered', !(matchesKind && matchesQuery));
-          if (matchesKind && matchesQuery) visible += 1;
+          const statusText = $('.activity-value > span',row).textContent.trim().toLowerCase();
+          const status = statusText==='placed' ? 'pending' : statusText;
+          const matches = (activeFilter==='all'||row.dataset.kind.split(' ').includes(activeFilter)) && (!query||row.dataset.search.includes(query)) && (activeStatus==='all'||status===activeStatus);
+          const pageVisible = !row.closest('[data-earlier]') || earlierLoaded || filtered;
+          row.classList.toggle('filtered',!(matches&&pageVisible));
+          if(matches&&pageVisible)visible++;
         });
-        $$('[data-activity-group]').forEach(group => { group.hidden = !$('.activity-row:not(.filtered)', group); });
-        $('#empty-results').hidden = visible !== 0;
+        $$('[data-activity-group]').forEach(group => {group.hidden=!$('.activity-row:not(.filtered)',group);});
+        $('#empty-results').hidden=visible!==0;
+        $('#activity-filter-summary').hidden=!filtered;
+        $('#activity-result-count').textContent=`${visible} ${visible===1?'result':'results'}`;
+        $('#load-activity').hidden=earlierLoaded||filtered;
+        $('#status-filter-label').textContent=({all:'All statuses',pending:'Pending',confirmed:'Confirmed',failed:'Failed',unknown:'Unknown'}[activeStatus])+' ⌄';
+      }
+
+      function filterPositions(filter=activePositionFilter){
+        activePositionFilter=filter;
+        $$('[data-position-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.positionFilter===filter)));
+        $$('[data-position-section]').forEach(section=>section.hidden=filter!=='all'&&section.dataset.positionSection!==filter);
+      }
+
+      function applyPrivacy(){
+        $$('.value, .register-value>strong, .register-value>span, .position-fact>strong, .risk-row>strong, .reconcile-row>strong').forEach(value=>{
+          if(!value.dataset.visibleText){value.dataset.visibleText=value.textContent;value.dataset.visibleHtml=value.innerHTML;}
+          value.classList.add('value');
+          value.classList.toggle('is-private',valuesPrivate);
+          if(valuesPrivate)value.textContent='••••';else if(value.innerHTML!==value.dataset.visibleHtml)value.innerHTML=value.dataset.visibleHtml;
+        });
+        $$('.register-copy>span, .risk-line, .order-row>span>span').forEach(meta=>{
+          if(!meta.dataset.visibleHtml)meta.dataset.visibleHtml=meta.innerHTML;
+          meta.innerHTML=valuesPrivate?meta.dataset.visibleHtml.replace(/[$][\d,.]+|[+−-]?\d[\d,.]*%|\b\d[\d,.]*(?=\s+(?:[A-Z][A-Za-z]*|units)\b)/g,'••••'):meta.dataset.visibleHtml;
+        });
       }
 
       $$('[data-state-switch]').forEach(button => button.addEventListener('click', () => {
@@ -1882,26 +2172,44 @@
         renderState();
       }));
       $$('[data-view-tab]').forEach(button => button.addEventListener('click', () => selectView(button.dataset.viewTab)));
-      $$('[data-view-link]').forEach(button => button.addEventListener('click', () => selectView(button.dataset.viewLink)));
-      $$('[data-open-sheet]').forEach(button => button.addEventListener('click', () => openSheet(button.dataset.openSheet, undefined, button)));
+      $$('[data-view-link]').forEach(button => button.addEventListener('click', () => {filterPositions(button.dataset.positionTarget||'all');selectView(button.dataset.viewLink);}));
+      $$('[data-position-filter]').forEach(button=>button.addEventListener('click',()=>filterPositions(button.dataset.positionFilter)));
+      $$('[data-open-sheet]').forEach(button => button.addEventListener('click', () => { if (button.dataset.openSheet === 'wallet-setup') { prepareDesignWallet(); return; } if (button.dataset.openSheet === 'receive') depositReturn = 'account'; openSheet(button.dataset.openSheet, undefined, button); }));
       $$('[data-scroll-top]').forEach(button => button.addEventListener('click', () => scroll.scrollTo({ top: 0, behavior: 'smooth' })));
-      $$('[data-nav]').forEach(button => button.addEventListener('click', () => showToast(`${button.dataset.nav} is outside this Portfolio mock.`)));
+      $$('[data-nav]').forEach(button => button.addEventListener('click', () => {location.href=button.dataset.nav==='Home'?'./homescreen_mock.html':'./markets_mock.html';}));
       $$('[data-toast]').forEach(button => button.addEventListener('click', () => showToast(button.dataset.toast)));
-      $$('[data-company]').forEach(button => button.addEventListener('click', () => showToast(`${button.dataset.company} would open Market Details.`)));
+      $$('[data-company]').forEach(button => button.addEventListener('click', () => {
+        if(!hasPrivateSession()&&button.dataset.company==='NVIDIA'){location.href='./markets_details_mock.html';return;}
+        const qty=$('.register-copy>span',button)?.textContent||'', value=$('.register-value>strong',button)?.dataset.visibleText||$('.register-value>strong',button)?.textContent||'';
+        openSheet('holding',{title:button.dataset.company,copy:qty,fact:value==='Unpriced'?'Excluded from account equity until a price is available.':'',primary:'Done',action:'close',markup:`<div class="risk-table"><div class="risk-row"><span>Market value</span><strong>${value}</strong></div><div class="risk-row"><span>Product</span><strong>${button.dataset.company==='Anthropic'?'PreStocks':'Spot'}</strong></div></div>`},button);
+      }));
       $$('[data-position]').forEach(button => button.addEventListener('click', () => openSheet('position', undefined, button)));
       $$('[data-order]').forEach(button => button.addEventListener('click', () => openSheet('order', { title: 'Tesla limit order', copy: 'Placed · TSLA-PERP · Buy at $398.00 · 1.5× isolated · $150 collateral', fact: 'A placed order is not an open position and does not change position count or equity until it fills.', primary: 'Done', action: 'close' }, button)));
-      $$('[data-event]').forEach(button => button.addEventListener('click', () => openSheet('event', { title: button.dataset.event, copy: button.dataset.eventDetail, fact: 'Production activity includes status progression, fees, wallet, venue, and a Solana explorer link.', primary: 'Done', action: 'close' }, button)));
+      $$('[data-event]').forEach(button => button.addEventListener('click', () => openSheet('event', { title: button.dataset.event, copy: button.dataset.eventDetail, fact: '', primary: 'Done', action: 'close' }, button)));
 
       accountChip.addEventListener('click', () => {
         if (accountState === 'ready') openSheet('account', undefined, accountChip);
         else if (accountState === 'issue') openSheet('wallet-issue', undefined, accountChip);
         else if (accountState === 'unverified') openSheet('verify-account', undefined, accountChip);
-        else if (accountState === 'wallet-setup') openSheet('wallet-setup', undefined, accountChip);
+        else if (accountState === 'wallet-setup') prepareDesignWallet();
         else if (accountState === 'expired') openSheet('session-expired', undefined, accountChip);
         else if (accountState === 'signed-out') openSheet('sign-in', undefined, accountChip);
       });
-      $('#sheet-close').addEventListener('click', closeSheet);
+      $('#sheet-close').addEventListener('click', () => closeSheet());
+      sheetBack.addEventListener('click', goBackInSheet);
+      sheetExtra.addEventListener('input', event => {
+        if (event.target.id === 'auth-email-input') authEmail = event.target.value;
+        if (event.target.id === 'auth-code-input') { event.target.value = event.target.value.replace(/\D/g, '').slice(0, 6); authCode = event.target.value; }
+        if (event.target.matches('.auth-input')) { event.target.removeAttribute('aria-invalid'); $('#auth-error').textContent = ''; }
+      });
+      sheetExtra.addEventListener('submit', event => {
+        if (event.target.id !== 'auth-form') return;
+        event.preventDefault();
+        if (currentSheet === 'auth-email') sendDesignCode();
+        else if (currentSheet === 'auth-code') verifyDesignCode();
+      });
       sheetSecondary.addEventListener('click', () => {
+        if (handleFlowAction(sheetSecondary.dataset.action)) return;
         if (sheetSecondary.dataset.action === 'choose-method') openSheet('sign-in', undefined, accountChip);
         else if (sheetSecondary.dataset.action === 'back-account') returnToAccount();
         else closeSheet();
@@ -1909,20 +2217,8 @@
       sheetBackdrop.addEventListener('click', event => { if (event.target === sheetBackdrop) closeSheet(); });
       sheetPrimary.addEventListener('click', () => {
         const action = sheetPrimary.dataset.action;
-        if (action === 'preview-unverified') {
-          accountState = 'unverified';
-          renderState();
-        }
-        else if (action === 'preview-wallet-setup') {
-          accountState = 'wallet-setup';
-          renderState();
-        }
-        else if (action === 'preview-ready') {
-          closeSheet({ restoreFocus: false });
-          accountState = 'checking';
-          renderState();
-          setTimeout(() => { accountState = 'ready'; currentView = returnView; renderState(); accountChip.focus(); }, 750);
-        }
+        if (handleFlowAction(action)) return;
+        if (action === 'auth-email') openSheet('auth-email', undefined, accountChip);
         else if (action === 'retry-wallet') {
           closeSheet({ restoreFocus: false });
           accountState = 'checking';
@@ -1931,7 +2227,7 @@
         }
         else if (action === 'preview-phoenix-registration') {
           closeSheet();
-          showToast('Phoenix registration would open for transaction review.');
+          openSheet('registration-review',{title:'Create Phoenix account',copy:'One-time setup for trading perpetuals.',markup:'<div class="risk-table"><div class="risk-row"><span>Network</span><strong>Solana</strong></div><div class="risk-row"><span>Fee payer</span><strong>Warren wallet</strong></div><div class="risk-row"><span>Cost</span><strong>Solana fee + account rent</strong></div></div>',fact:'Your wallet will ask you to approve this transaction.',primary:'Continue to wallet',action:'close'});
         }
         else if (action === 'reauth') openSheet('sign-in', undefined, accountChip);
         else if (action === 'back-account') returnToAccount();
@@ -1941,28 +2237,27 @@
       });
 
       sheetExtra.addEventListener('click', event => {
+        const status=event.target.closest('[data-status-filter]');
+        if(status){activeStatus=status.dataset.statusFilter;filterActivity();closeSheet();return;}
         const action = event.target.closest('[data-sheet-action]')?.dataset.sheetAction;
+        if (handleFlowAction(action)) return;
         if (action === 'copy') void copyAddress();
         else if (action === 'close') closeSheet();
         else if (action === 'auth-email') openSheet('auth-email', undefined, accountChip);
         else if (action === 'auth-wallet') openSheet('auth-wallet', undefined, accountChip);
         else if (action === 'sign-out') openAccountChild('sign-out', undefined, 'sign-out');
-        else if (action === 'receive') openAccountChild('receive', undefined, 'receive');
-        else if (action === 'security') openAccountChild('security', { title: 'Security & recovery', copy: 'Your email is verified. Sensitive wallet actions should require fresh authentication.', fact: 'Never reveal a seed phrase or private key. Warren support will not ask for either.', primary: 'Back to account', action: 'back-account' }, 'security');
+        else if (action === 'receive') { depositReturn = 'account'; openSheet('receive', undefined, accountChip); }
+        else if (action === 'export') openAccountChild('export', undefined, 'export');
+        else if (action === 'security') openAccountChild('security', { title: 'Security & recovery', copy: signInMethod === 'email' ? 'Sign in with the same email to access your Warren account on another device.' : 'Sign in with the same Solana wallet to access your Warren account on another device.', fact: 'Never reveal a seed phrase or private key. Warren support will not ask for either.', primary: 'Back to account', action: 'back-account' }, 'security');
         else if (action === 'activity') { closeSheet(); selectView('activity'); }
       });
 
       privacyToggle.addEventListener('click', () => {
-        valuesPrivate = !valuesPrivate;
-        $$('.value').forEach(value => {
-          value.classList.toggle('is-private', valuesPrivate);
-          value.setAttribute('aria-hidden', String(valuesPrivate));
-        });
-        privacyToggle.setAttribute('aria-pressed', String(valuesPrivate));
-        privacyToggle.setAttribute('aria-label', valuesPrivate ? 'Show portfolio values' : 'Hide portfolio values');
-        $('.eye-open', privacyToggle).hidden = valuesPrivate;
-        $('.eye-closed', privacyToggle).hidden = !valuesPrivate;
-        $('#privacy-status').textContent = valuesPrivate ? 'Balance hidden.' : 'Balance visible.';
+        valuesPrivate=!valuesPrivate;applyPrivacy();
+        privacyToggle.setAttribute('aria-pressed',String(valuesPrivate));
+        privacyToggle.setAttribute('aria-label',valuesPrivate?'Show portfolio values':'Hide portfolio values');
+        $('.eye-open',privacyToggle).hidden=valuesPrivate;$('.eye-closed',privacyToggle).hidden=!valuesPrivate;
+        $('#privacy-status').textContent=valuesPrivate?'Portfolio values hidden.':'Portfolio values visible.';
       });
 
       $$('.filter-chip').forEach(button => button.addEventListener('click', () => {
@@ -1971,6 +2266,8 @@
         filterActivity();
       }));
       $('#activity-search').addEventListener('input', filterActivity);
+      $('#reset-activity').addEventListener('click',()=>{activeFilter='all';activeStatus='all';$('#activity-search').value='';$$('.filter-chip').forEach(chip=>chip.setAttribute('aria-pressed',String(chip.dataset.filter==='all')));filterActivity();$('#activity-search').focus();});
+      $('#load-activity').addEventListener('click',()=>{earlierLoaded=true;filterActivity();$('[data-earlier] .activity-row')?.focus();});
 
       document.addEventListener('keydown', event => {
         if (!sheetBackdrop.classList.contains('open')) return;
@@ -1993,15 +2290,20 @@
       const requestedState = params.get('state');
       const requestedPortfolio = params.get('portfolio');
       accountState = requestedState === 'signed' ? 'ready' : ['signed-out', 'checking', 'unverified', 'wallet-setup', 'ready', 'issue', 'expired'].includes(requestedState) ? requestedState : 'ready';
-      portfolioState = ['new', 'spot', 'phoenix', 'full'].includes(requestedPortfolio) ? requestedPortfolio : 'new';
+      accountKnown = hasPrivateSession() || accountState === 'expired' || params.get('returning') === '1';
+      portfolioState = ['new', 'spot', 'phoenix', 'full'].includes(requestedPortfolio) ? requestedPortfolio : 'full';
       returnView = ['overview', 'positions', 'activity'].includes(params.get('view')) ? params.get('view') : 'overview';
       currentView = hasPrivateSession() ? returnView : 'overview';
+      const groups=$$('[data-activity-group]');if(groups[2])groups[2].dataset.earlier='';
+      filterActivity();filterPositions();applyPrivacy();
       renderState({ announce: false });
       if (params.get('sheet') === 'signin' && accountState === 'signed-out') requestAnimationFrame(() => openSheet('sign-in', undefined, accountChip));
       if (params.get('sheet') === 'verify' && accountState === 'unverified') requestAnimationFrame(() => openSheet('verify-account', undefined, accountChip));
-      if (params.get('sheet') === 'setup' && accountState === 'wallet-setup') requestAnimationFrame(() => openSheet('wallet-setup', undefined, accountChip));
+      if (params.get('sheet') === 'setup' && accountState === 'wallet-setup') requestAnimationFrame(prepareDesignWallet);
       if (params.get('sheet') === 'expired' && accountState === 'expired') requestAnimationFrame(() => openSheet('session-expired', undefined, accountChip));
       if (params.get('sheet') === 'account' && accountState === 'ready') requestAnimationFrame(() => openSheet('account', undefined, accountChip));
+      if (params.get('sheet') === 'export' && accountState === 'ready') requestAnimationFrame(() => openAccountChild('export', undefined, 'export'));
+      if (params.get('sheet') === 'deposit' && accountState === 'ready') requestAnimationFrame(() => openSheet('receive', undefined, accountChip));
       if (params.get('sheet') === 'issue' && accountState === 'issue') requestAnimationFrame(() => openSheet('wallet-issue', undefined, accountChip));
       if (params.get('sheet') === 'position' && hasPrivateSession()) requestAnimationFrame(() => openSheet('position'));
       if (params.get('sheet') === 'filters' && hasPrivateSession()) requestAnimationFrame(() => openSheet('activity-filters'));

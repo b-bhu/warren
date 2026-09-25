@@ -1,5 +1,4 @@
 import type { CompanySummary } from '@warren/home-contract';
-import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -28,6 +27,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { PortfolioOverview } from './PortfolioOverview';
 import { PortfolioActivity } from './PortfolioActivity';
 import { PortfolioPositions } from './PortfolioPositions';
+import { AccountWalletSheet, type AccountWalletMode } from './AccountWalletSheet';
 import {
   accountControlsAvailable,
   accountControlKey,
@@ -35,7 +35,6 @@ import {
   portfolioAccessState,
   portfolioTabIntent,
   portfolioViews,
-  type PortfolioSheetMode,
   type PortfolioView,
 } from './portfolio-state';
 
@@ -86,7 +85,11 @@ export function ProfileTabScreen() {
 
   const openAuthSheet = useCallback((returnView: PortfolioView) => {
     authSheet.open({
-      onAuthenticated: () => router.setParams({ view: returnView }),
+      contextLabel: returnView === 'overview' ? undefined : `Continue to your ${returnView} after signing in.`,
+      continueLabel: returnView === 'overview' ? 'Explore markets' : `Continue to ${returnView}`,
+      onAuthenticated: () => returnView === 'overview'
+        ? router.push('/(tabs)/markets' as Href)
+        : router.setParams({ view: returnView }),
     });
   }, [authSheet, router]);
 
@@ -198,11 +201,8 @@ export function ProfileTabScreen() {
 
       <PortfolioSheet
         key={infoSheet ?? 'closed'}
-        address={wallet.address}
         mode={infoSheet}
         onClose={() => setInfoSheet(null)}
-        onReceive={() => undefined}
-        onSignOut={async () => undefined}
       />
     </View>
   );
@@ -219,16 +219,19 @@ function PortfolioAccountControl({
   onOpenAuth: () => void;
   onSignOut: () => Promise<void>;
 }) {
-  const [mode, setMode] = useState<'account' | 'receive' | null>(null);
+  const [mode, setMode] = useState<AccountWalletMode | null>(null);
+  const wallet = useTransactionWallet();
   return (
     <>
       <AppAccountButton appearance="outlined" onPress={accountReady ? () => setMode('account') : onOpenAuth} />
-      <PortfolioSheet
+      <AccountWalletSheet
+        key={mode ?? 'closed'}
         address={address}
         mode={accountReady ? mode : null}
         onClose={() => setMode(null)}
-        onReceive={() => setMode('receive')}
+        onModeChange={setMode}
         onSignOut={onSignOut}
+        signInLabel={wallet.accountIdentityLabel}
       />
     </>
   );
@@ -518,39 +521,11 @@ function PrivateViewBoundary({
   );
 }
 
-function PortfolioSheet({
-  address,
-  mode,
-  onClose,
-  onReceive,
-  onSignOut,
-}: {
-  address: string | null;
-  mode: PortfolioSheetMode | null;
+function PortfolioSheet({ mode, onClose }: {
+  mode: 'portfolio-info' | 'about' | null;
   onClose: () => void;
-  onReceive: () => void;
-  onSignOut: () => Promise<void>;
 }) {
   const theme = useTheme();
-  const [notice, setNotice] = useState<string>();
-  const [signingOut, setSigningOut] = useState(false);
-  const copy = async () => {
-    if (!address) return;
-    await Clipboard.setStringAsync(address);
-    setNotice('Wallet address copied.');
-  };
-  const signOut = async () => {
-    setNotice(undefined);
-    setSigningOut(true);
-    try {
-      await onSignOut();
-    } catch {
-      setNotice('Warren could not sign out. Check your connection and try again.');
-    } finally {
-      setSigningOut(false);
-    }
-  };
-
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent visible={mode !== null}>
       <View style={styles.modalLayer}>
@@ -558,48 +533,12 @@ function PortfolioSheet({
         <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.sheet, { backgroundColor: theme.canvas, borderColor: theme.outline }]}>
           <View style={[styles.sheetHandle, { backgroundColor: theme.outline }]} />
           <View style={styles.sheetHeader}>
-            <Text accessibilityRole="header" style={[styles.sheetTitle, { color: theme.ink }]}>{sheetTitle(mode)}</Text>
+            <Text accessibilityRole="header" style={[styles.sheetTitle, { color: theme.ink }]}>{mode === 'portfolio-info' ? 'How Portfolio works' : 'About Warren'}</Text>
             <Pressable accessibilityLabel="Close" accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}>
               <Text style={[styles.closeText, { color: theme.muted }]}>×</Text>
             </Pressable>
           </View>
-
           <ScrollView contentContainerStyle={styles.sheetContent} showsVerticalScrollIndicator={false}>
-            {mode === 'account' ? (
-              <>
-                <Text style={[styles.sheetCopy, { color: theme.muted }]}>Your active wallet is used for balances and transaction approvals.</Text>
-                <View style={[styles.walletIdentity, { backgroundColor: theme.surface }]}>
-                  <View style={[styles.walletIdentityMark, { backgroundColor: theme.proofWash }]}><Text style={[styles.walletIdentityLetter, { color: theme.proof }]}>W</Text></View>
-                  <View style={styles.walletIdentityCopy}>
-                    <Text style={[styles.walletIdentityLabel, { color: theme.muted }]}>Active wallet</Text>
-                    <Text style={[styles.walletIdentityName, { color: theme.ink }]}>Warren wallet</Text>
-                    <Text style={[styles.walletIdentityMeta, { color: theme.muted }]}>Embedded · Solana</Text>
-                  </View>
-                  <Text style={[styles.readyLabel, { color: theme.proof }]}>● Ready</Text>
-                </View>
-                <Text selectable style={[styles.address, { backgroundColor: theme.surface, color: theme.muted }]}>{address ?? 'Wallet address is still loading'}</Text>
-                <View style={styles.walletActions}>
-                  <SheetAction label="Copy" onPress={() => void copy()} />
-                  <SheetAction label="Receive" onPress={onReceive} />
-                </View>
-                <Pressable
-                  accessibilityRole="button"
-                  disabled={signingOut}
-                  onPress={() => void signOut()}
-                  style={({ pressed }) => [styles.signOutButton, { borderTopColor: theme.outline }, pressed && styles.pressed]}>
-                  <Text style={[styles.signOutText, { color: theme.caution }]}>{signingOut ? 'Signing out…' : 'Sign out'}</Text>
-                </Pressable>
-              </>
-            ) : null}
-
-            {mode === 'receive' ? (
-              <>
-                <Text style={[styles.sheetCopy, { color: theme.muted }]}>Send supported Solana assets to this wallet. Always verify the network before transferring.</Text>
-                <Text selectable style={[styles.receiveAddress, { backgroundColor: theme.surface, color: theme.ink }]}>{address ?? 'Wallet address is still loading'}</Text>
-                <SheetAction label="Copy wallet address" onPress={() => void copy()} primary />
-              </>
-            ) : null}
-
             {mode === 'portfolio-info' ? (
               <>
                 <Text style={[styles.sheetCopy, { color: theme.muted }]}>Portfolio keeps three facts separate: assets you own, perpetual positions you have open, and orders waiting to fill.</Text>
@@ -607,29 +546,13 @@ function PortfolioSheet({
                   <Text style={[styles.factText, { color: theme.ink }]}>Net account equity never counts perpetual notional as owned value. Unpriced holdings remain visible outside the total.</Text>
                 </View>
               </>
-            ) : null}
-
-            {mode === 'about' ? (
-              <>
-                <Text style={[styles.sheetCopy, { color: theme.muted }]}>Warren brings supported tokenized stocks, private-company exposure, and equity perpetuals into one Solana-first workspace.</Text>
-                <View style={[styles.fact, { backgroundColor: theme.surface }]}><Text style={[styles.factText, { color: theme.ink }]}>Market values are informational until you review an executable trade quote.</Text></View>
-              </>
-            ) : null}
-
-            {notice ? <Text accessibilityLiveRegion="polite" style={[styles.sheetNotice, { color: theme.proof }]}>{notice}</Text> : null}
+            ) : (
+              <Text style={[styles.sheetCopy, { color: theme.muted }]}>Invest in tokenized stocks and trade perpetuals from your Solana wallet.</Text>
+            )}
           </ScrollView>
         </SafeAreaView>
       </View>
     </Modal>
-  );
-}
-
-function SheetAction({ label, onPress, primary = false }: { label: string; onPress: () => void; primary?: boolean }) {
-  const theme = useTheme();
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.sheetAction, { backgroundColor: primary ? theme.proof : theme.proofWash }, pressed && styles.pressed]}>
-      <Text style={[styles.sheetActionText, { color: primary ? theme.onProof : theme.proof }]}>{label}</Text>
-    </Pressable>
   );
 }
 
@@ -669,13 +592,6 @@ function LockIcon({ color, size = 13 }: { color: string; size?: number }) {
 
 function tabLabel(view: PortfolioView) {
   return view[0]!.toUpperCase() + view.slice(1);
-}
-
-function sheetTitle(mode: PortfolioSheetMode | null) {
-  if (mode === 'account') return 'Account & wallet';
-  if (mode === 'receive') return 'Receive';
-  if (mode === 'portfolio-info') return 'How Portfolio works';
-  return 'About Warren';
 }
 
 function initials(name: string) {
@@ -756,24 +672,8 @@ const styles = StyleSheet.create({
   closeButton: { alignItems: 'center', borderRadius: 14, height: 44, justifyContent: 'center', width: 44 },
   closeText: { fontFamily: Fonts.sans, fontSize: 25, lineHeight: 27 },
   sheetCopy: { fontFamily: Fonts.sans, fontSize: 13, lineHeight: 20, marginTop: 9 },
-  walletIdentity: { alignItems: 'center', borderRadius: 17, flexDirection: 'row', gap: 12, marginTop: 17, padding: 14 },
-  walletIdentityMark: { alignItems: 'center', borderRadius: 14, height: 44, justifyContent: 'center', width: 44 },
-  walletIdentityLetter: { fontFamily: Fonts.serif, fontSize: 16, fontWeight: '700' },
-  walletIdentityCopy: { flex: 1, minWidth: 0 },
-  walletIdentityLabel: { fontFamily: Fonts.sans, fontSize: 11 },
-  walletIdentityName: { fontFamily: Fonts.sans, fontSize: 14, fontWeight: '700', marginVertical: 3 },
-  walletIdentityMeta: { fontFamily: Fonts.sans, fontSize: 11 },
-  readyLabel: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '700' },
-  address: { borderRadius: 13, fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, marginTop: 12, padding: 12 },
-  walletActions: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  sheetAction: { alignItems: 'center', borderRadius: 12, flex: 1, justifyContent: 'center', minHeight: 46, paddingHorizontal: 14 },
-  sheetActionText: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '500', textAlign: 'center' },
-  signOutButton: { alignItems: 'center', borderTopWidth: StyleSheet.hairlineWidth, justifyContent: 'center', marginTop: 18, minHeight: 54 },
-  signOutText: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '700' },
-  receiveAddress: { borderRadius: 15, fontFamily: Fonts.mono, fontSize: 13, lineHeight: 20, marginBottom: 12, marginTop: 17, padding: 16 },
   fact: { borderRadius: 13, marginTop: 15, padding: 13 },
   factText: { fontFamily: Fonts.sans, fontSize: 12, lineHeight: 18 },
-  sheetNotice: { fontFamily: Fonts.sans, fontSize: 12, fontWeight: '700', marginTop: 12, textAlign: 'center' },
   pressed: { opacity: 0.72 },
   rowPressed: { opacity: 0.78, transform: [{ scale: 0.995 }] },
 });

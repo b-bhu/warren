@@ -21,6 +21,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Fonts } from '@/constants/theme';
+import { WalletCard } from '@/components/WalletCard';
 import { useTheme } from '@/hooks/use-theme';
 
 import { loadPortfolioOverview, PortfolioRequestError } from './portfolio-api';
@@ -681,9 +682,15 @@ function OverviewSheet({
 }) {
   const theme = useTheme();
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState<string>();
   const copy = async () => {
-    await Clipboard.setStringAsync(walletAddress);
-    setCopied(true);
+    try {
+      await Clipboard.setStringAsync(walletAddress);
+      setCopied(true);
+      setCopyError(undefined);
+    } catch {
+      setCopyError('Could not copy the address. Try again.');
+    }
   };
   return (
     <Modal animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent visible={mode !== null}>
@@ -692,7 +699,7 @@ function OverviewSheet({
         <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.sheet, { backgroundColor: theme.canvas, borderColor: theme.outline }]}>
           <View style={[styles.sheetHandle, { backgroundColor: theme.outline }]} />
           <View style={styles.sheetHeader}>
-            <Text accessibilityRole="header" style={[styles.sheetTitle, { color: theme.ink }]}>{mode === 'receive' ? 'Receive' : 'Account equity'}</Text>
+            <Text accessibilityRole="header" style={[styles.sheetTitle, mode === 'receive' && styles.depositTitle, { color: theme.ink }]}>{mode === 'receive' ? 'Deposit to Warren' : 'Account equity'}</Text>
             <Pressable accessibilityLabel="Close" accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.closeButton, { backgroundColor: theme.canvas }, pressed && styles.pressed]}><Text style={[styles.closeText, { color: theme.muted }]}>×</Text></Pressable>
           </View>
           <ScrollView
@@ -703,9 +710,11 @@ function OverviewSheet({
             showsVerticalScrollIndicator={false}>
             {mode === 'receive' ? (
               <>
-                <Text style={[styles.sheetCopy, { color: theme.muted }]}>Send supported Solana assets to this wallet. Always verify the network before transferring.</Text>
-                <Text selectable style={[styles.receiveAddress, { backgroundColor: theme.surface, color: theme.ink }]}>{walletAddress}</Text>
-                <Pressable accessibilityRole="button" onPress={() => void copy()} style={({ pressed }) => [styles.primaryButton, { backgroundColor: theme.proof }, pressed && styles.pressed]}><Text style={[styles.primaryButtonText, { color: theme.onProof }]}>{copied ? 'Address copied' : 'Copy wallet address'}</Text></Pressable>
+                <WalletCard address={walletAddress} expanded />
+                <Text style={[styles.depositNote, { color: theme.muted }]}>Send only supported assets on the Solana network to this address.</Text>
+                <Pressable accessibilityRole="button" onPress={() => void copy()} style={({ pressed }) => [styles.primaryButton, styles.depositCopy, { backgroundColor: theme.proof }, pressed && styles.pressed]}><Text style={[styles.primaryButtonText, { color: theme.onProof }]}>{copied ? 'Address copied' : 'Copy address'}</Text></Pressable>
+                {copyError ? <Text accessibilityRole="alert" style={[styles.depositNote, { color: theme.caution }]}>{copyError}</Text> : null}
+                <Pressable accessibilityRole="button" onPress={onClose} style={styles.depositDone}><Text style={[styles.textButton, { color: theme.muted }]}>Done</Text></Pressable>
               </>
             ) : null}
             {mode === 'equity' ? (
@@ -884,7 +893,10 @@ const styles = StyleSheet.create({
   closeButton: { alignItems: 'center', borderRadius: 14, height: 44, justifyContent: 'center', width: 44 },
   closeText: { fontFamily: Fonts.sans, fontSize: 25, lineHeight: 27 },
   sheetCopy: { fontFamily: Fonts.sans, fontSize: 13, lineHeight: 20, marginTop: 9 },
-  receiveAddress: { borderRadius: 15, fontFamily: Fonts.mono, fontSize: 13, lineHeight: 20, marginBottom: 12, marginTop: 17, padding: 16 },
+  depositTitle: { fontSize: 25 },
+  depositNote: { fontFamily: Fonts.sans, fontSize: 11, lineHeight: 17, marginTop: 15 },
+  depositCopy: { marginTop: 22, minHeight: 50 },
+  depositDone: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
   reconcileList: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: 17 },
   reconcileRow: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', justifyContent: 'space-between', minHeight: 48 },
   reconcileLabel: { flex: 1, fontFamily: Fonts.sans, fontSize: 12 },
