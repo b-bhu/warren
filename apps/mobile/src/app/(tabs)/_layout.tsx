@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
@@ -23,15 +24,16 @@ export default function MainTabLayout() {
         tabBarLabelStyle: {
           fontFamily: Fonts.sans,
           fontSize: 12,
-          fontWeight: '700',
+          fontWeight: '600',
+          lineHeight: 16,
           marginTop: 2,
         },
         tabBarStyle: {
           backgroundColor: theme.surface,
-          borderTopColor: theme.outline,
+          borderTopColor: `${theme.muted}33`,
           borderTopWidth: 1,
           elevation: 0,
-          height: 56 + bottomInset,
+          height: 64 + bottomInset,
           paddingBottom: bottomInset,
           paddingTop: 7,
           shadowOpacity: 0,
@@ -42,7 +44,9 @@ export default function MainTabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color as string} focused={focused} name="home" />
+            <View style={{ alignItems: 'center', backgroundColor: focused ? theme.proofWash : 'transparent', borderRadius: 999, height: 30, justifyContent: 'center', width: 58 }}>
+              <TabIcon color={color as string} focused={focused} name="home" />
+            </View>
           ),
         }}
       />

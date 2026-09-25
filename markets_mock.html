@@ -4,1002 +4,428 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
-  <title>Warren · Markets concept</title>
+  <title>Warren · Markets</title>
   <style>
-    :root {
-      --canvas: #131918;
-      --surface: #1c2523;
-      --surface-raised: #222d2a;
-      --ink: #f2f5f1;
-      --muted: #b8c4bf;
-      --proof: #74c7df;
-      --on-proof: #131918;
-      --proof-wash: #163640;
-      --outline: #51615c;
-      --outline-soft: rgba(184, 196, 191, 0.2);
-      --caution: #ffaaa2;
-      --caution-wash: #42201f;
-      --gain: #8bc4a1;
-      --private: #d8b87c;
-      --private-wash: #3c321f;
-      --card-radius: 12px;
-      --control-radius: 10px;
-      --font-sans: Spline Sans, Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
-      --font-serif: Georgia, "Times New Roman", serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      color: var(--ink);
-      background: #0b100f;
-      font-family: var(--font-sans);
-      font-synthesis: none;
-    }
+    :root{--canvas:#131918;--surface:#1c2523;--surface-raised:#222d2a;--ink:#f2f5f1;--muted:#b8c4bf;--proof:#74c7df;--proof-wash:#163640;--outline:#51615c;--outline-soft:rgba(184,196,191,.20);--caution:#ffaaa2;--caution-wash:#42201f;--gain:#8bc4a1;--private:#d8b87c;--font-sans:"Spline Sans",Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;--font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink);background:#0b100f;font-family:var(--font-sans);font-synthesis:none}
+*{box-sizing:border-box}body{margin:0}button,input,a{font:inherit}button,a{color:inherit;-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:default;opacity:.5}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--proof);outline-offset:3px}h1,h2,h3,p{margin:0}svg,img{display:block}[hidden]{display:none!important}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.prototype-stage{min-height:100dvh;display:grid;place-items:center;padding:24px}.phone{position:relative;width:min(430px,100%);height:min(900px,calc(100dvh - 48px));min-height:680px;display:flex;flex-direction:column;overflow:hidden;border:7px solid #050807;border-radius:42px;background:var(--canvas)}
+.status-bar{position:relative;flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between;height:34px;padding:0 24px 5px;font-size:10px;font-weight:700}.dynamic-island{position:absolute;top:7px;left:50%;width:84px;height:18px;transform:translateX(-50%);border-radius:999px;background:#050807}.app-header{display:flex;align-items:center;justify-content:space-between;min-height:60px;padding:7px 18px;flex-shrink:0}.brand{min-height:44px;padding:0;border:0;background:none}.brand img{width:126px;height:auto}.sign-in{min-height:44px;padding:0 14px;border:1px solid var(--outline-soft);border-radius:99px;background:transparent;font-size:13px;font-weight:600}
+.screen-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:none;scroll-behavior:auto;overflow-anchor:none}.screen-scroll::-webkit-scrollbar,.detail-body::-webkit-scrollbar{display:none}.markets-content{padding:15px 18px 26px}.sample-label{font-size:10px;color:var(--muted);white-space:nowrap}.intro-copy{font-size:12px;color:var(--muted);margin:8px 0 18px;line-height:1.5}
+.search-wrap{position:relative;z-index:12;margin-bottom:20px}.search-box{display:flex;align-items:center;gap:9px;min-height:48px;border:1px solid var(--outline-soft);border-radius:13px;padding:0 11px;color:var(--muted)}.search-box:focus-within{border-color:var(--proof)}.search-box input{width:100%;min-width:0;padding:0 25px 0 0;line-height:1.4;color:var(--ink);font-size:14px;border:0;background:transparent;outline:none}.search-box input::-webkit-search-cancel-button{display:none}.search-box input::placeholder{color:var(--muted)}.clear-search{position:absolute;right:1px;top:2px;width:44px;height:44px;border:0;background:transparent;color:var(--muted);font-size:24px}.search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;max-height:300px;overflow:auto;padding:6px;border:1px solid var(--outline);border-radius:14px;background:var(--surface-raised);box-shadow:0 16px 30px #0008}.search-result{width:100%;display:grid;grid-template-columns:32px minmax(0,1fr) auto;align-items:center;gap:9px;min-height:64px;padding:10px 6px;border:0;border-radius:8px;text-align:left;background:none}.search-result:hover{background:var(--proof-wash)}.search-result strong{display:block;font-size:13px;font-weight:600}.search-result small{display:block;margin-top:4px;font-size:10px;color:var(--muted)}.result-families{color:var(--muted);font-size:10px;line-height:1.6;text-align:right}.search-empty{padding:20px 12px;font-size:13px;color:var(--muted);line-height:1.5}
+.catalog-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}.eyebrow{font-size:10px;color:var(--proof);letter-spacing:.05em;margin-bottom:7px}.catalog-heading h2{font-size:24px;font-weight:550;letter-spacing:-.045em;line-height:1.2}.catalog-count{font:400 10px/1.5 var(--font-mono);color:var(--muted);padding-bottom:2px;white-space:nowrap}.catalog-copy{font-size:12px;line-height:1.5;color:var(--muted);margin:10px 0 18px;max-width:330px}.column-labels{display:flex;justify-content:space-between;gap:10px;color:var(--muted);padding:0 10px 9px;font-size:9px;letter-spacing:.04em;text-transform:uppercase}.instrument-list{background:var(--surface);border-radius:16px;overflow:hidden}.instrument-row{width:100%;display:grid;grid-template-columns:32px minmax(0,1fr) 100px;align-items:center;gap:10px;padding:15px 12px;min-height:86px;border:0;border-bottom:1px solid var(--outline-soft);background:none;text-align:left}.instrument-row:last-child{border-bottom:0}.instrument-row:hover{background:var(--proof-wash)}.instrument-row:focus-visible{outline-offset:-3px}.company-logo{display:grid;place-items:center;width:32px;height:32px;flex-shrink:0;border-radius:10px;color:var(--proof);background:var(--proof-wash);font-size:11px;font-weight:650;overflow:hidden}.company-logo img{width:100%;height:100%;object-fit:contain}.company-logo.private-logo{color:var(--private);background:#3c321f}.instrument-identity{min-width:0}.company-name{display:block;font-size:14px;font-weight:550;line-height:1.3;letter-spacing:-.015em}.instrument-symbol{display:block;margin-top:4px;font:400 10px/1.4 var(--font-mono);color:var(--muted)}.provider-name{display:block;margin-top:3px;color:var(--muted);font-size:10px;line-height:1.4}.instrument-market{text-align:right}.market-value{display:block;font:500 15px/1.3 var(--font-mono);letter-spacing:-.04em}.market-change{display:block;margin-top:5px;font:400 11px/1.3 var(--font-mono);color:var(--gain)}.market-change.negative{color:var(--caution)}.availability{display:inline-flex;align-items:center;gap:4px;color:var(--muted);font-size:9px;line-height:1.4;margin-top:6px}.availability::before{content:'';width:4px;height:4px;flex-shrink:0;border-radius:50%;background:currentColor}.availability.paused{color:var(--caution)}.availability.preview{color:var(--private)}.availability.available{color:var(--gain)}
+.bottom-nav{display:grid;grid-template-columns:repeat(3,1fr);flex-shrink:0;padding:8px 20px 12px;min-height:72px;border-top:1px solid var(--outline-soft);background:var(--surface)}.nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:0;border:0;background:none;color:var(--muted);font-size:12px;text-decoration:none}.nav-item.active{color:var(--proof)}.nav-item.active svg{box-sizing:content-box;padding:5px 19px;margin-block:-5px;border-radius:99px;background:var(--proof-wash)}
+.detail-screen{position:absolute;inset:34px 0 0;z-index:40;display:flex;flex-direction:column;background:var(--canvas)}.detail-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 18px;border-bottom:1px solid var(--outline-soft)}.back-button{border:0;background:none;color:var(--ink);padding:0;min-height:44px;min-width:70px;text-align:left;font-size:14px}.detail-body{padding:24px 18px 32px;overflow:auto;min-height:0;flex:1;scrollbar-width:none}.company-heading{display:flex;align-items:center;gap:12px}.company-heading .company-logo{width:44px;height:44px;font-size:15px;border-radius:13px}.company-heading h2,.detail-body>h2{font-size:28px;letter-spacing:-.05em;font-weight:550}.company-heading p{font-size:11px;color:var(--muted);margin-top:5px}.detail-quote{margin:28px 0 22px}.detail-quote .quote-label{font-size:11px;color:var(--muted);display:block;margin-bottom:8px}.detail-quote strong{font:500 36px/1.2 var(--font-mono);letter-spacing:-.06em;display:block}.detail-quote .market-change{font-size:13px}.detail-description{font-size:13px;color:var(--muted);line-height:1.6;margin-top:14px}.detail-section-title{font-size:19px;font-weight:550;letter-spacing:-.03em;margin:28px 0 12px}.provider-option{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;min-height:78px;padding:13px;border:1px solid var(--outline-soft);border-radius:12px;text-align:left;background:var(--surface);margin:8px 0}.provider-option[aria-pressed=true]{border-color:var(--proof)}.provider-option strong{font-size:14px;font-weight:550;display:block}.provider-option small{font-size:11px;color:var(--muted);display:block;margin-top:5px}.provider-option .provider-price{text-align:right;font:400 13px/1.5 var(--font-mono)}.provider-option .provider-price .availability{font-family:var(--font-sans)}.selection-note{font-size:11px;line-height:1.5;color:var(--muted);margin-top:12px}.facts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;border:1px solid var(--outline-soft);border-radius:14px;overflow:hidden;background:var(--outline-soft)}.fact{padding:15px 12px;background:var(--surface)}.fact small{display:block;font-size:10px;color:var(--muted);margin-bottom:7px}.fact strong{display:block;font-size:13px;font-weight:500;line-height:1.5}.secondary-button{border:1px solid var(--outline);border-radius:12px;background:transparent;min-height:48px;padding:12px 16px;font-size:14px}.account-preview{padding:20px 0;color:var(--muted);font-size:13px;line-height:1.6}.account-preview button{width:100%;margin-top:24px}
+@media(max-width:359px){.markets-content{padding-inline:14px}.capability-card{padding:12px;min-height:120px}.capability-card strong{font-size:16px}.capability-card small{font-size:9px}.instrument-row{grid-template-columns:28px minmax(0,1fr) 85px;gap:8px;padding-inline:10px}.instrument-row .company-logo{width:28px;height:28px}.company-name{font-size:13px}.market-value{font-size:14px}.instrument-symbol,.provider-name{font-size:9px}.catalog-heading h2{font-size:22px}.search-box input{font-size:13px}.offering-card{padding:15px}.offering-name strong{font-size:16px}.contract-terms{font-size:9px}.compact-tabs{padding-inline:10px}.compact-tab{font-size:10px}}
+@media(max-width:600px){.prototype-stage{display:block;padding:0;background:var(--canvas)}.phone{width:100%;height:100dvh;min-height:0;border:0;border-radius:0}.status-bar{height:calc(34px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top)}.detail-screen{top:calc(34px + env(safe-area-inset-top))}.bottom-nav{padding-bottom:calc(12px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
+.company-logo{position:relative}.company-logo img{position:absolute;inset:0}.offering-value,.offering-bottom{width:100%}#lending-detail{position:absolute;inset:34px 0 0;z-index:40;background:var(--canvas)}.lend-detail-shell{inset:0}
+@media(max-width:600px){#lending-detail{top:calc(34px + env(safe-area-inset-top))}}
 
-    * { box-sizing: border-box; }
-    html, body { min-height: 100%; }
-    body { margin: 0; }
-    button, input { font: inherit; }
-    button { color: inherit; }
-    button, input { -webkit-tap-highlight-color: transparent; }
-    button:focus-visible, input:focus-visible {
-      outline: 3px solid rgba(116, 199, 223, 0.42);
-      outline-offset: 2px;
-    }
-    h1, h2, h3, p { margin: 0; }
-    svg, img { display: block; }
-    [hidden] { display: none !important; }
+    #lending-content[hidden], #lending-detail[hidden] { display: none; }
+#lending-content, #lending-detail { color: var(--ink); font-family: var(--font-sans); }
+.lend-catalog { padding: 14px 12px 28px; }
+.lend-flow { display: grid; grid-template-columns: 1fr 24px 1fr; align-items: stretch; margin-bottom: 12px; }
+.lend-flow-card { min-height: 68px; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 11px; border: 1px solid var(--outline-soft); border-radius: 14px; background: var(--surface); }
+.lend-flow-card strong { font-size: 13px; line-height: 1.2; }
+.lend-flow-card span { color: var(--muted); font: 500 9px/1.3 var(--font-mono); }
+.lend-flow-card:first-child { border-color: color-mix(in srgb, var(--proof) 45%, var(--outline-soft)); }
+.lend-flow-card:last-child { border-color: color-mix(in srgb, var(--proof) 25%, var(--outline-soft)); }
+.lend-flow-arrow { display: grid; place-items: center; color: var(--proof); font-size: 18px; }
+.lend-protocol { margin: 0 2px 16px; color: var(--muted); font: 500 9px/1.4 var(--font-mono); }
+.lend-cards { overflow: hidden; border: 1px solid var(--outline-soft); border-radius: 16px; background: var(--surface); }
+.lend-card { width: 100%; min-height: 126px; display: block; padding: 14px 12px; border: 0; border-bottom: 1px solid var(--outline-soft); color: var(--ink); text-align: left; background: transparent; cursor: pointer; }
+.lend-card:last-child { border-bottom: 0; }
+.lend-card:hover, .lend-card:focus-visible { background: var(--proof-wash); }
+.lend-card:focus-visible { outline: 2px solid var(--proof); outline-offset: -2px; }
+.lend-identity { min-width: 0; }
+.lend-symbol { display: block; font: 700 14px/1.2 var(--font-mono); }
+.lend-name { display: block; overflow: hidden; margin-top: 4px; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.lend-card-state { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; color: var(--muted); font: 600 10px/1.2 var(--font-mono); text-transform: uppercase; }
+.lend-card-state::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--proof); }
+.lend-card-state.paused { color: var(--caution); }
+.lend-card-state.paused::before { background: var(--caution); }
+.lend-rates { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 14px; }
+.lend-rate { min-width: 0; padding-left: 10px; border-left: 1px solid var(--outline-soft); }
+.lend-rate span, .lend-detail-label { display: block; color: var(--muted); font: 500 11px/1.25 var(--font-mono); text-transform: uppercase; }
+.lend-rate strong { display: block; margin-top: 5px; font: 600 20px/1.05 var(--font-mono); }
+.lend-disclosure { margin: 14px 2px 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+.lend-detail-shell { position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; overflow: hidden; background: var(--canvas); }
+.lend-detail-back { position: sticky; top: 0; z-index: 2; flex: 0 0 52px; display: flex; align-items: center; gap: 9px; padding: 0 14px; border: 0; border-bottom: 1px solid var(--outline-soft); color: var(--ink); background: var(--canvas); font-size: 13px; cursor: pointer; }
+.lend-detail-back:focus-visible, .lend-action:focus-visible, .lend-preview-close:focus-visible { outline: 2px solid var(--proof); outline-offset: -2px; }
+.lend-detail-back b { color: var(--muted); font-size: 20px; font-weight: 400; }
+.lend-detail-scroll { overflow-y: auto; padding: 18px 14px 30px; }
+.lend-detail-kicker { margin: 0; color: var(--muted); font: 600 10px/1.3 var(--font-mono); text-transform: uppercase; }
+.lend-detail-title { margin: 5px 0 0; font-size: 26px; font-weight: 600; letter-spacing: -.05em; }
+.lend-detail-subtitle { margin: 6px 0 0; color: var(--muted); font: 500 11px/1.45 var(--font-mono); }
+.lend-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+.lend-info { padding: 11px; border: 1px solid var(--outline-soft); border-radius: 12px; background: var(--surface); }
+.lend-info strong { display: block; margin-top: 5px; font: 600 18px/1.1 var(--font-mono); }
+.lend-info p { margin: 5px 0 0; color: var(--muted); font-size: 10px; line-height: 1.35; }
+.lend-position { margin-top: 10px; padding: 12px; border: 1px solid var(--outline-soft); border-radius: 12px; background: var(--proof-wash); }
+.lend-position h3 { margin: 0 0 8px; font-size: 14px; }
+.lend-position p { margin: 3px 0; color: var(--muted); font: 500 11px/1.45 var(--font-mono); }
+.lend-action-title { margin: 22px 2px 8px; font-size: 15px; font-weight: 600; }
+.lend-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.lend-action { min-height: 44px; padding: 8px 10px; border: 1px solid var(--outline-soft); border-radius: 10px; color: var(--muted); text-align: left; background: transparent; cursor: pointer; }
+.lend-action strong { display: block; color: inherit; font-size: 13px; }
+.lend-action span { display: block; margin-top: 3px; font: 500 10px/1.25 var(--font-mono); }
+.lend-action.active { border-color: var(--proof); color: var(--ink); background: var(--proof-wash); }
+.lend-action.blocked { opacity: .55; }
+.lend-amount-label { display: flex; justify-content: space-between; gap: 10px; margin: 16px 2px 6px; font-size: 12px; font-weight: 600; }
+.lend-amount-label span { color: var(--muted); font: 500 10px/1.2 var(--font-mono); }
+.lend-amount { width: 100%; min-height: 48px; padding: 0 11px; border: 1px solid var(--outline-soft); border-radius: 10px; outline: 0; color: var(--ink); background: var(--surface); font: 600 15px/1 var(--font-mono); }
+.lend-amount:focus { border-color: var(--proof); }
+.lend-helper { margin: 7px 2px 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.lend-preview-button, .lend-preview-close { width: 100%; min-height: 46px; margin-top: 14px; border: 0; border-radius: 10px; color: var(--canvas); background: var(--proof); font-size: 12px; font-weight: 700; cursor: pointer; }
+.lend-preview-button:disabled { color: var(--muted); background: var(--outline-soft); cursor: not-allowed; }
+.lend-preview { margin-top: 14px; padding: 13px; border: 1px solid var(--outline-soft); border-radius: 12px; background: var(--surface); }
+.lend-preview h3 { margin: 0; font-size: 15px; }
+.lend-preview-summary { margin: 7px 0 0; color: var(--ink); font: 500 11px/1.55 var(--font-mono); white-space: pre-line; }
+.lend-preview-note { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+.lend-preview-close { color: var(--ink); border: 1px solid var(--outline-soft); background: transparent; }
+.lend-error { margin-top: 9px; color: var(--caution); font-size: 10px; line-height: 1.4; }
+@media (max-width: 359px) {
+  .lend-catalog { padding-inline: 10px; }
+  .lend-card { padding-inline: 10px; }
+  .lend-rates { gap: 4px; }
+  .lend-rate { padding-left: 5px; }
+  .lend-rate strong { font-size: 18px; }
+  .lend-symbol { font-size: 13px; }
+  .lend-detail-scroll { padding-inline: 12px; }
+}
+.lend-catalog{padding:0}.lend-flow-card{padding:13px 11px;min-height:84px}.lend-flow-card strong{font-size:14px;font-weight:550}.lend-flow-card span{font:400 11px/1.4 var(--font-sans)}.lend-protocol{font:400 11px/1.5 var(--font-sans);margin:0 0 20px}.lend-card{padding:19px 16px}.lend-symbol{font:550 18px/1.3 var(--font-sans);letter-spacing:-.02em}.lend-name{font-size:12px;margin-top:3px;white-space:normal}.lend-card-state{font:400 11px/1.5 var(--font-sans);text-transform:none;margin-top:14px}.lend-rates{margin-top:18px}.lend-rate:first-child{border-left:0;padding-left:0}.lend-rate span{font:400 11px/1.5 var(--font-sans);text-transform:none}.lend-rate strong{font-size:22px;font-weight:500;letter-spacing:-.04em}.lend-disclosure{font-size:11px;line-height:1.6}.lend-detail-scroll{padding:22px 18px 32px;scrollbar-width:none;min-height:0;overflow-anchor:none}.lend-detail-kicker{font:400 11px/1.4 var(--font-sans);text-transform:none}.lend-detail-title{font-size:28px;font-weight:550;margin-top:8px}.lend-detail-subtitle{font:400 12px/1.5 var(--font-sans);margin-top:6px}.lend-detail-label{font:400 12px/1.4 var(--font-sans);text-transform:none}.lend-info{padding:14px}.lend-info strong{font-size:22px;font-weight:500;letter-spacing:-.04em}.lend-info p{font-size:11px}.lend-position{margin-top:20px;background:var(--surface);padding:15px}.lend-position h3{font-size:14px;font-weight:550;margin-bottom:16px}.lend-position-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}.lend-position-pair span,.lend-position-pair small{display:block;font-size:11px;color:var(--muted)}.lend-position-pair strong{display:block;font:500 16px/1.5 var(--font-mono);margin:5px 0;letter-spacing:-.04em}.lend-route-note{font-size:12px;line-height:1.5;color:var(--muted);margin-top:14px}.lend-action-title{font-size:20px;font-weight:550;margin:25px 0 13px;letter-spacing:-.03em}.lend-action{padding:13px 12px;min-height:65px}.lend-action strong{font-size:14px;font-weight:550}.lend-action span{font:400 11px/1.4 var(--font-sans)}.lend-helper,.lend-error{font-size:12px;line-height:1.6}.lend-amount{font-size:24px;min-height:58px;font-weight:500}.lend-amount-label{font-size:13px;margin-top:22px}.lend-amount-label span{font-size:12px}.lend-preview-button,.lend-preview-close{min-height:48px;font-size:14px;font-weight:550}.lend-preview{padding:17px;margin-top:24px}.lend-review-heading h3{font-size:20px;font-weight:550;margin:5px 0 12px}.lend-review-heading>strong{font:500 25px/1.3 var(--font-mono);letter-spacing:-.04em}.lend-review-table{margin-top:22px}.lend-review-row{display:grid;grid-template-columns:1.1fr 1fr 1fr;align-items:center;gap:5px;border-top:1px solid var(--outline-soft);padding:13px 0;font-size:12px}.lend-review-row>span:nth-child(2){text-align:right;color:var(--muted);font-family:var(--font-mono)}.lend-review-row>strong{text-align:right;font:500 12px/1.5 var(--font-mono);overflow-wrap:anywhere}.lend-review-row>span{overflow-wrap:anywhere}.lend-review-row small{color:var(--muted);font-size:10px}.lend-review-labels{border:0;padding:0 0 8px;color:var(--muted);font-size:10px}.lend-review-labels>span:last-child{text-align:right}.lend-risk-track{position:relative;height:5px;background:var(--outline-soft);border-radius:99px;margin:18px 0 10px}.lend-risk-track span{display:block;height:100%;background:var(--proof);border-radius:99px}.lend-risk-track i{position:absolute;top:-3px;width:2px;height:11px;background:var(--caution)}.lend-risk-caption,.lend-preview-note{font-size:11px;line-height:1.6;color:var(--muted)}.lend-preview-note{margin-top:16px}
+@media(max-width:359px){.lend-catalog{padding:0}.lend-card{padding:18px 14px}.lend-position-pair strong{font-size:14px}.lend-detail-scroll{padding-inline:14px}.lend-review-row{font-size:11px}.lend-review-row>strong{font-size:11px}.lend-preview{padding:14px}.lend-flow-card strong{font-size:13px}}
 
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
 
-    .prototype-stage {
-      min-height: 100vh;
-      min-height: 100dvh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-      background: #0b100f;
-    }
+/* Browse-first catalogue: stable navigation and a compact company directory. */
+.app-header{min-height:52px;padding-block:3px}.brand img{width:112px}.browse-header{flex-shrink:0;padding:6px 18px 10px;position:relative;z-index:25}.browse-header .search-wrap{margin:0}.search-box{min-height:44px}.clear-search{top:0}.category-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:0 18px;flex-shrink:0;border-bottom:1px solid var(--outline-soft)}.category-tab{border:0;border-bottom:2px solid transparent;background:none;min-height:46px;padding:0 1px;color:var(--muted);font-size:12px}.category-tab[aria-pressed=true]{color:var(--proof);border-bottom-color:var(--proof);font-weight:600}.category-intent{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:13px 18px 9px;flex-shrink:0}.category-intent h2{font-size:16px;font-weight:550;letter-spacing:-.02em}.category-intent>span{font-size:10px;color:var(--muted);text-align:right;max-width:130px;line-height:1.4}.browse-controls{position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px 7px;min-height:48px;z-index:20}.browse-count{display:flex;gap:8px;align-items:baseline}.browse-count strong{font-size:12px;font-weight:550}.browse-count>span{font-size:10px;color:var(--muted)}.index-toggle{display:flex;align-items:center;justify-content:center;gap:10px;min-width:68px;min-height:40px;padding:0 10px;border:1px solid var(--outline-soft);border-radius:10px;background:var(--surface);font-size:12px}.index-toggle[aria-expanded=true]{border-color:var(--proof);color:var(--proof)}.index-toggle span{font-size:16px}.letter-picker{position:absolute;top:calc(100% - 3px);left:18px;right:18px;padding:8px 12px 14px;border:1px solid var(--outline);border-radius:14px;background:var(--surface-raised);box-shadow:0 16px 38px #0008;max-height:min(340px,60dvh);overflow:auto}.picker-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.picker-heading strong{font-size:14px;font-weight:550}.picker-heading button{width:44px;height:44px;border:0;background:none;font-size:22px;color:var(--muted)}.letter-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}.letter-button{min-height:44px;border:1px solid var(--outline-soft);border-radius:8px;background:var(--surface);font:500 14px/1 var(--font-mono)}.letter-button:hover,.letter-button:focus-visible{background:var(--proof-wash);border-color:var(--proof)}.letter-button:disabled{opacity:.25}.screen-scroll{padding:0 18px;position:relative}.column-labels{position:sticky;top:0;z-index:3;background:var(--canvas);padding:6px 10px 8px;font-size:9px;letter-spacing:.025em;text-transform:none;min-height:27px}.instrument-list{background:none;border-radius:0;overflow:visible}.letter-section{scroll-margin-top:27px}.letter-heading{position:sticky;top:27px;z-index:2;font:500 10px/1.3 var(--font-mono);padding:7px 10px 6px;background:var(--canvas);color:var(--proof);border-bottom:1px solid var(--outline-soft);outline-offset:-2px}.company-row{width:100%;min-height:64px;display:grid;grid-template-columns:30px minmax(0,1fr) 99px 8px;align-items:center;gap:9px;padding:10px 5px 10px 8px;border:0;border-bottom:1px solid var(--outline-soft);background:none;text-align:left}.company-row:hover{background:var(--surface)}.company-row:focus-visible{outline-offset:-3px;border-radius:8px}.company-row .company-logo{width:30px;height:30px;border-radius:9px;font-size:10px}.company-row .company-name{font-size:14px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}.company-row .instrument-symbol{font:400 10px/1.4 var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}.company-row .market-value{font-size:14px;letter-spacing:-.04em}.company-row .market-change{font-size:10px;margin-top:4px}.row-value-label{display:block;font-size:10px;line-height:1.4;color:var(--muted);margin-top:4px}.row-chevron{font-size:18px;color:var(--outline)}.offering-count{font-size:12px;font-weight:500;color:var(--ink)}.row-paused{color:var(--caution)}.catalogue-note{color:var(--muted);font-size:10px;line-height:1.6;padding:20px 4px 24px;margin:0;border:0}.detail-description{margin-top:14px}.provider-option small{line-height:1.5}.provider-option .provider-price{min-width:70px}.provider-option[aria-pressed=true]{background:var(--proof-wash)}.search-results{max-height:min(370px,55dvh)}.lending-browse .screen-scroll{padding-top:8px}.lending-browse .category-intent{padding-bottom:12px}.prototype-note{color:var(--muted);font-size:10px;line-height:1.6;margin-top:24px;padding-top:16px;border-top:1px solid var(--outline-soft)}.catalogue-note{margin-top:0;padding-top:20px;border:0}
+@media(max-width:359px){.browse-header,.category-nav{padding-inline:14px}.category-intent,.browse-controls{padding-inline:14px}.screen-scroll{padding-inline:14px}.category-tab{font-size:11px}.category-intent h2{font-size:15px}.category-intent>span{font-size:9px;max-width:104px}.company-row{grid-template-columns:26px minmax(0,1fr) 81px 7px;gap:7px;padding-left:5px}.company-row .company-logo{width:26px;height:26px}.company-row .company-name{font-size:13px}.company-row .market-value{font-size:13px}.company-row .instrument-symbol{font-size:9px}.row-value-label{font-size:9px}.browse-count{gap:6px}.browse-count>span{font-size:9px}.letter-picker{left:14px;right:14px;padding-inline:8px}.letter-grid{gap:2px}.letter-button{font-size:13px}}
 
-    .phone {
-      position: relative;
-      width: min(430px, 100%);
-      height: min(900px, calc(100dvh - 48px));
-      min-height: 680px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      background: var(--canvas);
-      border: 7px solid #050807;
-      border-radius: 42px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
-    }
+.browse-controls{gap:8px;justify-content:flex-end}.browse-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}.back-to-top{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 10px;border:1px solid var(--outline-soft);border-radius:10px;background:transparent;color:var(--proof);font-size:11px;white-space:nowrap}.index-toggle{min-height:44px}.picker-heading .index-reset{display:flex;align-items:center;gap:8px;width:auto;min-height:44px;padding:0 6px;font-size:13px;color:var(--proof);font-weight:500}.back-to-top:hover,.picker-heading .index-reset:hover{background:var(--proof-wash)}
 
-    .status-bar {
-      position: relative;
-      height: 34px;
-      flex: 0 0 auto;
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      padding: 0 24px 5px;
-      background: var(--canvas);
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      z-index: 12;
-    }
-
-    .dynamic-island {
-      position: absolute;
-      top: 7px;
-      left: 50%;
-      width: 84px;
-      height: 18px;
-      transform: translateX(-50%);
-      border-radius: 999px;
-      background: #050807;
-    }
-
-    .status-icons { display: flex; align-items: center; gap: 4px; }
-
-    .app-header {
-      min-height: 62px;
-      flex: 0 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 18px 7px;
-      border-bottom: 1px solid var(--outline-soft);
-      background: rgba(19, 25, 24, 0.97);
-      z-index: 11;
-    }
-
-    .brand {
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-    }
-
-    .brand-mark {
-      width: 30px;
-      height: 30px;
-      display: grid;
-      place-items: center;
-      transform: rotate(-9deg);
-      border: 1px solid var(--outline);
-      border-radius: 9px;
-      color: var(--proof);
-      background: var(--proof-wash);
-      font: 400 15px/1 var(--font-serif);
-    }
-
-    .brand-mark span { transform: rotate(9deg); }
-    .brand-name { font: 700 19px/1 var(--font-serif); }
-
-    .guest-pill {
-      min-height: 36px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 12px;
-      border: 1px solid var(--outline);
-      border-radius: 999px;
-      color: var(--muted);
-      background: var(--surface);
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .guest-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--proof); }
-
-    .screen-scroll {
-      min-height: 0;
-      flex: 1;
-      overflow-y: auto;
-      scrollbar-width: none;
-      overscroll-behavior-y: contain;
-    }
-
-    .screen-scroll::-webkit-scrollbar,
-    .product-tabs::-webkit-scrollbar,
-    .filter-rail::-webkit-scrollbar { display: none; }
-
-    .markets-content { padding: 16px 16px 28px; }
-
-    .screen-intro {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 16px;
-      margin: 0 2px 13px;
-    }
-
-    .screen-intro h1 {
-      font: 700 28px/1.05 var(--font-serif);
-      letter-spacing: -0.035em;
-    }
-
-    .screen-state { text-align: right; }
-    .screen-state strong {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 6px;
-      color: var(--ink);
-      font: 600 9px/1.3 var(--font-mono);
-    }
-
-    .screen-state strong::before {
-      content: "";
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--muted);
-    }
-
-    .screen-state span {
-      display: block;
-      margin-top: 3px;
-      color: var(--muted);
-      font: 500 8px/1.2 var(--font-mono);
-    }
-
-    .registry-panel {
-      position: relative;
-      border: 1px solid var(--outline);
-      border-radius: var(--card-radius);
-      background: var(--surface);
-    }
-
-    .search-wrap { position: relative; z-index: 8; padding: 8px; }
-    .search-box {
-      min-height: 46px;
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 0 11px;
-      border: 1px solid var(--outline-soft);
-      border-radius: var(--control-radius);
-      color: var(--muted);
-      background: var(--canvas);
-      transition: border-color 140ms ease, box-shadow 140ms ease;
-    }
-
-    .search-box:focus-within {
-      border-color: var(--proof);
-      box-shadow: 0 0 0 3px rgba(116, 199, 223, 0.12);
-    }
-
-    .search-box input {
-      min-width: 0;
-      flex: 1;
-      padding: 0;
-      border: 0;
-      outline: 0;
-      color: var(--ink);
-      background: transparent;
-      font-size: 12px;
-      font-weight: 650;
-    }
-
-    .search-box input::placeholder { color: var(--muted); font-weight: 500; }
-    .clear-search {
-      width: 30px;
-      height: 30px;
-      display: grid;
-      place-items: center;
-      padding: 0;
-      border: 0;
-      border-radius: 8px;
-      color: var(--muted);
-      background: transparent;
-      font-size: 19px;
-      cursor: pointer;
-    }
-
-    .search-results {
-      position: absolute;
-      top: calc(100% + 2px);
-      right: 8px;
-      left: 8px;
-      max-height: 276px;
-      overflow-y: auto;
-      padding: 5px;
-      border: 1px solid var(--outline);
-      border-radius: 12px;
-      background: var(--surface-raised);
-      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
-    }
-
-    .search-result {
-      width: 100%;
-      min-height: 58px;
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 10px;
-      padding: 8px;
-      border: 0;
-      border-radius: 9px;
-      color: var(--ink);
-      background: transparent;
-      text-align: left;
-      cursor: pointer;
-    }
-
-    .search-result:hover { background: var(--proof-wash); }
-    .search-result-copy { min-width: 0; }
-    .search-result-copy strong { display: block; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-    .search-result-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; }
-    .capability-chips { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 3px; max-width: 116px; }
-    .mini-chip { padding: 3px 5px; border-radius: 5px; color: var(--proof); background: var(--proof-wash); font: 600 7px/1 var(--font-mono); }
-    .mini-chip.private { color: var(--private); background: var(--private-wash); }
-    .mini-chip.preview { color: var(--muted); background: var(--canvas); }
-    .search-empty { padding: 18px 12px; color: var(--muted); font-size: 11px; line-height: 1.5; text-align: center; }
-
-    .product-tabs {
-      display: flex;
-      gap: 4px;
-      overflow-x: auto;
-      padding: 0 8px 8px;
-      scroll-padding-inline: 8px;
-      scrollbar-width: none;
-    }
-
-    .product-tab {
-      min-width: 104px;
-      min-height: 44px;
-      flex: 1 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 0 11px;
-      border: 1px solid var(--outline-soft);
-      border-radius: var(--control-radius);
-      color: var(--muted);
-      background: transparent;
-      font-size: 10px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .product-tab:hover { color: var(--ink); background: var(--proof-wash); }
-    .product-tab.active { color: var(--proof); border-color: var(--proof); background: var(--proof-wash); }
-    .tab-count { color: inherit; font: 600 8px/1 var(--font-mono); opacity: 0.8; }
-
-    .product-context {
-      display: grid;
-      grid-template-columns: 24px minmax(0, 1fr);
-      gap: 9px;
-      padding: 11px 12px;
-      border-top: 1px solid var(--outline-soft);
-      border-bottom: 1px solid var(--outline-soft);
-      background: var(--canvas);
-    }
-
-    .context-icon { color: var(--proof); }
-    .product-context strong { display: block; font-size: 10px; line-height: 1.3; }
-    .product-context p { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.45; }
-
-    .catalog-toolbar {
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 7px 9px;
-    }
-
-    .catalog-heading strong { display: block; font-size: 11px; }
-    .catalog-heading span { display: block; margin-top: 2px; color: var(--muted); font: 500 8px/1.2 var(--font-mono); }
-    .filter-rail { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; }
-    .filter-chip {
-      min-height: 32px;
-      flex: 0 0 auto;
-      padding: 0 9px;
-      border: 1px solid var(--outline-soft);
-      border-radius: 8px;
-      color: var(--muted);
-      background: transparent;
-      font-size: 8px;
-      font-weight: 750;
-      cursor: pointer;
-    }
-    .filter-chip:hover, .filter-chip.active { color: var(--proof); border-color: var(--proof); background: var(--proof-wash); }
-
-    .instrument-list { border-top: 1px solid var(--outline-soft); }
-    .instrument-row {
-      width: 100%;
-      min-height: 78px;
-      display: grid;
-      grid-template-columns: 40px minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 10px;
-      padding: 10px;
-      border: 0;
-      border-bottom: 1px solid var(--outline-soft);
-      color: var(--ink);
-      background: transparent;
-      text-align: left;
-      cursor: pointer;
-      transition: background 120ms ease;
-    }
-
-    .instrument-row:last-child { border-bottom: 0; }
-    .instrument-row:hover, .instrument-row:active { background: var(--proof-wash); }
-
-    .company-logo {
-      width: 40px;
-      height: 40px;
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      border-radius: 10px;
-      color: var(--proof);
-      background: var(--proof-wash);
-      font-size: 10px;
-      font-weight: 850;
-      letter-spacing: -0.04em;
-    }
-
-    .company-logo img { width: 100%; height: 100%; object-fit: contain; }
-    .company-logo.private-logo { color: var(--private); background: var(--private-wash); }
-
-    .instrument-identity { min-width: 0; }
-    .company-line { display: flex; align-items: center; gap: 6px; min-width: 0; }
-    .company-line strong { overflow: hidden; font-size: 12px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
-    .company-line span { flex: 0 0 auto; color: var(--muted); font: 500 8px/1.2 var(--font-mono); }
-
-    .instrument-line {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      min-width: 0;
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 8px;
-      line-height: 1.3;
-    }
-
-    .instrument-symbol { color: var(--ink); font: 650 8px/1.2 var(--font-mono); }
-    .verified-mark { display: inline-flex; align-items: center; gap: 3px; color: var(--proof); }
-    .instrument-market { min-width: 91px; text-align: right; }
-    .market-value { display: block; color: var(--ink); font: 650 11px/1.15 var(--font-mono); }
-    .market-change { display: block; margin-top: 4px; color: var(--gain); font: 650 9px/1.15 var(--font-mono); }
-    .market-change.negative { color: var(--caution); }
-    .market-secondary { display: block; margin-top: 4px; color: var(--muted); font: 500 7px/1.15 var(--font-mono); }
-
-    .availability {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      margin-top: 6px;
-      padding: 3px 5px;
-      border-radius: 5px;
-      color: var(--gain);
-      background: rgba(139, 196, 161, 0.1);
-      font: 650 7px/1 var(--font-mono);
-      text-transform: uppercase;
-    }
-    .availability::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
-    .availability.preview { color: var(--private); background: var(--private-wash); }
-    .availability.paused { color: var(--caution); background: var(--caution-wash); }
-
-    .catalog-empty { padding: 38px 24px; text-align: center; }
-    .catalog-empty strong { display: block; font-size: 13px; }
-    .catalog-empty p { margin-top: 7px; color: var(--muted); font-size: 10px; line-height: 1.5; }
-
-    .coverage {
-      margin-top: 18px;
-      padding: 13px 2px 0;
-      border-top: 1px solid var(--outline-soft);
-    }
-    .coverage-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .coverage strong { font-size: 10px; }
-    .coverage span { color: var(--muted); font: 550 8px/1.2 var(--font-mono); }
-    .coverage p { margin-top: 8px; color: var(--muted); font-size: 8px; line-height: 1.55; }
-
-    .bottom-nav {
-      position: relative;
-      min-height: 72px;
-      flex: 0 0 auto;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      align-items: start;
-      padding: 8px 20px 12px;
-      border-top: 1px solid var(--outline-soft);
-      background: rgba(28, 37, 35, 0.98);
-      z-index: 10;
-    }
-
-    .nav-item {
-      position: relative;
-      min-height: 48px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      border: 0;
-      border-radius: 10px;
-      color: var(--muted);
-      background: transparent;
-      font-size: 8px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .nav-item.active { color: var(--proof); }
-    .nav-item.active::after { content: ""; position: absolute; top: -8px; width: 22px; height: 2px; border-radius: 999px; background: var(--proof); }
-
-    .sheet-layer {
-      position: absolute;
-      inset: 0;
-      z-index: 30;
-      display: flex;
-      align-items: flex-end;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    .sheet-layer.open { visibility: visible; pointer-events: auto; }
-    .sheet-backdrop {
-      position: absolute;
-      inset: 0;
-      border: 0;
-      background: rgba(0, 0, 0, 0.6);
-      opacity: 0;
-      transition: opacity 180ms ease;
-      cursor: pointer;
-    }
-    .sheet-layer.open .sheet-backdrop { opacity: 1; }
-    .capability-sheet {
-      position: relative;
-      width: 100%;
-      max-height: 82%;
-      overflow-y: auto;
-      padding: 10px 16px 22px;
-      transform: translateY(102%);
-      border: 1px solid var(--outline);
-      border-bottom: 0;
-      border-radius: 22px 22px 0 0;
-      background: var(--surface);
-      transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    .sheet-layer.open .capability-sheet { transform: translateY(0); }
-    .sheet-handle { width: 38px; height: 4px; margin: 0 auto 12px; border-radius: 999px; background: var(--outline); }
-    .sheet-header { display: grid; grid-template-columns: 48px minmax(0, 1fr) 44px; align-items: center; gap: 11px; }
-    .sheet-header .company-logo { width: 48px; height: 48px; border-radius: 13px; font-size: 12px; }
-    .sheet-title { min-width: 0; }
-    .sheet-title p { color: var(--proof); font: 600 8px/1.2 var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; }
-    .sheet-title h2 { margin-top: 4px; overflow: hidden; font: 700 23px/1.1 var(--font-serif); text-overflow: ellipsis; white-space: nowrap; }
-    .sheet-close { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 1px solid var(--outline); border-radius: 11px; color: var(--ink); background: transparent; font-size: 24px; cursor: pointer; }
-    .sheet-close:hover { background: var(--proof-wash); }
-
-    .sheet-evidence {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-top: 16px;
-      padding: 10px 11px;
-      border: 1px solid var(--outline-soft);
-      border-radius: 10px;
-      background: var(--canvas);
-      color: var(--muted);
-      font-size: 9px;
-    }
-    .sheet-evidence strong { color: var(--proof); font: 650 8px/1.2 var(--font-mono); text-transform: uppercase; }
-
-    .capability-group { margin-top: 19px; }
-    .capability-group-heading { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 8px; }
-    .capability-group-heading h3 { font-size: 12px; }
-    .capability-group-heading span { color: var(--muted); font: 550 7px/1.2 var(--font-mono); text-transform: uppercase; }
-    .capability-list { overflow: hidden; border: 1px solid var(--outline); border-radius: var(--card-radius); }
-    .capability-row {
-      width: 100%;
-      min-height: 66px;
-      display: grid;
-      grid-template-columns: 32px minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 10px;
-      border: 0;
-      border-bottom: 1px solid var(--outline-soft);
-      color: var(--ink);
-      background: transparent;
-      text-align: left;
-    }
-    button.capability-row { cursor: pointer; }
-    button.capability-row:hover { background: var(--proof-wash); }
-    .capability-row:last-child { border-bottom: 0; }
-    .capability-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; color: var(--proof); background: var(--proof-wash); }
-    .capability-copy strong { display: block; font-size: 11px; }
-    .capability-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; line-height: 1.35; }
-    .capability-state { text-align: right; }
-    .capability-state b { display: block; color: var(--gain); font: 650 8px/1.2 var(--font-mono); text-transform: uppercase; }
-    .capability-state b.preview { color: var(--private); }
-    .capability-state b.later { color: var(--muted); }
-    .capability-state span { display: block; margin-top: 4px; color: var(--muted); font-size: 14px; }
-
-    .sheet-disclosure { margin: 17px 2px 0; color: var(--muted); font-size: 8px; line-height: 1.55; }
-    .toast {
-      position: absolute;
-      right: 16px;
-      bottom: 84px;
-      left: 16px;
-      z-index: 50;
-      padding: 11px 13px;
-      transform: translateY(20px);
-      border: 1px solid var(--outline);
-      border-radius: 10px;
-      color: var(--ink);
-      background: var(--surface-raised);
-      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
-      opacity: 0;
-      pointer-events: none;
-      font-size: 10px;
-      line-height: 1.4;
-      transition: opacity 140ms ease, transform 140ms ease;
-    }
-    .toast.show { transform: translateY(0); opacity: 1; }
-
-    @media (max-width: 520px) {
-      .prototype-stage { padding: 0; background: var(--canvas); }
-      .phone { width: 100%; height: 100dvh; min-height: 0; border: 0; border-radius: 0; }
-      .status-bar { display: none; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.001ms !important; }
-    }
+/* Search and alphabet navigation sit together beneath the product tabs. */
+.browse-header{display:flex;align-items:center;gap:8px;padding-block:12px 8px;--index-width:68px}.browse-header .search-wrap{flex:1;min-width:0}.browse-header .search-box svg{flex-shrink:0}.browse-header .browse-controls{position:static;padding:0;min-height:44px;z-index:auto}.browse-header .index-toggle{width:var(--index-width);min-width:var(--index-width)}.browse-header .letter-picker{top:calc(100% - 2px)}.browse-header .search-results{width:calc(100% + var(--index-width) + 8px);right:auto}.lending-browse .browse-header .search-results{width:100%}.market-list-area{position:relative;display:flex;flex-direction:column;flex:1;min-height:0;isolation:isolate}.market-list-area .screen-scroll{padding-bottom:68px}.back-to-top{position:absolute;right:18px;bottom:12px;z-index:10;min-width:68px;padding:0 13px;border-color:var(--outline);border-radius:99px;background:var(--surface-raised);box-shadow:0 4px 16px #0005;font-size:13px;font-weight:550}.back-to-top:hover{background:var(--proof-wash)}
+@media(max-width:359px){.back-to-top{right:14px}}
   </style>
 </head>
 <body>
   <main class="prototype-stage">
-    <div class="phone">
-      <div class="status-bar" aria-hidden="true">
-        <span>9:41</span>
-        <span class="dynamic-island"></span>
-        <span class="status-icons">● ◒ ▰</span>
-      </div>
-
+    <section class="phone" aria-label="Warren Markets prototype">
+      <div class="status-bar" aria-hidden="true"><span>9:41</span><span class="dynamic-island"></span><span>▂▄▆ &nbsp; ◒ &nbsp; ▰</span></div>
       <header class="app-header">
-        <button class="brand" id="brand-button" type="button" aria-label="Scroll Markets to top">
-          <span class="brand-mark"><span>W</span></span>
-          <span class="brand-name">Warren</span>
-        </button>
-        <div class="guest-pill" aria-label="Browsing as guest"><span class="guest-dot"></span>Guest</div>
+        <button class="brand" id="brand-button" aria-label="Scroll Markets to top"><img src="./apps/mobile/assets/brand/approved/brand/brand-dark.png" width="126" height="41" alt="Warren"></button>
+        <button class="sign-in" id="sign-in">Sign in</button>
       </header>
-
-      <div class="screen-scroll" id="market-scroll">
-        <div class="markets-content">
-          <div class="screen-intro">
-            <h1>Markets</h1>
-            <div class="screen-state">
-              <strong>Read-only</strong>
-              <span>Sample registry · 9:41 AM</span>
-            </div>
+      <div class="category-nav" role="group" aria-label="Market categories"></div>
+      <div class="browse-header">
+        <div class="search-wrap">
+          <label class="search-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="m15.4 15.4 4.2 4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="sr-only">Search company, ticker, or instrument</span><input id="market-search" type="search" placeholder="Search companies" autocomplete="off" aria-controls="search-results" aria-expanded="false"></label>
+          <button id="clear-search" class="clear-search" aria-label="Clear search" hidden>×</button>
+          <div id="search-results" class="search-results" role="region" aria-label="Company search results" hidden></div>
+        </div>
+        <div class="browse-controls" id="browse-controls">
+          <button class="index-toggle" id="index-toggle" aria-expanded="false" aria-controls="letter-picker" aria-label="Jump to company letter">A–Z <span aria-hidden="true">⌄</span></button>
+          <div class="letter-picker" id="letter-picker" hidden role="region" aria-label="Jump to company letter">
+            <div class="picker-heading"><button class="index-reset" id="index-reset" type="button"><span aria-hidden="true">↑</span> Start from A</button><button id="close-index" aria-label="Close letter index">×</button></div>
+            <div id="letter-grid" class="letter-grid"></div>
           </div>
-
-          <section class="registry-panel" aria-label="Verified market instruments">
-            <div class="search-wrap">
-              <div class="search-box">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="m15.4 15.4 4.2 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                <label class="sr-only" for="market-search">Search company, ticker, or instrument</label>
-                <input id="market-search" type="search" autocomplete="off" placeholder="Search company, ticker, or instrument" aria-controls="search-results" aria-expanded="false">
-                <button class="clear-search" id="clear-search" type="button" aria-label="Clear search" hidden>×</button>
-              </div>
-              <div class="search-results" id="search-results" role="region" aria-label="Market search results" hidden></div>
-            </div>
-
-            <div class="product-tabs" role="tablist" aria-label="Market product type">
-              <button class="product-tab active" type="button" role="tab" aria-selected="true" data-product="spot">Spot <span class="tab-count">06</span></button>
-              <button class="product-tab" type="button" role="tab" aria-selected="false" data-product="prestock">PreStocks <span class="tab-count">03</span></button>
-              <button class="product-tab" type="button" role="tab" aria-selected="false" data-product="perp">Perpetuals <span class="tab-count">04</span></button>
-            </div>
-
-            <div class="product-context" id="product-context"></div>
-
-            <div class="catalog-toolbar">
-              <div class="catalog-heading">
-                <strong id="catalog-title">Spot stocks</strong>
-                <span id="catalog-count">6 verified instruments</span>
-              </div>
-              <div class="filter-rail" aria-label="Market filters">
-                <button class="filter-chip" id="available-filter" type="button" aria-pressed="false">Available now</button>
-                <button class="filter-chip" id="sort-control" type="button">Most active</button>
-              </div>
-            </div>
-
-            <div class="instrument-list" id="instrument-list"></div>
-          </section>
-
-          <section class="coverage" aria-label="Registry coverage">
-            <div class="coverage-top"><strong>Registry coverage</strong><span>13 products · Solana</span></div>
-            <p>Warren verifies the instrument identity shown here. Verification does not mean an investment is safe, endorsed, or available in every region. Prices are informational and never reused as executable quotes.</p>
-          </section>
         </div>
       </div>
-
-      <nav class="bottom-nav" aria-label="Primary navigation">
-        <button class="nav-item" type="button" data-nav="Home">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 10.5 12 3.7l8.5 6.8v8.3a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5v-8.3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 20.3v-5.6h6v5.6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-          Home
-        </button>
-        <button class="nav-item active" type="button" aria-current="page" data-nav="Markets">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4.5v15h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="m7 15 4-4 3 2 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Markets
-        </button>
-        <button class="nav-item" type="button" data-nav="Profile">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="2"/><path d="M5.5 20c.5-3.8 2.7-5.7 6.5-5.7s6 1.9 6.5 5.7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          Profile
-        </button>
-      </nav>
-
-      <div class="sheet-layer" id="sheet-layer" aria-hidden="true">
-        <button class="sheet-backdrop" id="sheet-backdrop" type="button" aria-label="Close company markets"></button>
-        <section class="capability-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-company">
-          <div class="sheet-handle"></div>
-          <div class="sheet-header">
-            <div id="sheet-logo"></div>
-            <div class="sheet-title"><p>Markets for</p><h2 id="sheet-company"></h2></div>
-            <button class="sheet-close" id="sheet-close" type="button" aria-label="Close company markets">×</button>
-          </div>
-          <div class="sheet-evidence"><span id="sheet-summary"></span><strong>Registry checked</strong></div>
-          <div id="sheet-capabilities"></div>
-          <p class="sheet-disclosure">Product availability and market-data freshness are separate. Opening a product here does not request a quote, connect a wallet, or place a trade.</p>
+      <div class="market-list-area">
+      <div class="screen-scroll" id="market-scroll">
+        <section id="catalog" aria-label="Spot companies">
+          <div class="column-labels" id="column-labels" aria-hidden="true"><span>Company / Instrument</span><span id="value-column">Price / 1D</span></div>
+          <div id="instrument-list" class="instrument-list"></div>
+          <div id="lending-content" hidden></div>
         </section>
+        <p class="prototype-note catalogue-note">Layout test · 60 sample companies per stock category. Added instruments, prices and availability are illustrative; additional private companies are fictional. No transaction is connected.</p>
       </div>
-
-      <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    </div>
+        <button class="back-to-top" id="back-to-top" type="button" aria-label="Back to top" aria-controls="market-scroll" hidden><span aria-hidden="true">↑</span> Top</button>
+      </div>
+      <nav class="bottom-nav" aria-label="Primary navigation">
+        <a class="nav-item" href="./homescreen_mock.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3.5 10.5 8.5-7 8.5 7V20h-6v-6h-5v6h-6Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Home</a>
+        <button class="nav-item active" aria-current="page" id="markets-nav"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4v16h16M7 15l4-5 4 3 5-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Markets</button>
+        <a class="nav-item" href="./profile_mock.html?state=signed-out"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 7h8M8 11h8M8 15h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Portfolio</a>
+      </nav>
+      <section id="company-detail" class="detail-screen" hidden role="dialog" aria-modal="true" aria-labelledby="company-title"></section>
+      <section id="lending-detail" hidden role="dialog" aria-modal="true" aria-labelledby="lending-title"></section>
+      <section id="account-detail" class="detail-screen" hidden role="dialog" aria-modal="true" aria-labelledby="account-title"><header class="detail-header"><button class="back-button" data-close-detail data-initial-focus>‹ Markets</button><span class="sample-label">Design preview</span></header><div class="detail-body"><h2 id="account-title">Sign in to Warren</h2><p class="detail-description">Your account brings your wallet and positions together.</p><div class="account-preview"><p>This preview does not connect to an account.</p><button class="secondary-button" data-close-detail>Back to Markets</button></div></div></section>
+    </section>
   </main>
-
   <script>
-    const products = {
-      spot: {
-        title: 'Spot stocks',
-        countLabel: 'verified instruments',
-        contextTitle: 'Own the supported stock token',
-        context: 'Verified public-stock tokens. Reference prices are informational; availability belongs to the instrument, not the US market clock.',
-        icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 18V9m7 9V5m7 13v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
-        items: [
-          { id: 'nvidia', company: 'NVIDIA', ticker: 'NVDA', symbol: 'NVDAx', provider: 'xStocks', price: 222.01, change: 0.39, availability: 'Available', state: 'available', activity: 98, logo: 'https://api.tokens.xyz/logos/xstocks/NVDAx.png', capabilities: ['spot', 'perp'] },
-          { id: 'circle', company: 'Circle', ticker: 'CRCL', symbol: 'CRCLx', provider: 'xStocks', price: 141.32, change: 1.82, availability: 'Available', state: 'available', activity: 93, logo: 'https://api.tokens.xyz/logos/xstocks/CRCLx.png', capabilities: ['spot', 'perp'] },
-          { id: 'microsoft', company: 'Microsoft', ticker: 'MSFT', symbol: 'MSFTx', provider: 'xStocks', price: 451.84, change: 0.27, availability: 'Available', state: 'available', activity: 88, logo: 'https://api.tokens.xyz/logos/xstocks/MSFTx.png', capabilities: ['spot'] },
-          { id: 'apple', company: 'Apple', ticker: 'AAPL', symbol: 'AAPLx', provider: 'xStocks', price: 225.16, change: -0.64, availability: 'Available', state: 'available', activity: 86, logo: 'https://api.tokens.xyz/logos/xstocks/AAPLx.png', capabilities: ['spot'] },
-          { id: 'tesla', company: 'Tesla', ticker: 'TSLA', symbol: 'TSLAx', provider: 'xStocks', price: 250.44, change: 1.43, availability: 'Available', state: 'available', activity: 81, logo: 'https://api.tokens.xyz/logos/xstocks/TSLAx.png', capabilities: ['spot', 'perp'] },
-          { id: 'alphabet', company: 'Alphabet', ticker: 'GOOGL', symbol: 'GOOGLx', provider: 'xStocks', price: 197.08, change: -0.18, availability: 'Paused', state: 'paused', activity: 74, logo: 'https://api.tokens.xyz/logos/xstocks/GOOGLx.png', capabilities: ['spot'] }
-        ]
-      },
-      prestock: {
-        title: 'Private-company exposure',
-        countLabel: 'preview products',
-        contextTitle: 'Exposure before a public listing',
-        context: 'PreStocks are not listed shares. Each product must explain its legal structure, valuation source, liquidity, fees, and exit terms.',
-        icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19.5h16M6 19.5V8l6-3.5L18 8v11.5M9 10h1m4 0h1M9 14h1m4 0h1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-        items: [
-          { id: 'anthropic', company: 'Anthropic', ticker: 'Private', symbol: 'ANTH.PS', provider: 'PreStocks', price: 31.80, priceLabel: 'Indicative', change: null, availability: 'Preview', state: 'preview', activity: 91, mark: 'AN', capabilities: ['prestock'] },
-          { id: 'spacex', company: 'SpaceX', ticker: 'Private', symbol: 'SPACEX.PS', provider: 'PreStocks', price: 42.15, priceLabel: 'Indicative', change: null, availability: 'Preview', state: 'preview', activity: 87, mark: 'SX', capabilities: ['prestock'] },
-          { id: 'openai', company: 'OpenAI', ticker: 'Private', symbol: 'OPENAI.PS', provider: 'PreStocks', price: 27.40, priceLabel: 'Indicative', change: null, availability: 'Preview', state: 'preview', activity: 83, mark: 'OA', capabilities: ['prestock'] }
-        ]
-      },
-      perp: {
-        title: 'Equity perpetuals',
-        countLabel: 'preview contracts',
-        contextTitle: 'Directional exposure, not ownership',
-        context: 'Perpetual contracts add funding, leverage, liquidation, oracle, and venue risk. Discovery stays read-only until those risks are reviewed.',
-        icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 17 5-5 3.2 3.2L19 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.5 8H19v4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-        items: [
-          { id: 'nvidia', company: 'NVIDIA', ticker: 'NVDA', symbol: 'NVDA-PERP', provider: 'Phoenix', price: 222.18, change: 0.44, funding: '+0.0062%', availability: 'Preview', state: 'preview', activity: 97, logo: 'https://api.tokens.xyz/logos/xstocks/NVDAx.png', capabilities: ['spot', 'perp'] },
-          { id: 'tesla', company: 'Tesla', ticker: 'TSLA', symbol: 'TSLA-PERP', provider: 'Phoenix', price: 250.62, change: 1.51, funding: '-0.0038%', availability: 'Preview', state: 'preview', activity: 92, logo: 'https://api.tokens.xyz/logos/xstocks/TSLAx.png', capabilities: ['spot', 'perp'] },
-          { id: 'circle', company: 'Circle', ticker: 'CRCL', symbol: 'CRCL-PERP', provider: 'Phoenix', price: 141.48, change: 1.77, funding: '+0.0041%', availability: 'Preview', state: 'preview', activity: 84, logo: 'https://api.tokens.xyz/logos/xstocks/CRCLx.png', capabilities: ['spot', 'perp'] },
-          { id: 'coinbase', company: 'Coinbase', ticker: 'COIN', symbol: 'COIN-PERP', provider: 'Phoenix', price: 337.12, change: -1.15, funding: '-0.0022%', availability: 'Preview', state: 'preview', activity: 79, mark: 'CO', capabilities: ['perp'] }
-        ]
-      }
-    };
+    const products = {"spot":{"title":"Spot stocks","countLabel":"verified instruments","contextTitle":"Own the supported stock token","context":"Verified public-stock tokens. Reference prices are informational; availability belongs to the instrument, not the US market clock.","icon":"<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M5 18V9m7 9V5m7 13v-6\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg>","items":[{"id":"nvidia","company":"NVIDIA","ticker":"NVDA","symbol":"NVDAx","provider":"xStocks","price":222.01,"change":0.39,"availability":"Available","state":"available","activity":98,"logo":"https://api.tokens.xyz/logos/xstocks/NVDAx.png","capabilities":["spot","perp"]},{"id":"circle","company":"Circle","ticker":"CRCL","symbol":"CRCLx","provider":"xStocks","price":141.32,"change":1.82,"availability":"Available","state":"available","activity":93,"logo":"https://api.tokens.xyz/logos/xstocks/CRCLx.png","capabilities":["spot","perp"]},{"id":"microsoft","company":"Microsoft","ticker":"MSFT","symbol":"MSFTx","provider":"xStocks","price":451.84,"change":0.27,"availability":"Available","state":"available","activity":88,"logo":"https://api.tokens.xyz/logos/xstocks/MSFTx.png","capabilities":["spot"]},{"id":"apple","company":"Apple","ticker":"AAPL","symbol":"AAPLx","provider":"xStocks","price":225.16,"change":-0.64,"availability":"Available","state":"available","activity":86,"logo":"https://api.tokens.xyz/logos/xstocks/AAPLx.png","capabilities":["spot"]},{"id":"tesla","company":"Tesla","ticker":"TSLA","symbol":"TSLAx","provider":"xStocks","price":250.44,"change":1.43,"availability":"Available","state":"available","activity":81,"logo":"https://api.tokens.xyz/logos/xstocks/TSLAx.png","capabilities":["spot","perp"]},{"id":"alphabet","company":"Alphabet","ticker":"GOOGL","symbol":"GOOGLx","provider":"xStocks","price":197.08,"change":-0.18,"availability":"Paused","state":"paused","activity":74,"logo":"https://api.tokens.xyz/logos/xstocks/GOOGLx.png","capabilities":["spot"]}]},"prestock":{"title":"Private-company exposure","countLabel":"preview products","contextTitle":"Exposure before a public listing","context":"PreStocks are not listed shares. Each product must explain its legal structure, valuation source, liquidity, fees, and exit terms.","icon":"<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M4 19.5h16M6 19.5V8l6-3.5L18 8v11.5M9 10h1m4 0h1M9 14h1m4 0h1\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>","items":[{"id":"anthropic","company":"Anthropic","ticker":"Private","symbol":"ANTH.PS","provider":"PreStocks","price":31.8,"priceLabel":"Indicative","change":null,"availability":"Preview","state":"preview","activity":91,"mark":"AN","capabilities":["prestock"]},{"id":"spacex","company":"SpaceX","ticker":"Private","symbol":"SPACEX.PS","provider":"PreStocks","price":42.15,"priceLabel":"Indicative","change":null,"availability":"Preview","state":"preview","activity":87,"mark":"SX","capabilities":["prestock"]},{"id":"openai","company":"OpenAI","ticker":"Private","symbol":"OPENAI.PS","provider":"PreStocks","price":27.4,"priceLabel":"Indicative","change":null,"availability":"Preview","state":"preview","activity":83,"mark":"OA","capabilities":["prestock"]}]},"perp":{"title":"Equity perpetuals","countLabel":"preview contracts","contextTitle":"Directional exposure, not ownership","context":"Perpetual contracts add funding, leverage, liquidation, oracle, and venue risk. Discovery stays read-only until those risks are reviewed.","icon":"<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"m5 17 5-5 3.2 3.2L19 8\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M14.5 8H19v4.5\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>","items":[{"id":"nvidia","company":"NVIDIA","ticker":"NVDA","symbol":"NVDA-PERP","provider":"Phoenix","price":222.18,"change":0.44,"funding":"+0.0062%","availability":"Preview","state":"preview","activity":97,"logo":"https://api.tokens.xyz/logos/xstocks/NVDAx.png","capabilities":["spot","perp"]},{"id":"tesla","company":"Tesla","ticker":"TSLA","symbol":"TSLA-PERP","provider":"Phoenix","price":250.62,"change":1.51,"funding":"-0.0038%","availability":"Preview","state":"preview","activity":92,"logo":"https://api.tokens.xyz/logos/xstocks/TSLAx.png","capabilities":["spot","perp"]},{"id":"circle","company":"Circle","ticker":"CRCL","symbol":"CRCL-PERP","provider":"Phoenix","price":141.48,"change":1.77,"funding":"+0.0041%","availability":"Preview","state":"preview","activity":84,"logo":"https://api.tokens.xyz/logos/xstocks/CRCLx.png","capabilities":["spot","perp"]},{"id":"coinbase","company":"Coinbase","ticker":"COIN","symbol":"COIN-PERP","provider":"Phoenix","price":337.12,"change":-1.15,"funding":"-0.0022%","availability":"Preview","state":"preview","activity":79,"mark":"CO","capabilities":["perp"]}]}};
+  </script>
+  <script>
+    (() => {
+  const assets = [
+    { symbol:'SPYx', name:'SPDR S&P 500', price:672.40, supply:'0.09%', borrow:'5.90%', maxLtv:65, liqLtv:75, holding:0.42, wallet:1.5, debt:0, walletUsdc:420, route:true, paused:false },
+    { symbol:'QQQx', name:'Invesco QQQ', price:598.10, supply:'0.08%', borrow:'5.90%', maxLtv:65, liqLtv:75, holding:1.20, wallet:2.5, debt:120, walletUsdc:160, route:true, paused:false },
+    { symbol:'TSLAx', name:'Tesla', price:250.44, supply:'0.01%', borrow:'5.90%', maxLtv:55, liqLtv:65, holding:0.65, wallet:1.1, debt:85, walletUsdc:100, route:false, paused:true },
+    { symbol:'GOOGLx', name:'Alphabet', price:197.08, supply:'0.00%', borrow:'5.90%', maxLtv:60, liqLtv:70, holding:0, wallet:0.8, debt:0, walletUsdc:500, route:true, paused:false },
+    { symbol:'NVDAx', name:'NVIDIA', price:222.18, supply:'0.02%', borrow:'5.90%', maxLtv:55, liqLtv:65, holding:2, wallet:3, debt:240, walletUsdc:300, route:true, paused:false },
+    { symbol:'CRCLx', name:'Circle', price:141.48, supply:'0.00%', borrow:'5.90%', maxLtv:50, liqLtv:60, holding:0.15, wallet:0.4, debt:0, walletUsdc:75, route:false, paused:true },
+    { symbol:'HOODx', name:'Robinhood', price:104.72, supply:'0.00%', borrow:'5.90%', maxLtv:60, liqLtv:70, holding:0.8, wallet:1.4, debt:60, walletUsdc:90, route:true, paused:false },
+    { symbol:'AAPLx', name:'Apple', price:225.16, supply:'0.00%', borrow:'5.90%', maxLtv:65, liqLtv:75, holding:0, wallet:1, debt:0, walletUsdc:300, route:true, paused:false },
+    { symbol:'MSTRx', name:'Strategy', price:345.00, supply:'0.00%', borrow:'5.90%', maxLtv:45, liqLtv:55, holding:0.25, wallet:0.5, debt:50, walletUsdc:75, route:false, paused:true }
+  ];
+  let root, detail, parent, selected, action, previewTrigger, initialized = false;
+  const round = value => Math.round((Number(value) + Number.EPSILON) * 1e6) / 1e6;
+  const amount = value => round(value).toString();
+  const money = value => `$${round(value).toFixed(2)}`;
+  const pct = value => Number.isFinite(Number(value)) ? `${Number(value).toFixed(1)}%` : '∞';
+  const validDecimal = value => /^(?:\d+(?:\.\d{0,6})?|\.\d{1,6})$/.test(value);
+  const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const get = symbol => assets.find(asset => asset.symbol === symbol) || assets[0];
+  const newRiskBlocked = asset => asset.paused || !asset.route;
+  const collateralUsd = asset => asset.holding * asset.price;
+  const ltv = (debt, collateral) => collateral > 0 ? (debt / collateral) * 100 : debt > 0 ? Infinity : 0;
+  const amountUnit = type => type === 'borrow' || type === 'repay' ? 'USDC' : `${selected.symbol}`;
+  const actionText = { supply:'Supply xStock', borrow:'Borrow USDC', repay:'Repay USDC', withdraw:'Withdraw xStock' };
+  const actionHint = { supply:'Add collateral', borrow:'Create USDC debt', repay:'Reduce debt', withdraw:'Remove collateral' };
 
-    const productLabels = { spot: 'Spot stock', prestock: 'PreStock', perp: 'Equity perpetual' };
-    let activeProduct = 'spot';
-    let availableOnly = false;
-    let sortMode = 'activity';
-    let toastTimer;
+  function card(asset) {
+    const state = asset.paused ? 'New risk paused' : asset.route ? 'USDC route active' : 'No active route';
+    return `<button class="lend-card" type="button" data-lend-asset="${asset.symbol}" aria-label="Open lending terms for ${esc(asset.name)} ${asset.symbol}">
+      <span class="lend-identity"><strong class="lend-symbol">${asset.symbol}</strong><span class="lend-name">${esc(asset.name)}</span></span>
+      <span class="lend-rates"><span class="lend-rate"><span>Supply APY</span><strong>${asset.supply}</strong></span><span class="lend-rate"><span>Borrow APY</span><strong>${asset.borrow}</strong></span></span>
+      <span class="lend-card-state ${asset.paused ? 'paused' : ''}">${state}</span>
+    </button>`;
+  }
 
-    const $ = selector => document.querySelector(selector);
-    const $$ = selector => [...document.querySelectorAll(selector)];
-    const list = $('#instrument-list');
-    const search = $('#market-search');
-    const searchResults = $('#search-results');
-    const clearSearch = $('#clear-search');
-    const marketScroll = $('#market-scroll');
+  function render() {
+    if (!root) return;
+    root.innerHTML = `<div class="lend-catalog">
+      <div class="lend-flow" aria-label="Lending relationship"><div class="lend-flow-card"><strong>Supply xStocks</strong><span>Collateral you provide</span></div><div class="lend-flow-arrow" aria-hidden="true">→</div><div class="lend-flow-card"><strong>Borrow USDC</strong><span>Debt against collateral</span></div></div>
+      <p class="lend-protocol">Kamino · Solana · Sample rates</p>
+      <div class="lend-cards">${assets.map(card).join('')}</div>
+      <p class="lend-disclosure">Supply APY, borrow APY, route status, and risk limits can change. New risk actions remain subject to market controls. No wallet or transaction is connected in this preview.</p>
+    </div>`;
+  }
 
-    function logoMarkup(item, extraClass = '') {
-      const fallback = item.mark || item.ticker.slice(0, 2);
-      if (!item.logo) return `<span class="company-logo ${(item.product === 'prestock' || activeProduct === 'prestock') ? 'private-logo' : ''} ${extraClass}">${fallback}</span>`;
-      return `<span class="company-logo ${extraClass}"><img src="${item.logo}" alt="" onerror="this.remove();this.parentElement.textContent='${fallback}'"></span>`;
-    }
+  function detailMarkup(asset) {
+    const defaultAction = asset.paused && asset.debt > 0 ? 'repay' : asset.route ? 'supply' : asset.debt > 0 ? 'repay' : 'withdraw';
+    action = defaultAction;
+    const riskState = asset.paused ? 'New supply and borrow are paused; repay and withdraw remain reviewable when valid.' : asset.route ? 'USDC route active; terms below are indicative sample data.' : 'No active USDC route; new risk actions are unavailable.';
+    return `<div class="lend-detail-shell"><button class="lend-detail-back" type="button" data-lend-close data-initial-focus><b aria-hidden="true">‹</b><span>Back to lending markets</span></button><div class="lend-detail-scroll">
+      <p class="lend-detail-kicker">Kamino · Solana · Sample data</p><h1 class="lend-detail-title" id="lending-title">${asset.name}</h1><p class="lend-detail-subtitle">${asset.symbol} · xStock collateral · USDC debt</p>
+      <div class="lend-detail-grid"><div class="lend-info"><span class="lend-detail-label">Supply APY</span><strong>${asset.supply}</strong><p>Variable rate</p></div><div class="lend-info"><span class="lend-detail-label">Borrow APY</span><strong>${asset.borrow}</strong><p>Variable rate</p></div><div class="lend-info"><span class="lend-detail-label">Max LTV</span><strong>${pct(asset.maxLtv)}</strong><p>New borrow limit</p></div><div class="lend-info"><span class="lend-detail-label">Liquidation LTV</span><strong>${pct(asset.liqLtv)}</strong><p>Risk threshold</p></div></div>
+      <div class="lend-position"><h3>Sample position</h3><div class="lend-position-pair"><div><span>Supplied collateral</span><strong>${amount(asset.holding)} ${asset.symbol}</strong><small>${money(collateralUsd(asset))}</small></div><div><span>USDC debt</span><strong>${money(asset.debt)}</strong><small>${pct(ltv(asset.debt,collateralUsd(asset)))} current LTV</small></div></div></div><p class="lend-route-note">${riskState}</p>
+      <h2 class="lend-action-title">Manage position</h2><div class="lend-actions">${['supply','borrow','repay','withdraw'].map(type => `<button class="lend-action ${type === action ? 'active' : ''} ${newRiskBlocked(asset) && (type === 'supply' || type === 'borrow') ? 'blocked' : ''}" type="button" data-lend-action="${type}" aria-pressed="${type === action}"><strong>${actionText[type]}</strong><span>${actionHint[type]}</span></button>`).join('')}</div>
+      <div class="lend-amount-label"><label for="lend-amount">${actionText[action]}</label><span>${amountUnit(action)}</span></div><input class="lend-amount" id="lend-amount" inputmode="decimal" placeholder="0.00" aria-describedby="lend-helper" value=""><p class="lend-helper" id="lend-helper"></p><div class="lend-error" id="lend-error" role="alert" hidden></div><button class="lend-preview-button" type="button" data-lend-preview>Preview action</button><div class="lend-preview" id="lend-preview" hidden></div>
+    </div></div>`;
+  }
 
-    function formatPrice(item) {
-      return item.price == null ? '—' : `$${item.price.toFixed(2)}`;
-    }
+  function updateForm() {
+    const asset = selected, input = detail.querySelector('#lend-amount'), helper = detail.querySelector('#lend-helper'), error = detail.querySelector('#lend-error');
+    detail.querySelectorAll('[data-lend-action]').forEach(button => { const type = button.dataset.lendAction; const disabled = newRiskBlocked(asset) && (type === 'supply' || type === 'borrow'); button.classList.toggle('active', type === action); button.disabled = disabled; button.setAttribute('aria-pressed', String(type === action)); });
+    detail.querySelector('.lend-amount-label label').textContent = actionText[action];
+    detail.querySelector('.lend-amount-label span').textContent = amountUnit(action);
+    input.value = '';
+    error.hidden = true;
+    helper.textContent = action === 'supply' ? `Add ${asset.symbol} to collateral. Wallet balance: ${asset.wallet} ${asset.symbol}.` : action === 'borrow' ? `Borrow against supplied collateral. Supplied collateral: ${asset.holding} ${asset.symbol}; limit ${pct(asset.maxLtv)} LTV.` : action === 'repay' ? `Reduce ${money(asset.debt)} sample debt using up to ${money(asset.walletUsdc)} wallet USDC.` : `Withdraw supplied collateral only when projected LTV stays below ${pct(asset.maxLtv)}.`;
+    detail.querySelector('[data-lend-preview]').disabled = newRiskBlocked(asset) && (action === 'supply' || action === 'borrow');
+    detail.querySelector('#lend-preview').hidden = true;
+    previewTrigger = null;
+  }
 
-    function formatChange(value) {
-      if (value == null) return '';
-      return `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value).toFixed(2)}%`;
-    }
+  function calculatePreview(asset, selectedAction, rawInput) {
+    const raw = round(Number(rawInput)), unitPrice = asset.price, beforeCollateral = collateralUsd(asset), beforeLtv = ltv(asset.debt, beforeCollateral);
+    let afterHolding = asset.holding, afterCollateral = beforeCollateral, afterDebt = asset.debt, valid = validDecimal(rawInput) && Number.isFinite(raw) && raw > 0, reason = '';
+    if (selectedAction === 'supply') { afterHolding += raw; afterCollateral += raw * unitPrice; if (raw > asset.wallet) reason = 'Supply amount exceeds the sample wallet balance.'; }
+    if (selectedAction === 'borrow') { afterDebt += raw; if (!asset.holding) reason = 'Supply collateral before borrowing in this sample.'; }
+    if (selectedAction === 'repay') { afterDebt -= raw; if (raw > asset.debt) reason = 'Repay amount exceeds the sample debt.'; if (raw > asset.walletUsdc) reason = 'Repay amount exceeds the sample wallet USDC.'; }
+    if (selectedAction === 'withdraw') { afterHolding -= raw; afterCollateral -= raw * unitPrice; if (raw > asset.holding) reason = 'Withdraw amount exceeds the sample collateral.'; if (afterDebt > 0 && afterHolding <= 0) reason = 'Keep collateral while sample debt remains outstanding.'; }
+    if (afterCollateral < 0) reason = 'Projected collateral cannot be negative.';
+    const afterLtv = ltv(Math.max(afterDebt, 0), Math.max(afterCollateral, 0));
+    if (newRiskBlocked(asset) && (selectedAction === 'supply' || selectedAction === 'borrow')) reason = asset.paused ? 'New supply and borrow are paused in this sample.' : 'No active USDC route in this sample.';
+    if ((selectedAction === 'borrow' || selectedAction === 'withdraw') && afterLtv > asset.maxLtv) reason = `Projected LTV exceeds the ${pct(asset.maxLtv)} sample limit.`;
+    if (!valid) reason = 'Enter an amount greater than zero, with up to 6 decimal places.';
+    return { ok: !reason, reason, raw, beforeCollateral, beforeLtv, afterHolding, afterCollateral, afterDebt: Math.max(afterDebt, 0), afterLtv };
+  }
 
-    function visibleItems() {
-      let items = [...products[activeProduct].items];
-      if (availableOnly) items = items.filter(item => item.state === 'available');
-      if (sortMode === 'alpha') items.sort((a, b) => a.company.localeCompare(b.company));
-      if (sortMode === 'change') items.sort((a, b) => (b.change ?? -Infinity) - (a.change ?? -Infinity));
-      if (sortMode === 'activity') items.sort((a, b) => b.activity - a.activity);
-      return items;
-    }
+  function preview() {
+    const asset = selected, rawInput = detail.querySelector('#lend-amount').value.trim(), result = calculatePreview(asset, action, rawInput), error = detail.querySelector('#lend-error'), box = detail.querySelector('#lend-preview');
+    if (!result.ok) { error.textContent = result.reason; error.hidden = false; box.hidden = true; return; }
+    error.hidden = true;
+    box.innerHTML = `<div class="lend-review-heading"><span class="eyebrow">Review · Sample</span><h3>${actionText[action]}</h3><strong>${amount(result.raw)} ${amountUnit(action)}</strong></div><div class="lend-review-table"><div class="lend-review-row lend-review-labels"><span>Position</span><span>Before</span><span>After</span></div><div class="lend-review-row"><span>Collateral<br><small>${asset.symbol}</small></span><span>${amount(asset.holding)}</span><strong>${amount(Math.max(result.afterHolding,0))}</strong></div><div class="lend-review-row"><span>Value</span><span>${money(result.beforeCollateral)}</span><strong>${money(result.afterCollateral)}</strong></div><div class="lend-review-row"><span>USDC debt</span><span>${money(asset.debt)}</span><strong>${money(result.afterDebt)}</strong></div><div class="lend-review-row"><span>LTV</span><span>${pct(result.beforeLtv)}</span><strong>${pct(result.afterLtv)}</strong></div></div><div class="lend-risk-track" aria-hidden="true"><span style="width:${Math.min(result.afterLtv,100)}%"></span><i style="left:${asset.liqLtv}%"></i></div><p class="lend-risk-caption">${pct(result.afterLtv)} projected LTV · ${pct(asset.liqLtv)} liquidation threshold</p><p class="lend-preview-note">Design preview only. Your sample position stays unchanged.</p><button class="lend-preview-close" type="button" data-lend-preview-close>Close preview</button>`;
+    box.hidden = false;
+    box.scrollIntoView({ behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth', block:'start' });
+    box.querySelector('[data-lend-preview-close]').focus({ preventScroll:true });
+  }
 
-    function renderContext() {
-      const product = products[activeProduct];
-      $('#product-context').innerHTML = `<div class="context-icon">${product.icon}</div><div><strong>${product.contextTitle}</strong><p>${product.context}</p></div>`;
-      $('#catalog-title').textContent = product.title;
-      $('#catalog-count').textContent = `${visibleItems().length} ${product.countLabel}`;
-    }
+  function open(symbol, trigger) { selected = get(symbol); detail.innerHTML = detailMarkup(selected); detail.hidden = false; updateForm(); parent?.openDetail?.('lending-detail', trigger); }
+  function close() { parent?.closeDetail?.(); }
 
-    function renderList() {
-      const items = visibleItems();
-      $('#catalog-count').textContent = `${items.length} ${products[activeProduct].countLabel}`;
-      if (!items.length) {
-        list.innerHTML = `<div class="catalog-empty"><strong>No available products in this view</strong><p>Turn off “Available now” to see preview and paused instruments.</p></div>`;
-        return;
-      }
-      list.innerHTML = items.map(item => {
-        const secondary = activeProduct === 'perp'
-          ? `<span class="market-secondary">Funding ${item.funding}</span>`
-          : activeProduct === 'prestock'
-            ? `<span class="market-secondary">${item.priceLabel} · sample</span>`
-            : `<span class="market-secondary">Reference · sample</span>`;
-        const change = item.change == null ? '' : `<span class="market-change ${item.change < 0 ? 'negative' : ''}">${formatChange(item.change)} · 1D</span>`;
-        return `<button class="instrument-row" type="button" data-company="${item.id}" aria-label="Open markets for ${item.company}">
-          ${logoMarkup(item)}
-          <span class="instrument-identity">
-            <span class="company-line"><strong>${item.company}</strong><span>${item.ticker}</span></span>
-            <span class="instrument-line"><b class="instrument-symbol">${item.symbol}</b><span>·</span><span>${item.provider}</span><span class="verified-mark" title="Canonical instrument checked by Warren">✓ Verified</span></span>
-          </span>
-          <span class="instrument-market"><b class="market-value">${formatPrice(item)}</b>${change}${secondary}<i class="availability ${item.state}">${item.availability}</i></span>
-        </button>`;
-      }).join('');
+  function init(options = {}) {
+    parent = options; root = document.getElementById('lending-content'); detail = document.getElementById('lending-detail');
+    if (!root || !detail || initialized) return; initialized = true;
+    root.addEventListener('click', event => { const cardEl = event.target.closest('[data-lend-asset]'); if (cardEl) open(cardEl.dataset.lendAsset, cardEl); });
+    detail.addEventListener('click', event => { const target = event.target.closest('[data-lend-close]'); if (target) return close(); const actionButton = event.target.closest('[data-lend-action]'); if (actionButton && !actionButton.disabled) { action = actionButton.dataset.lendAction; updateForm(); return; } const previewButton = event.target.closest('[data-lend-preview]'); if (previewButton) { previewTrigger = previewButton; preview(); return; } const closePreview = event.target.closest('[data-lend-preview-close]'); if (closePreview) { detail.querySelector('#lend-preview').hidden = true; previewTrigger?.focus({ preventScroll:true }); } });
+    detail.addEventListener('input', event => { if (event.target.id === 'lend-amount') { detail.querySelector('#lend-preview').hidden = true; detail.querySelector('#lend-error').hidden = true; } });
+    render();
+  }
+  window.WarrenLending = { init, render };
+})();
 
-      $$('.instrument-row').forEach(row => row.addEventListener('click', () => openCompany(row.dataset.company)));
-    }
-
-    function switchProduct(product) {
-      activeProduct = product;
-      availableOnly = false;
-      $('#available-filter').classList.remove('active');
-      $('#available-filter').setAttribute('aria-pressed', 'false');
-      $$('.product-tab').forEach(tab => {
-        const selected = tab.dataset.product === product;
-        tab.classList.toggle('active', selected);
-        tab.setAttribute('aria-selected', String(selected));
-      });
-      renderContext();
-      renderList();
-    }
-
-    function allItems() {
-      return Object.entries(products).flatMap(([product, config]) => config.items.map(item => ({ ...item, product })));
-    }
-
-    function searchCompanies(query) {
-      const normalized = query.trim().toLowerCase();
-      if (!normalized) return [];
-      const matches = allItems().filter(item => `${item.company} ${item.ticker} ${item.symbol} ${item.provider}`.toLowerCase().includes(normalized));
-      const companies = new Map();
-      matches.forEach(item => {
-        const current = companies.get(item.id) || { ...item, products: new Set() };
-        current.products.add(item.product);
-        companies.set(item.id, current);
-      });
-      return [...companies.values()].sort((a, b) => {
-        const aExact = a.ticker.toLowerCase() === normalized || a.symbol.toLowerCase() === normalized ? 0 : 1;
-        const bExact = b.ticker.toLowerCase() === normalized || b.symbol.toLowerCase() === normalized ? 0 : 1;
-        return aExact - bExact || a.company.localeCompare(b.company);
-      }).slice(0, 7);
-    }
-
-    function renderSearch() {
-      const query = search.value;
-      clearSearch.hidden = !query;
-      if (!query.trim()) {
-        searchResults.hidden = true;
-        search.setAttribute('aria-expanded', 'false');
-        return;
-      }
-      const results = searchCompanies(query);
-      searchResults.innerHTML = results.length ? results.map(item => {
-        const chips = [...item.products].map(product => `<span class="mini-chip ${product === 'prestock' ? 'private' : product === 'perp' ? 'preview' : ''}">${productLabels[product]}</span>`).join('');
-        return `<button class="search-result" type="button" data-company="${item.id}">${logoMarkup(item)}<span class="search-result-copy"><strong>${item.company}</strong><span>${item.ticker === 'Private' ? 'Private company exposure' : item.ticker}</span></span><span class="capability-chips">${chips}</span></button>`;
-      }).join('') : '<p class="search-empty">No verified company or instrument matches this search.</p>';
-      searchResults.hidden = false;
-      search.setAttribute('aria-expanded', 'true');
-      $$('.search-result').forEach(result => result.addEventListener('click', () => openCompany(result.dataset.company)));
-    }
-
-    function companyRecords(companyId) {
-      return allItems().filter(item => item.id === companyId);
-    }
-
-    function capabilityIcon(type) {
-      if (type === 'spot') return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 18V9m7 9V5m7 13v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-      if (type === 'prestock') return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 19h14M7 19V8l5-3 5 3v11" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
-      if (type === 'perp') return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m5 17 5-5 3 3 5-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 12h12M12 6v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-    }
-
-    function capabilityRow(type, label, description, state, detail, interactive = false) {
-      const tag = interactive ? 'button' : 'div';
-      const stateClass = state === 'Available' ? '' : state === 'Preview' ? 'preview' : 'later';
-      return `<${tag} class="capability-row" ${interactive ? 'type="button" data-detail="' + label + '"' : ''}>
-        <span class="capability-icon">${capabilityIcon(type)}</span>
-        <span class="capability-copy"><strong>${label}</strong><span>${description}</span></span>
-        <span class="capability-state"><b class="${stateClass}">${state}</b><span>${detail}</span></span>
-      </${tag}>`;
-    }
-
-    function openCompany(companyId) {
-      const records = companyRecords(companyId);
-      if (!records.length) return;
-      const company = records[0];
-      const types = new Set(records.map(record => record.product));
-      const availableCount = records.filter(record => record.state === 'available').length;
-      $('#sheet-logo').innerHTML = logoMarkup(company);
-      $('#sheet-company').textContent = company.company;
-      $('#sheet-summary').textContent = `${records.length} ${records.length === 1 ? 'market' : 'markets'} found · ${availableCount} available now`;
-
-      const investRows = [];
-      if (types.has('spot')) {
-        const record = records.find(item => item.product === 'spot');
-        investRows.push(capabilityRow('spot', 'Spot stock', `${record.symbol} · ${record.provider} · Solana`, record.state === 'available' ? 'Available' : 'Paused', '›', record.state === 'available'));
-      }
-      if (types.has('prestock')) {
-        const record = records.find(item => item.product === 'prestock');
-        investRows.push(capabilityRow('prestock', 'PreStock', `${record.symbol} · private-company exposure`, 'Preview', '›', true));
-      }
-      if (types.has('perp')) {
-        const record = records.find(item => item.product === 'perp');
-        investRows.push(capabilityRow('perp', 'Equity perpetual', `${record.symbol} · ${record.provider} · no ownership`, 'Preview', '›', true));
-      }
-
-      const groups = `<div class="capability-group"><div class="capability-group-heading"><h3>Invest & trade</h3><span>Read-only</span></div><div class="capability-list">${investRows.join('')}</div></div>
-        <div class="capability-group"><div class="capability-group-heading"><h3>Use holdings</h3><span>Future</span></div><div class="capability-list">
-          ${capabilityRow('later', 'Lend', 'Earn against a supported stock position', 'Later', '')}
-          ${capabilityRow('later', 'Borrow', 'Use a supported position as collateral', 'Later', '')}
-        </div></div>`;
-      $('#sheet-capabilities').innerHTML = groups;
-      $('#sheet-layer').classList.add('open');
-      $('#sheet-layer').setAttribute('aria-hidden', 'false');
-      searchResults.hidden = true;
-      $$('#sheet-capabilities [data-detail]').forEach(button => button.addEventListener('click', () => showToast(`${button.dataset.detail} details would open next. No trade is started.`)));
-      setTimeout(() => $('#sheet-close').focus(), 20);
-    }
-
-    function closeSheet() {
-      $('#sheet-layer').classList.remove('open');
-      $('#sheet-layer').setAttribute('aria-hidden', 'true');
-    }
-
-    function showToast(message) {
-      const toast = $('#toast');
-      clearTimeout(toastTimer);
-      toast.textContent = message;
-      toast.classList.add('show');
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
-    }
-
-    $$('.product-tab').forEach(tab => tab.addEventListener('click', () => switchProduct(tab.dataset.product)));
-    search.addEventListener('input', renderSearch);
-    search.addEventListener('keydown', event => { if (event.key === 'Escape') { searchResults.hidden = true; search.setAttribute('aria-expanded', 'false'); } });
-    clearSearch.addEventListener('click', () => { search.value = ''; renderSearch(); search.focus(); });
-    $('#available-filter').addEventListener('click', event => {
-      availableOnly = !availableOnly;
-      event.currentTarget.classList.toggle('active', availableOnly);
-      event.currentTarget.setAttribute('aria-pressed', String(availableOnly));
-      renderContext();
-      renderList();
+  </script>
+  <script>
+    (() => {
+  const $ = selector => document.querySelector(selector);
+  const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const money = value => new Intl.NumberFormat('en-US', {style:'currency', currency:'USD'}).format(value);
+  const change = value => `${value >= 0 ? '+' : '−'}${Math.abs(value).toFixed(2)}%`;
+  const categories = {
+    spot:{name:'Spot',title:'Buy stock tokens',note:'Public companies',column:'Price / 1D'},
+    prestock:{name:'PreStocks',title:'Explore private companies',note:'Before a public listing',column:'Indicative value'},
+    perp:{name:'Perpetuals',title:'Trade long or short',note:'Equity perpetuals',column:'Mark price / 1D'},
+    lending:{name:'Lending',title:'Supply and borrow',note:'xStocks → USDC',column:''}
+  };
+  // Scale fixtures are local design examples, not claims of supported instruments.
+  const publicCompanies = [
+    ['Adobe','ADBE'],['Airbnb','ABNB'],['Alibaba','BABA'],['Alphabet','GOOGL'],['Amazon','AMZN'],['AMD','AMD'],['Apple','AAPL'],['Arm','ARM'],['ASML','ASML'],['AT&T','T'],
+    ['Berkshire Hathaway','BRK.B'],['BlackRock','BLK'],['Boeing','BA'],['Broadcom','AVGO'],['Chevron','CVX'],['Circle','CRCL'],['Cisco','CSCO'],['Coca-Cola','KO'],['Coinbase','COIN'],['Costco','COST'],
+    ['CrowdStrike','CRWD'],['Disney','DIS'],['Eli Lilly','LLY'],['Exxon Mobil','XOM'],['Ford','F'],['GE Aerospace','GE'],['Goldman Sachs','GS'],['Home Depot','HD'],['IBM','IBM'],['Intel','INTC'],
+    ['Intuit','INTU'],['Johnson & Johnson','JNJ'],['JPMorgan Chase','JPM'],['Mastercard','MA'],['McDonald’s','MCD'],['Meta','META'],['Microsoft','MSFT'],['Moderna','MRNA'],['Netflix','NFLX'],['Nike','NKE'],
+    ['NVIDIA','NVDA'],['Oracle','ORCL'],['Palantir','PLTR'],['PayPal','PYPL'],['PepsiCo','PEP'],['Pfizer','PFE'],['Procter & Gamble','PG'],['Qualcomm','QCOM'],['Robinhood','HOOD'],['Salesforce','CRM'],
+    ['Shopify','SHOP'],['Snowflake','SNOW'],['Spotify','SPOT'],['Tesla','TSLA'],['Uber','UBER'],['UnitedHealth','UNH'],['Visa','V'],['Walmart','WMT'],['Texas Instruments','TXN'],['Zoom','ZM']
+  ];
+  // Fictional additions let the private-company layout be assessed at the same scale.
+  const privateAdditions = ['Aster Robotics','Atlas Energy','Aurora Materials','Banyan Labs','Beacon Aerospace','Birch Health','Bluehaven Systems','Boreal Computing','Cedar Mobility','Cinder Analytics','Clearwater Bio','Cobalt Networks','Copperfield AI','Cove Therapeutics','Dawn Agriculture','Delta Photonics','Drift Software','Eastbank Energy','Ember Robotics','Evergreen Systems','Fable Computing','Fern Biotech','Flint Materials','Grove Aerospace','Harbor Intelligence','Helix Agriculture','Horizon Photonics','Indigo Robotics','Juniper Materials','Keystone Fusion','Kite Software','Lattice Mobility','Laurel Health','Lumen Research','Maple Networks','Meridian Energy','Moss Computing','Northstar Robotics','Oakline Analytics','Orbit Agriculture','Pinecone Materials','Prism Therapeutics','Quartz Mobility','Redwood Fusion','Riverbank Bio','Seabright Computing','Silverleaf Labs','Solstice Photonics','Spruce Systems','Summit Robotics','Tidal Networks','Umbra Aerospace','Verdant Research','Willow Energy','Xenon Materials','Yonder Mobility','Zephyr Intelligence'];
+  const slug = name => name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/-$/,'');
+  for(const family of ['spot','perp']) {
+    publicCompanies.forEach(([company,ticker],index)=>{
+      if(products[family].items.some(item=>item.ticker===ticker))return;
+      products[family].items.push({id:slug(company),company,ticker,symbol:family==='spot'?`${ticker}x`:`${ticker}-PERP`,provider:family==='spot'?'Sample issuer':'Sample venue',price:Math.round((25+index*7.13)*100)/100,change:Math.round(((index%9)-4)*41)/100,funding:`${index%2?'+':'−'}0.0040%`,availability:'Sample',state:'preview',mark:ticker.slice(0,2),capabilities:[family],demo:true});
     });
-    $('#sort-control').addEventListener('click', event => {
-      const order = ['activity', 'alpha', 'change'];
-      sortMode = order[(order.indexOf(sortMode) + 1) % order.length];
-      event.currentTarget.textContent = sortMode === 'activity' ? 'Most active' : sortMode === 'alpha' ? 'A–Z' : '1D change';
-      event.currentTarget.classList.toggle('active', sortMode !== 'activity');
-      renderList();
-    });
-    $('#sheet-close').addEventListener('click', closeSheet);
-    $('#sheet-backdrop').addEventListener('click', closeSheet);
-    $('#brand-button').addEventListener('click', () => marketScroll.scrollTo({ top: 0, behavior: 'smooth' }));
-    $$('.nav-item').forEach(item => item.addEventListener('click', () => { if (item.dataset.nav !== 'Markets') showToast(`${item.dataset.nav} is outside this Markets mock.`); }));
-    document.addEventListener('click', event => {
-      if (!event.target.closest('.search-wrap')) {
-        searchResults.hidden = true;
-        search.setAttribute('aria-expanded', 'false');
-      }
-    });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeSheet(); });
+  }
+  privateAdditions.forEach((company,index)=>products.prestock.items.push({id:slug(company),company,ticker:'Private',symbol:`DEMO${String(index+1).padStart(2,'0')}`,provider:'Sample provider',price:Math.round((14+index*1.17)*100)/100,priceLabel:'Indicative token value',change:null,availability:'Sample',state:'preview',mark:company.split(' ').map(word=>word[0]).slice(0,2).join(''),capabilities:['prestock'],demo:true}));
+  products.prestock.items.forEach(item => {item.exposureType = 'SPV exposure'; item.priceLabel='Indicative token value';});
+  products.prestock.items.push({id:'openai',company:'OpenAI',ticker:'Private',symbol:'tOpenAI',provider:'Tessera',price:28.15,priceLabel:'Indicative token value',exposureType:'Loan participation',availability:'Preview',state:'preview',mark:'OA',capabilities:['prestock']});
+  products.perp.items.forEach(item => {item.maxLeverage=5;});
+  const all = Object.entries(products).flatMap(([family,product]) => product.items.map((item,index) => ({...item,family,key:`${family}-${index}`})));
+  let activeProduct='spot', openModal=null, returnFocus=null, selectedKey=null, savedScroll=0;
+  const scroll = $('#market-scroll'), positions={spot:0,prestock:0,perp:0,lending:0};
+  const logo = item => `<span class="company-logo ${item.family === 'prestock' ? 'private-logo' : ''}" aria-hidden="true">${esc(item.mark || item.ticker.slice(0,2))}${item.logo ? `<img src="${esc(item.logo)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span>`;
+  const status = item => `<span class="availability ${esc(item.state)}">${esc(item.availability)}</span>`;
+  const lookup = key => all.find(item => item.key === key);
+  $('.category-nav').innerHTML=Object.entries(categories).map(([key,c])=>`<button type="button" class="category-tab" data-category="${key}" aria-pressed="${key===activeProduct}" aria-controls="catalog">${c.name}</button>`).join('');
+  function companyGroups(family) {
+    const groups=new Map();
+    all.filter(item=>item.family===family).forEach(item=>{if(!groups.has(item.id))groups.set(item.id,[]);groups.get(item.id).push(item);});
+    return [...groups.values()].sort((a,b)=>a[0].company.localeCompare(b[0].company));
+  }
+  function companyRow(items) {
+    const item=items[0], multiple=items.length>1, privateStock=item.family==='prestock';
+    const subtitle=multiple?items.map(option=>option.provider).join(' · '):`${item.symbol} · ${item.provider}`;
+    const quote=multiple?`<strong class="offering-count">${items.length} offerings</strong><span class="row-value-label">Compare terms</span>`:`<strong class="market-value">${money(item.price)}</strong>${privateStock?'<span class="row-value-label">Indicative</span>':`<span class="market-change ${item.change<0?'negative':''}">${change(item.change)}</span>`}`;
+    return `<button class="company-row" data-instrument="${item.key}" aria-label="View ${esc(item.company)} ${categories[item.family].name} details">${logo(item)}<span class="instrument-identity"><strong class="company-name">${esc(item.company)}</strong><span class="instrument-symbol ${item.state==='paused'?'row-paused':''}">${item.state==='paused'?'Paused · ':''}${esc(subtitle)}</span></span><span class="instrument-market">${quote}</span><span class="row-chevron" aria-hidden="true">›</span></button>`;
+  }
+  function renderProduct() {
+    const c=categories[activeProduct], isLending=activeProduct==='lending', groups=companyGroups(activeProduct);
+    document.querySelectorAll('[data-category]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.category===activeProduct)));
+    $('.phone').classList.toggle('lending-browse',isLending);
+    $('#catalog').setAttribute('aria-label',isLending?'Lending markets':`${c.name} companies`);
+    $('#browse-controls').hidden=isLending;$('#column-labels').hidden=isLending;
+    $('#value-column').textContent=c.column;
+    $('#instrument-list').hidden=isLending;$('#lending-content').hidden=!isLending;
+    $('.catalogue-note').textContent=isLending?'Design preview · rates, positions and availability are illustrative. No account or transaction is connected.':'Layout test · 60 sample companies per stock category. Added instruments, prices and availability are illustrative; additional private companies are fictional.';
+    const letters=new Map();
+    groups.forEach(items=>{const letter=items[0].company[0].toUpperCase();if(!letters.has(letter))letters.set(letter,[]);letters.get(letter).push(items);});
+    $('#instrument-list').innerHTML=[...letters].map(([letter,companies])=>`<section class="letter-section" aria-labelledby="letter-${letter}"><h3 class="letter-heading" id="letter-${letter}" tabindex="-1">${letter}</h3>${companies.map(companyRow).join('')}</section>`).join('');
+    $('#letter-grid').innerHTML=[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map(letter=>`<button class="letter-button" data-letter="${letter}" aria-label="Jump to ${letter}" ${letters.has(letter)?'':'disabled'}>${letter}</button>`).join('');
+  }
+  function closeIndex(restore=false){$('#letter-picker').hidden=true;$('#index-toggle').setAttribute('aria-expanded','false');if(restore)$('#index-toggle').focus({preventScroll:true});}
+  $('#index-toggle').onclick=()=>{
+    const opening=$('#letter-picker').hidden;closeSearch();$('#letter-picker').hidden=!opening;$('#index-toggle').setAttribute('aria-expanded',String(opening));
+    if(opening)$('#letter-grid button:not(:disabled)')?.focus({preventScroll:true});
+  };
+  $('#close-index').onclick=()=>closeIndex(true);
+  function updateBrowseReset(){
+    const away=activeProduct!=='lending' && scroll.scrollTop>32;
+    $('#back-to-top').hidden=!away;
+  }
+  function resetBrowse(moveFocus=true){
+    closeIndex();scroll.scrollTo({top:0,behavior:'instant'});positions[activeProduct]=0;updateBrowseReset();
+    if(moveFocus)$('#instrument-list .letter-heading')?.focus({preventScroll:true});
+  }
+  $('#back-to-top').onclick=()=>resetBrowse();
+  $('#index-reset').onclick=()=>resetBrowse();
+  scroll.addEventListener('scroll',updateBrowseReset,{passive:true});
+  function switchProduct(key) {
+    if(key===activeProduct)return;
+    positions[activeProduct]=scroll.scrollTop;activeProduct=key;closeSearch();closeIndex();
+    $('#market-search').value='';$('#clear-search').hidden=true;renderProduct();
+    scroll.scrollTo({top:positions[key],behavior:'instant'});updateBrowseReset();
+  }
+  document.addEventListener('click',event=>{
+    const category=event.target.closest('[data-category]');if(category)switchProduct(category.dataset.category);
+    const letter=event.target.closest('[data-letter]');
+    if(letter && !letter.disabled){
+      const heading=document.getElementById(`letter-${letter.dataset.letter}`);closeIndex();
+      heading.focus({preventScroll:true});scroll.scrollTo({top:scroll.scrollTop+heading.parentElement.getBoundingClientRect().top-scroll.getBoundingClientRect().top-27,behavior:'instant'});
+    }
+    const instrument=event.target.closest('[data-instrument]');if(instrument)openCompany(instrument.dataset.instrument,instrument);
+    const option=event.target.closest('[data-provider-key]');
+    if(option){const focusKey=option.dataset.providerKey,priorScroll=$('#company-detail .detail-body').scrollTop;selectedKey=focusKey;renderCompany();$('#company-detail .detail-body').scrollTop=priorScroll;$('#company-detail').querySelector(`[data-provider-key="${focusKey}"]`)?.focus({preventScroll:true});}
+    if(event.target.closest('[data-close-detail]'))closeDetail();
+    if(!event.target.closest('.search-wrap'))closeSearch();
+    if(!event.target.closest('.browse-controls'))closeIndex();
+  });
+  $('#brand-button').onclick=$('#markets-nav').onclick=()=>resetBrowse(false);
 
-    renderContext();
-    renderList();
+  function facts(item) {
+    const pairs=item.family==='spot' ? [['Instrument',item.symbol],['Provider',item.provider],['Network','Solana'],['Availability',item.availability]] : item.family==='prestock' ? [['Exposure structure',item.exposureType],['Provider',item.provider],['Value type','Indicative token value'],['Availability',item.availability]] : [['Funding rate',item.funding],['Maximum leverage',`${item.maxLeverage}×`],['Venue',item.provider],['Availability',item.availability]];
+    return pairs.map(([label,value])=>`<div class="fact"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`).join('');
+  }
+  function renderCompany() {
+    const item=lookup(selectedKey), options=all.filter(candidate=>candidate.id===item.id).sort((a,b)=>Number(b.family===item.family)-Number(a.family===item.family));
+    const description={spot:'A token linked to a public stock. Review the issuer and instrument terms before trading.',prestock:'Private-company exposure through the provider’s offering. Review the structure, fees and exit terms for this specific instrument.',perp:'A contract for long or short exposure. Funding and leverage affect the position; this does not represent stock ownership.'};
+    $('#company-detail').innerHTML=`<header class="detail-header"><button class="back-button" data-close-detail data-initial-focus>‹ Markets</button><span class="sample-label">Sample data</span></header><div class="detail-body"><div class="company-heading">${logo(item)}<div><h2 id="company-title">${esc(item.company)}</h2><p>${esc(item.symbol)} · ${esc(item.provider)}</p></div></div><div class="detail-quote"><span class="quote-label">${item.family==='prestock'?esc(item.priceLabel):item.family==='perp'?'Sample mark price':'Sample token price'}</span><strong>${money(item.price)}</strong>${item.change!==null?`<span class="market-change ${item.change<0?'negative':''}">${change(item.change)} today</span>`:''}</div><div class="facts-grid">${facts(item)}</div><p class="detail-description">${description[item.family]}</p><h3 class="detail-section-title">Available instruments <span class="sample-label">${options.length}</span></h3><p class="selection-note">Select an instrument to compare its provider and terms.</p>${options.map(option=>`<button type="button" class="provider-option" data-provider-key="${option.key}" aria-pressed="${option.key===item.key}"><span><strong>${esc(option.provider)} · ${categories[option.family].name}</strong><small>${esc(option.symbol)}${option.exposureType?' · '+esc(option.exposureType):''}</small></span><span class="provider-price">${money(option.price)}<br>${status(option)}</span></button>`).join('')}<p class="prototype-note">${item.demo?'This instrument was added for the 60-company layout test. Provider support and terms are fictional.':'Instrument details are illustrative. This preview does not connect to trading.'}</p></div>`;
+  }
+  function openCompany(key,trigger) { selectedKey=key; closeSearch(); closeIndex(); renderCompany(); openDetail('company-detail',trigger); }
+  function openDetail(id,trigger) {
+    if(openModal) closeDetail(false);
+    savedScroll=scroll.scrollTop;returnFocus=trigger||document.activeElement;openModal=document.getElementById(id);openModal.hidden=false;
+    [...$('.phone').children].forEach(child=>{child.inert=child!==openModal;});
+    openModal.inert=false;
+    requestAnimationFrame(()=>openModal.querySelector('[data-initial-focus]')?.focus({preventScroll:true}));
+  }
+  function closeDetail(restore=true) {
+    if(!openModal)return;
+    openModal.hidden=true; openModal=null;
+    [...$('.phone').children].forEach(child=>{child.inert=child.hidden;});
+    if(restore && returnFocus?.isConnected && !returnFocus.closest('[hidden]'))returnFocus.focus({preventScroll:true});
+    else if(restore) $('#market-search').focus({preventScroll:true});
+    scroll.scrollTo({top:savedScroll,behavior:'instant'});updateBrowseReset();
+  }
+  $('#sign-in').onclick=event=>openDetail('account-detail',event.currentTarget);
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){if(openModal){event.preventDefault();closeDetail();}else if(!$('#letter-picker').hidden)closeIndex(true);else closeSearch();}
+    if(event.key==='Tab' && openModal){
+      const nodes=[...openModal.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),[tabindex="0"]')].filter(node=>!node.closest('[hidden]')&&node.getClientRects().length);
+      const first=nodes[0],last=nodes.at(-1);
+      if(event.shiftKey && (document.activeElement===first||!openModal.contains(document.activeElement))){event.preventDefault();last?.focus();}
+      else if(!event.shiftKey && document.activeElement===last){event.preventDefault();first?.focus();}
+    }
+  });
+  const search=$('#market-search'), results=$('#search-results');
+  function closeSearch(){results.hidden=true;search.setAttribute('aria-expanded','false');}
+  function renderSearch(){
+    closeIndex();
+    const query=search.value.trim().toLowerCase(); $('#clear-search').hidden=!query;
+    if(!query){closeSearch();return;}
+    const matches=all.filter(item=>`${item.company} ${item.ticker} ${item.symbol} ${item.provider}`.toLowerCase().includes(query));
+    const grouped=[...new Set(matches.map(item=>item.id))].map(id=>({item:matches.find(item=>item.id===id),families:[...new Set(all.filter(item=>item.id===id).map(item=>categories[item.family].name))]}));
+    results.innerHTML=grouped.length?grouped.map(({item,families})=>`<button class="search-result" data-instrument="${item.key}">${logo(item)}<span><strong>${esc(item.company)}</strong><small>${esc(item.ticker)}</small></span><span class="result-families">${families.join('<br>')}</span></button>`).join(''):'<p class="search-empty">No matching company or instrument.<br>Try a company name or ticker.</p>';
+    results.hidden=false;search.setAttribute('aria-expanded','true');
+  }
+  search.addEventListener('input',renderSearch);search.addEventListener('focus',()=>{if(search.value)renderSearch();});
+  search.addEventListener('keydown',event=>{if(event.key==='ArrowDown'){event.preventDefault();results.querySelector('button')?.focus();}});
+  $('#clear-search').onclick=()=>{search.value='';renderSearch();search.focus();};
+  window.WarrenLending.init({openDetail,closeDetail});
+  renderProduct();
+})();
+
   </script>
 </body>
 </html>

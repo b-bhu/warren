@@ -7,10 +7,11 @@ import { usePrivyAuthSheet, useTransactionWallet, useViewerStatus } from '@/feat
 import { useTheme } from '@/hooks/use-theme';
 
 type AppAccountButtonProps = {
+  appearance?: 'default' | 'outlined';
   onPress?: () => void;
 };
 
-export function AppAccountButton({ onPress }: AppAccountButtonProps) {
+export function AppAccountButton({ appearance = 'default', onPress }: AppAccountButtonProps) {
   const router = useRouter();
   const theme = useTheme();
   const viewerStatus = useViewerStatus();
@@ -51,11 +52,12 @@ export function AppAccountButton({ onPress }: AppAccountButtonProps) {
         style={({ pressed }) => [
           styles.button,
           { backgroundColor: signedIn ? 'transparent' : theme.proofWash },
+          appearance === 'outlined' && { backgroundColor: 'transparent', borderColor: `${theme.muted}33`, borderRadius: 999, borderWidth: 1, paddingHorizontal: 12 },
           pressed && styles.pressed,
           loading && styles.loading,
         ]}>
-        <WalletGlyph color={theme.proof} />
-        <Text numberOfLines={1} style={[styles.label, { color: signedIn ? theme.ink : theme.proof }]}>
+        {appearance !== 'outlined' || signedIn ? <WalletGlyph color={theme.proof} /> : null}
+        <Text numberOfLines={1} style={[styles.label, { color: signedIn || appearance === 'outlined' ? theme.ink : theme.proof }]}>
           {label}
         </Text>
         {signedIn && wallet.address ? (
