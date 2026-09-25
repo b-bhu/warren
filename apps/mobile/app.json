@@ -4,35 +4,43 @@
     "slug": "warren",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/warren-icon-v1.png",
+    "icon": "./assets/brand/derived/icons/app-icon-dark.png",
     "scheme": "warren",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
+    "primaryColor": "#0B5C78",
     "ios": {
-      "icon": "./assets/images/warren-icon-v1.png",
+      "icon": {
+        "light": "./assets/brand/derived/icons/app-icon-light.png",
+        "dark": "./assets/brand/derived/icons/app-icon-dark.png"
+      },
       "bundleIdentifier": "com.warren.app"
     },
     "android": {
       "package": "com.warren.app",
       "adaptiveIcon": {
         "backgroundColor": "#131918",
-        "foregroundImage": "./assets/images/warren-android-foreground-v1.png",
-        "backgroundImage": "./assets/images/warren-android-background-v1.png",
-        "monochromeImage": "./assets/images/warren-android-monochrome-v1.png"
+        "foregroundImage": "./assets/brand/derived/android/adaptive-foreground.png",
+        "monochromeImage": "./assets/brand/derived/android/adaptive-foreground.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/warren-favicon-v1.png"
+      "favicon": "./assets/brand/derived/web/favicon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#131918",
-          "image": "./assets/images/warren-splash-v1.png",
-          "imageWidth": 180
+          "backgroundColor": "#F3F5F2",
+          "image": "./assets/brand/derived/splash/splash-light.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#131918",
+            "image": "./assets/brand/derived/splash/splash-dark.png"
+          }
         }
       ],
       "expo-secure-store",

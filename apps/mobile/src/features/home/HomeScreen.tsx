@@ -26,6 +26,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
+import { BrandLogo } from '@/components/brand-logo';
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -385,10 +386,7 @@ function HomeHeader({ onBrandPress }: { onBrandPress: () => void }) {
         hitSlop={8}
         onPress={onBrandPress}
         style={({ pressed }) => [styles.brand, pressed && styles.pressed]}>
-        <View style={[styles.brandMark, { backgroundColor: theme.proofWash, borderColor: theme.outline }]}>
-          <Text style={[styles.brandLetter, { color: theme.proof }]}>W</Text>
-        </View>
-        <Text style={[styles.brandName, { color: theme.ink }]}>Warren</Text>
+        <BrandLogo decorative />
       </Pressable>
       <View accessibilityLabel="Browsing as guest" style={[styles.guestPill, { backgroundColor: theme.surface, borderColor: theme.outline }]}>
         <View style={[styles.guestDot, { backgroundColor: theme.proof }]} />
@@ -1127,9 +1125,6 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   brand: { alignItems: 'center', flexDirection: 'row', gap: 10, minHeight: 44 },
-  brandMark: { alignItems: 'center', borderRadius: 9, borderWidth: 1, height: 30, justifyContent: 'center', transform: [{ rotate: '-9deg' }], width: 30 },
-  brandLetter: { fontFamily: Fonts.serif, fontSize: 15, transform: [{ rotate: '9deg' }] },
-  brandName: { fontFamily: Fonts.serif, fontSize: 19, fontWeight: '700' },
   guestPill: { alignItems: 'center', borderRadius: 999, borderWidth: 1, flexDirection: 'row', gap: 8, minHeight: 36, paddingHorizontal: 12 },
   guestDot: { borderRadius: 999, height: 7, width: 7 },
   guestText: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '700' },

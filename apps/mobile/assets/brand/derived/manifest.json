@@ -1,0 +1,67 @@
+{
+  "generator": "apps/mobile/scripts/generate-brand-assets.cjs",
+  "sharpVersion": "0.35.4",
+  "sourceBase": "apps/mobile/assets/brand",
+  "files": [
+    {
+      "file": "icons/app-icon-light.png",
+      "source": "approved/icons/icon-square-light.png",
+      "sourceSha256": "7ad13588288347b607a12e3f643401054b690928bb299b0360bebeb5e52724bd",
+      "transform": "Preserve the full 1024×1024 square composition; flatten onto #F3F5F2 and remove the alpha channel for iOS. No baked-in corner mask.",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": false,
+      "sha256": "914de3218c85d04619b33aae7f66a7ce1816949039a2b5af67bc19c94cb29b96"
+    },
+    {
+      "file": "splash/splash-light.png",
+      "source": "approved/brand/mark-light.svg",
+      "sourceSha256": "f901bca631fedcabfadd380b202a1d72269f1092c729480afaceae26adcd0ca2",
+      "transform": "Rasterize the original 1024×1024 SVG canvas to a transparent PNG. Keep the original paths, colors, placement, and cutouts. Expo displays the canvas at 180 points/dp with contain scaling.",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "sha256": "99f3c5b02d0516c61cb82991a08a831aae0879dbd7b1d607fa3c991e9b44453f"
+    },
+    {
+      "file": "icons/app-icon-dark.png",
+      "source": "approved/icons/icon-square-dark.png",
+      "sourceSha256": "4029547caa12ba468efb56a3681c1444f484013583ecb2cf405ae6b85a71eef4",
+      "transform": "Preserve the full 1024×1024 square composition; flatten onto #131918 and remove the alpha channel for iOS. No baked-in corner mask.",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": false,
+      "sha256": "fba4ef15f0ac09cef44e1c5677e6411ecf8b194fff669d3985596c82e69ab93f"
+    },
+    {
+      "file": "splash/splash-dark.png",
+      "source": "approved/brand/mark-dark.svg",
+      "sourceSha256": "bb9f5f614596d41aaa55f1942e11b7898b784869a3317de6184ee6e5ddd38200",
+      "transform": "Rasterize the original 1024×1024 SVG canvas to a transparent PNG. Keep the original paths, colors, placement, and cutouts. Expo displays the canvas at 180 points/dp with contain scaling.",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "sha256": "04d979ab17b50e904bf565603896dcd8a2aa321b8d145cbfdbf057d127cbdd6f"
+    },
+    {
+      "file": "android/adaptive-foreground.png",
+      "source": "approved/brand/mark-dark.svg",
+      "sourceSha256": "bb9f5f614596d41aaa55f1942e11b7898b784869a3317de6184ee6e5ddd38200",
+      "transform": "Scale the entire SVG canvas uniformly to 780×780, then pad 150 transparent pixels on every side to 1080×1080. The artwork fits inside the central 660 px circle (66 dp of a 108 dp layer). Used unchanged for both foregroundImage and monochromeImage; Android uses its alpha mask for themed icons. The solid background is #131918 in app.json.",
+      "width": 1080,
+      "height": 1080,
+      "hasAlpha": true,
+      "sha256": "472595367245b3e1c5b1ad7532e30fb0951cda3fda77420d234b104be736be4c"
+    },
+    {
+      "file": "web/favicon.png",
+      "source": "approved/icons/icon-square-dark.png",
+      "sourceSha256": "4029547caa12ba468efb56a3681c1444f484013583ecb2cf405ae6b85a71eef4",
+      "transform": "Resize the full-square master to 64×64 for the existing Expo web favicon, flatten onto #131918, and remove alpha.",
+      "width": 64,
+      "height": 64,
+      "hasAlpha": false,
+      "sha256": "9097809e29aff77b9533f6aa3493f30f88b9fc2a28a4cc4ad42368432aa4098d"
+    }
+  ]
+}

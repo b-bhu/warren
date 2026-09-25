@@ -1,5 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -14,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BrandLogo } from '@/components/brand-logo';
 import { Fonts } from '@/constants/theme';
 
 import { GlassSurface } from './GlassSurface';
@@ -94,6 +96,7 @@ export function LiquidLedgerScreen({
       end={{ x: 0.78, y: 1 }}
       start={{ x: 0.16, y: 0 }}
       style={styles.background}>
+      <StatusBar style="light" />
       <View pointerEvents="none" style={styles.iceGlow} />
       <View pointerEvents="none" style={styles.seaGlow} />
       <SafeAreaView style={styles.safeArea}>
@@ -314,12 +317,7 @@ function EmailAuthForm({ auth, disabled }: { auth: EmailAuth; disabled: boolean 
 function Header({ status }: { status: string }) {
   return (
     <View style={styles.topbar}>
-      <View accessibilityLabel="Warren" style={styles.brand}>
-        <View accessible={false} style={styles.brandMark}>
-          <Text style={styles.brandLetter}>W</Text>
-        </View>
-        <Text style={styles.brandText}>Warren</Text>
-      </View>
+      <BrandLogo appearance="dark" />
       <View style={styles.statusPill}>
         <Text style={styles.statusText}>{status}</Text>
       </View>
@@ -666,34 +664,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     minHeight: 48,
-  },
-  brand: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 10,
-  },
-  brandMark: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(243, 240, 232, 0.06)',
-    borderColor: 'rgba(243, 240, 232, 0.42)',
-    borderRadius: 10,
-    borderWidth: 1,
-    height: 27,
-    justifyContent: 'center',
-    transform: [{ rotate: '-12deg' }],
-    width: 27,
-  },
-  brandLetter: {
-    color: palette.seaGlass,
-    fontFamily: Fonts.serif,
-    fontSize: 14,
-    transform: [{ rotate: '12deg' }],
-  },
-  brandText: {
-    color: palette.pearl,
-    fontFamily: Fonts.serif,
-    fontSize: 18,
-    letterSpacing: 0.15,
   },
   statusPill: {
     borderColor: 'rgba(243, 240, 232, 0.12)',

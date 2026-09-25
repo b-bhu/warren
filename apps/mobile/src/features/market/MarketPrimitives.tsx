@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
+import { BrandLogo } from '@/components/brand-logo';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -62,29 +63,7 @@ export function MarketHeader({
             </Text>
           </>
         ) : (
-          <>
-            <YStack
-              alignItems="center"
-              backgroundColor="$proofWash"
-              borderColor="$outline"
-              borderRadius="$control"
-              borderWidth={1}
-              height={30}
-              justifyContent="center"
-              transform={[{ rotate: '-9deg' }]}
-              width={30}>
-              <Text
-                color="$proof"
-                fontFamily="$serif"
-                fontSize={15}
-                transform={[{ rotate: '9deg' }]}>
-                W
-              </Text>
-            </YStack>
-            <Text color="$ink" fontFamily="$serif" fontSize={19} fontWeight="700">
-              Warren
-            </Text>
-          </>
+          <BrandLogo decorative />
         )}
       </Pressable>
 
