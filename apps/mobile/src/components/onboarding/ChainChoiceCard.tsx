@@ -17,7 +17,7 @@ export type ChainChoiceCardProps = {
 export function ChainChoiceCard({ chain, description, selected = false, disabled = false, unsupported = false, mark, onPress }: ChainChoiceCardProps) {
   const theme = useTheme();
   const unavailable = disabled || unsupported;
-  const stateText = unsupported ? 'Unsupported on this device' : disabled ? 'Unavailable' : selected ? 'Selected' : undefined;
+  const stateText = unsupported ? 'Unsupported on this device' : disabled ? 'Not ready' : selected ? 'Selected' : undefined;
 
   return (
     <Pressable

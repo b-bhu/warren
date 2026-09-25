@@ -5,10 +5,15 @@ import { join } from 'node:path';
 import test from 'node:test';
 import type { FastifyInstance } from 'fastify';
 import {
+  marketCompanyNewsResponseSchema,
   marketCompanyResponseSchema,
+  marketHistoryResponseSchema,
   marketSearchResponseSchema,
   marketsApiErrorSchema,
   marketsResponseSchema,
+  type MarketCompanyNewsItem,
+  type MarketHistoryCapability,
+  type MarketHistoryRange,
   type MarketInstrument,
   type PerpetualInstrument,
   type PrestockInstrument,
@@ -17,6 +22,12 @@ import {
 import type { Config } from '../src/config.js';
 import { openDatabase } from '../src/db.js';
 import { MarketsService } from '../src/markets/service.js';
+import {
+  TokensMarketDetailsSource,
+  type MarketCompanyIdentity,
+  type MarketCompanyNewsSource,
+  type MarketHistorySource,
+} from '../src/markets/details-sources.js';
 import {
   PhoenixPerpetualSource,
   PreStocksSource,
@@ -36,6 +47,61 @@ class TestSource implements MarketsSource {
     this.calls += 1;
     if (this.fail) throw new Error(`${this.id} raw failure`);
     return structuredClone(this.instruments);
+  }
+}
+
+class TestDetailsSource implements MarketHistorySource, MarketCompanyNewsSource {
+  readonly id = 'detail-test';
+  historyCalls = 0;
+  newsCalls = 0;
+  failHistory = false;
+  failNews = false;
+
+  capability(instrument: MarketInstrument): MarketHistoryCapability | null {
+    return instrument.productType === 'spot' && instrument.verificationState === 'verified'
+      ? {
+        instrumentId: instrument.instrumentId,
+        valueLabel: instrument.marketValue.label,
+        currency: 'USD',
+        source: this.id,
+        supportedRanges: ['1d', '1w', '1m'],
+        defaultRange: '1m',
+      }
+      : null;
+  }
+
+  async loadHistory(_instrument: MarketInstrument, _range: MarketHistoryRange) {
+    this.historyCalls += 1;
+    if (this.failHistory) throw new Error('raw history failure');
+    return {
+      interval: '1H' as const,
+      asOf: '2026-09-19T09:00:00.000Z',
+      dataState: 'live' as const,
+      points: [{
+        time: '2026-09-19T09:00:00.000Z',
+        open: 218,
+        high: 223,
+        low: 217,
+        close: 220.56,
+        volume: 10_000,
+      }],
+    };
+  }
+
+  async loadCompanyNews(company: MarketCompanyIdentity): Promise<MarketCompanyNewsItem[]> {
+    this.newsCalls += 1;
+    if (this.failNews) throw new Error('raw news failure');
+    return [{
+      id: `news:${company.assetId}`,
+      assetId: company.assetId,
+      headline: `${company.companyName} company update`,
+      source: 'Test Wire',
+      publishedAt: '2026-09-19T09:30:00.000Z',
+      imageUrl: 'https://images.test/news.png',
+      summary: null,
+      url: `https://news.test/${company.assetId}`,
+      dataState: 'live',
+    }];
   }
 }
 
@@ -140,21 +206,35 @@ function config(databaseFile: string, overrides: Partial<Config> = {}): Config {
     TOKENS_API_BASE_URL: 'https://tokens.test', HOME_PROVIDER_TIMEOUT_MS: 5_000,
     HOME_CATALOG_CACHE_SECONDS: 60, HOME_CATALOG_STALE_SECONDS: 900, HOME_HTTP_CACHE_SECONDS: 15, HOME_HTTP_STALE_SECONDS: 60,
     PRESTOCKS_API_URL: 'https://prestocks.test/api/prestocks', PHOENIX_API_BASE_URL: 'https://phoenix.test',
+    PRIVY_APP_ID: undefined, PRIVY_APP_SECRET: undefined, JUPITER_API_BASE_URL: 'https://api.jup.test', JUPITER_API_KEY: undefined,
+    SOLANA_RPC_URL: 'https://rpc.solana.test', EXECUTION_PROVIDER_TIMEOUT_MS: 12_000, EXECUTION_INTENT_TTL_SECONDS: 90,
     MARKETS_PROVIDER_TIMEOUT_MS: 8_000, MARKETS_REGISTRY_CACHE_SECONDS: 60, MARKETS_REGISTRY_STALE_SECONDS: 900,
     MARKETS_HTTP_CACHE_SECONDS: 15, MARKETS_HTTP_STALE_SECONDS: 60,
+    KAMINO_API_BASE_URL: 'https://kamino.test', KAMINO_MARKET_TIMEOUT_MS: 8_000, KAMINO_LENDING_ENABLED: 'false', KAMINO_LENDING_NEW_RISK_ENABLED: 'false',
+    KAMINO_LENDING_REPAY_ENABLED: 'false', KAMINO_LENDING_WITHDRAW_ENABLED: 'false', KAMINO_BORROW_HEADROOM_BPS: 5_000,
     ...overrides,
   };
 }
 
-function setup(options: { sources?: MarketsSource[]; now?: () => Date; config?: Partial<Config>; cacheTtlMs?: number; staleTtlMs?: number } = {}) {
+function setup(options: {
+  sources?: MarketsSource[];
+  detailsSource?: TestDetailsSource | null;
+  now?: () => Date;
+  config?: Partial<Config>;
+  cacheTtlMs?: number;
+  staleTtlMs?: number;
+} = {}) {
   const directory = mkdtempSync(join(tmpdir(), 'warren-markets-api-'));
   const sources = options.sources ?? [
     new TestSource('spot-test', [spot()]),
     new TestSource('prestock-test', [prestock()]),
     new TestSource('perp-test', [perpetual()]),
   ];
+  const detailsSource = options.detailsSource === undefined ? new TestDetailsSource() : options.detailsSource;
   const service = new MarketsService({
     sources,
+    historySource: detailsSource ?? undefined,
+    newsSource: detailsSource ?? undefined,
     cacheTtlMs: options.cacheTtlMs ?? 60_000,
     staleTtlMs: options.staleTtlMs ?? 900_000,
     now: options.now ?? (() => new Date('2026-09-19T10:00:00.000Z')),
@@ -162,7 +242,7 @@ function setup(options: { sources?: MarketsSource[]; now?: () => Date; config?: 
   const apiConfig = config(join(directory, 'test.db'), options.config);
   const db = openDatabase(apiConfig.DATABASE_URL);
   const app = buildApp({ config: apiConfig, db, marketsService: service });
-  return { app, service, sources, close: async () => { await app.close(); db.close(); rmSync(directory, { recursive: true, force: true }); } };
+  return { app, service, sources, detailsSource, close: async () => { await app.close(); db.close(); rmSync(directory, { recursive: true, force: true }); } };
 }
 
 async function get(app: FastifyInstance, url: string, headers: Record<string, string> = {}) {
@@ -233,11 +313,149 @@ test('company capability lookup groups instruments and returns a normalized 404'
     const result = await get(env.app, '/v1/markets/companies/nvidia');
     const parsed = marketCompanyResponseSchema.parse(result.body);
     assert.equal(parsed.company.companyName, 'NVIDIA');
+    assert.equal(parsed.company.description?.source, 'xStocks');
+    assert.equal(parsed.primaryInstrumentId, 'spot:xstocks:nvidia');
+    assert.equal(parsed.hero?.value.label, 'Token price');
+    assert.equal(parsed.hero?.provider, 'xStocks');
+    assert.equal(parsed.history?.instrumentId, parsed.primaryInstrumentId);
     assert.equal(parsed.availableNow, 2);
     assert.deepEqual(parsed.instruments.map((instrument) => instrument.productType), ['spot', 'perpetual']);
+    const signedInShape = marketCompanyResponseSchema.parse((await get(
+      env.app,
+      '/v1/markets/companies/nvidia',
+      { authorization: 'Bearer intentionally-ignored-for-public-read' },
+    )).body);
+    assert.deepEqual(signedInShape, parsed);
     const missing = await get(env.app, '/v1/markets/companies/missing');
     assert.equal(missing.response.statusCode, 404);
     assert.equal(marketsApiErrorSchema.parse(missing.body).error.code, 'NOT_FOUND');
+  } finally { await env.close(); }
+});
+
+test('company response contract rejects hero, history, ownership, and availability drift', async () => {
+  const env = setup();
+  try {
+    const parsed = marketCompanyResponseSchema.parse((await get(env.app, '/v1/markets/companies/nvidia')).body);
+    assert.equal(marketCompanyResponseSchema.safeParse({
+      ...parsed,
+      hero: parsed.hero ? { ...parsed.hero, value: { ...parsed.hero.value, label: 'Reference price' } } : null,
+    }).success, false);
+    assert.equal(marketCompanyResponseSchema.safeParse({
+      ...parsed,
+      history: parsed.history ? { ...parsed.history, instrumentId: 'spot:wrong:instrument' } : null,
+    }).success, false);
+    assert.equal(marketCompanyResponseSchema.safeParse({
+      ...parsed,
+      instruments: parsed.instruments.map((instrument, index) => index === 0
+        ? { ...instrument, assetId: 'another-company' }
+        : instrument),
+    }).success, false);
+    assert.equal(marketCompanyResponseSchema.safeParse({ ...parsed, availableNow: 0 }).success, false);
+  } finally { await env.close(); }
+});
+
+test('hero selection is deterministic across Spot, PreStock-only, Perpetual-only, and missing values', async () => {
+  const cases = [
+    {
+      name: 'Spot wins over every other available product',
+      instruments: [perpetual(), prestock({ assetId: 'nvidia', companyName: 'NVIDIA' }), spot()],
+      assetId: 'nvidia',
+      expected: 'spot:xstocks:nvidia',
+    },
+    {
+      name: 'PreStock value is used for a private company',
+      instruments: [prestock()],
+      assetId: 'anthropic',
+      expected: 'prestock:prestocks:anthropic',
+    },
+    {
+      name: 'Perpetual mark is used when it is the only value',
+      instruments: [perpetual()],
+      assetId: 'nvidia-corporation',
+      expected: 'perpetual:phoenix:nvda',
+    },
+    {
+      name: 'No value produces no primary hero',
+      instruments: [prestock({
+        marketValue: { label: 'Provider token price', amount: null, currency: 'USD', asOf: null, dataState: 'unavailable' },
+      })],
+      assetId: 'anthropic',
+      expected: null,
+    },
+  ];
+
+  for (const item of cases) {
+    const env = setup({ sources: [new TestSource(item.name, item.instruments)] });
+    try {
+      const response = await get(env.app, `/v1/markets/companies/${item.assetId}`);
+      const parsed = marketCompanyResponseSchema.parse(response.body);
+      assert.equal(parsed.primaryInstrumentId, item.expected, item.name);
+      assert.equal(parsed.hero?.instrumentId ?? null, item.expected, item.name);
+      assert.equal(parsed.history === null, item.expected !== 'spot:xstocks:nvidia', item.name);
+    } finally { await env.close(); }
+  }
+});
+
+test('company history is exact-instrument, independently cacheable, and explicitly unavailable when unsupported', async () => {
+  const detailsSource = new TestDetailsSource();
+  const env = setup({ detailsSource });
+  try {
+    const path = '/v1/markets/companies/nvidia/history?instrumentId=spot%3Axstocks%3Anvidia&range=1w';
+    const first = await get(env.app, path);
+    assert.equal(first.response.statusCode, 200);
+    const parsed = marketHistoryResponseSchema.parse(first.body);
+    assert.equal(parsed.assetId, 'nvidia');
+    assert.equal(parsed.instrumentId, 'spot:xstocks:nvidia');
+    assert.equal(parsed.valueLabel, 'Token price');
+    assert.equal(parsed.provider, 'detail-test');
+    assert.equal(parsed.points.length, 1);
+    assert.equal(detailsSource.historyCalls, 1);
+    const cached = await get(env.app, path);
+    marketHistoryResponseSchema.parse(cached.body);
+    assert.equal(detailsSource.historyCalls, 1);
+
+    const unsupported = await get(env.app, '/v1/markets/companies/nvidia/history?instrumentId=perpetual%3Aphoenix%3Anvda&range=1m');
+    const unavailable = marketHistoryResponseSchema.parse(unsupported.body);
+    assert.equal(unavailable.dataState, 'unavailable');
+    assert.deepEqual(unavailable.points, []);
+    assert.equal(unavailable.warnings.at(-1)?.section, 'history');
+    assert.equal(unavailable.warnings.at(-1)?.retryable, false);
+
+    const wrongInstrument = await get(env.app, '/v1/markets/companies/nvidia/history?instrumentId=spot%3Aunknown&range=1m');
+    assert.equal(wrongInstrument.response.statusCode, 404);
+    const invalidRange = await get(env.app, '/v1/markets/companies/nvidia/history?instrumentId=spot%3Axstocks%3Anvidia&range=all');
+    assert.equal(invalidRange.response.statusCode, 400);
+  } finally { await env.close(); }
+});
+
+test('company news is provider-associated while history and news failures remain section-local', async () => {
+  const detailsSource = new TestDetailsSource();
+  const env = setup({ detailsSource });
+  try {
+    const ready = await get(env.app, '/v1/markets/companies/nvidia/news');
+    const parsed = marketCompanyNewsResponseSchema.parse(ready.body);
+    assert.equal(parsed.items.length, 1);
+    assert.equal(parsed.items[0].assetId, 'nvidia');
+    assert.equal(detailsSource.newsCalls, 1);
+
+    detailsSource.failNews = true;
+    detailsSource.failHistory = true;
+    env.service.clearCache();
+    const newsFailure = marketCompanyNewsResponseSchema.parse((await get(env.app, '/v1/markets/companies/nvidia/news')).body);
+    assert.deepEqual(newsFailure.items, []);
+    assert.equal(newsFailure.warnings.at(-1)?.code, 'NEWS_UNAVAILABLE');
+    assert.equal(newsFailure.warnings.at(-1)?.retryable, true);
+    const historyFailure = marketHistoryResponseSchema.parse((await get(
+      env.app,
+      '/v1/markets/companies/nvidia/history?instrumentId=spot%3Axstocks%3Anvidia&range=1m',
+    )).body);
+    assert.deepEqual(historyFailure.points, []);
+    assert.equal(historyFailure.warnings.at(-1)?.code, 'HISTORY_UNAVAILABLE');
+    assert.doesNotMatch(JSON.stringify({ newsFailure, historyFailure }), /raw (news|history) failure/);
+
+    const companyStillWorks = await get(env.app, '/v1/markets/companies/nvidia');
+    assert.equal(companyStillWorks.response.statusCode, 200);
+    marketCompanyResponseSchema.parse(companyStillWorks.body);
   } finally { await env.close(); }
 });
 
@@ -377,6 +595,50 @@ test('Tokens source selects a safe primary stock variant and maps source freshne
   assert.equal(result[0].instrumentId, 'spot:nvidia:xstocks');
   assert.equal(result[0].marketValue.dataState, 'live');
   assert.equal(result[0].availability, 'available');
+});
+
+test('Tokens detail source scopes candles to the exact Spot mint and news to the canonical company', async () => {
+  const requested: URL[] = [];
+  const headers: Headers[] = [];
+  const source = new TokensMarketDetailsSource({
+    apiKey: 'server-secret-token-key',
+    baseUrl: 'https://tokens.test',
+    timeoutMs: 1_000,
+    now: () => new Date('2026-09-19T10:00:00.000Z'),
+    fetch: async (input, init) => {
+      const url = new URL(String(input));
+      requested.push(url);
+      headers.push(new Headers(init?.headers));
+      if (url.pathname.endsWith('/ohlcv')) return new Response(JSON.stringify({
+        assetId: 'nvidia',
+        mint: 'NVDAx1111111111111111111111111111111111111',
+        interval: '1H',
+        from: 1,
+        to: 2,
+        candles: [{ time: Date.parse('2026-09-19T09:00:00.000Z') / 1_000, open: 218, high: 223, low: 217, close: 220.56, volume: 10_000 }],
+      }), { status: 200 });
+      return new Response(JSON.stringify({ items: [{
+        title: 'NVIDIA announces company update',
+        url: 'https://news.test/nvidia',
+        posted_at: '2026-09-19T09:30:00.000Z',
+        source_name: 'Test Wire',
+        image: 'https://images.test/nvidia-news.png',
+      }] }), { status: 200 });
+    },
+  });
+
+  const instrument = spot();
+  const history = await source.loadHistory(instrument, '1w');
+  const news = await source.loadCompanyNews({ assetId: 'nvidia', companyName: 'NVIDIA', ticker: 'NVDA' });
+  assert.equal(history.points.length, 1);
+  assert.equal(history.interval, '1H');
+  assert.equal(requested[0].searchParams.get('mint'), instrument.mint);
+  assert.equal(requested[0].searchParams.get('interval'), '1H');
+  assert.equal(requested[1].searchParams.get('asset_id'), 'nvidia');
+  assert.equal(requested[1].searchParams.get('symbol'), 'NVDA');
+  assert.equal(requested[1].searchParams.get('name'), 'NVIDIA');
+  assert.equal(news[0].assetId, 'nvidia');
+  assert.ok(headers.every((header) => header.get('x-api-key') === 'server-secret-token-key'));
 });
 
 test('PreStocks source preserves provider values without inventing a source timestamp', async () => {

@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 import type { SessionResult } from '@/features/onboarding';
+import { configuredApiUrl } from '@/lib/api-config';
 
 const ACCESS_TOKEN_STORAGE_KEY = 'com.warren.session.v1.access';
 const REFRESH_TOKEN_STORAGE_KEY = 'com.warren.session.v1.refresh';
@@ -220,11 +221,6 @@ export function useSession(): SessionContextValue {
   return value;
 }
 
-function configuredApiUrl(): string | undefined {
-  const value = process.env.EXPO_PUBLIC_API_URL?.trim();
-  return value ? value.replace(/\/$/, '') : undefined;
-}
-
 function isDevelopmentBuild() {
   return typeof __DEV__ !== 'undefined' && __DEV__;
 }
@@ -287,7 +283,7 @@ function isAuthoritativeSessionRejection(error: unknown): boolean {
 }
 
 function recoverableMessageFor(error: unknown): string {
-  if (error instanceof SessionRequestError && error.status && error.status >= 500) return 'Warren is temporarily unavailable. Your saved session is still kept on this device.';
+  if (error instanceof SessionRequestError && error.status && error.status >= 500) return 'Warren could not reconnect. Your saved session is still kept on this device.';
   return 'We could not reach Warren. Your saved session is still kept on this device.';
 }
 

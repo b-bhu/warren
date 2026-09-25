@@ -1,11 +1,11 @@
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-type TabIconName = 'home' | 'markets' | 'profile';
+type TabIconName = 'home' | 'markets' | 'portfolio';
 
 export default function MainTabLayout() {
   const theme = useTheme();
@@ -58,9 +58,9 @@ export default function MainTabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'Portfolio',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color as string} focused={focused} name="profile" />
+            <TabIcon color={color as string} focused={focused} name="portfolio" />
           ),
         }}
       />
@@ -96,15 +96,10 @@ function TabIcon({ color, focused, name }: { color: string; focused: boolean; na
           />
         </>
       ) : null}
-      {name === 'profile' ? (
+      {name === 'portfolio' ? (
         <>
-          <Circle cx="12" cy="8" r="3.5" stroke={color} strokeWidth={strokeWidth} />
-          <Path
-            d="M5.5 20c.5-3.8 2.7-5.7 6.5-5.7s6 1.9 6.5 5.7"
-            stroke={color}
-            strokeLinecap="round"
-            strokeWidth={strokeWidth}
-          />
+          <Path d="M5 4.5h14v15H5z" stroke={color} strokeLinejoin="round" strokeWidth={strokeWidth} />
+          <Path d="M8 9h8M8 13h8M8 17h5" stroke={color} strokeLinecap="round" strokeWidth={strokeWidth} />
         </>
       ) : null}
     </Svg>

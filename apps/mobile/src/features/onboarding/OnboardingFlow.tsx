@@ -226,7 +226,7 @@ function errorHeading(error: SafeError): string {
     case 'signature_rejected': return 'Signature not approved.';
     case 'request_expired': return 'The signing request expired.';
     case 'offline': return 'You are offline.';
-    case 'provider_unavailable': return 'Wallet provider unavailable.';
+    case 'provider_unavailable': return 'Wallet provider needs attention.';
     case 'rate_limited': return 'Too many requests.';
     case 'session_invalid': return 'Your session ended.';
     case 'wrong_network': return 'This network is not supported.';

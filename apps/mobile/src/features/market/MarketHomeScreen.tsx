@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter, type Href } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
   Image,
   Keyboard,
-  Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,22 +17,24 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import {
-  type MarketAvailability,
-  type MarketCompanyResponse,
   type MarketCompanySummary,
   type MarketCounts,
   type MarketInstrument,
   type MarketProduct,
   type MarketSort,
 } from '@warren/markets-contract';
+import type { LendingCatalogResponse, LendingAsset } from '@warren/lending-contract';
 
+import { AppAccountButton } from '@/components/AppAccountButton';
 import { BrandLogo } from '@/components/brand-logo';
 import { Fonts, Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-import { loadMarketCompany, loadMarkets, searchMarkets } from './markets-api';
+import { loadMarkets, searchMarkets } from './markets-api';
+import { loadLendingCatalog } from './lending-api';
 
 const productOrder: readonly MarketProduct[] = ['spot', 'prestock', 'perpetual'];
+type MarketSection = MarketProduct | 'lending';
 const emptyCounts: MarketCounts = { spot: 0, prestock: 0, perpetual: 0 };
 
 const productLabels: Record<MarketProduct, string> = {
@@ -41,10 +44,15 @@ const productLabels: Record<MarketProduct, string> = {
 };
 
 export function MarketHomeScreen() {
+  const router = useRouter();
   const theme = useTheme();
   const listRef = useRef<FlatList<MarketInstrument>>(null);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [product, setProduct] = useState<MarketProduct>('spot');
+  const [section, setSection] = useState<MarketSection>('spot');
+  const [lendingCatalog, setLendingCatalog] = useState<LendingCatalogResponse>();
+  const [lendingError, setLendingError] = useState<string>();
+  const [lendingRequestVersion, setLendingRequestVersion] = useState(0);
   const [items, setItems] = useState<MarketInstrument[]>([]);
   const [counts, setCounts] = useState<MarketCounts>(emptyCounts);
   const [nextCursor, setNextCursor] = useState<string>();
@@ -53,6 +61,7 @@ export function MarketHomeScreen() {
   const [error, setError] = useState<string>();
   const [warning, setWarning] = useState<string>();
   const [requestVersion, setRequestVersion] = useState(0);
+  const [refreshingSection, setRefreshingSection] = useState<MarketSection>();
 
   const [query, setQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -60,23 +69,16 @@ export function MarketHomeScreen() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string>();
 
-  const [selectedAssetId, setSelectedAssetId] = useState<string>();
-  const [selectedInstrumentId, setSelectedInstrumentId] = useState<string>();
-  const [selectedCompany, setSelectedCompany] = useState<MarketCompanyResponse>();
-  const [isSheetLoading, setIsSheetLoading] = useState(false);
-  const [sheetError, setSheetError] = useState<string>();
-  const [sheetRequestVersion, setSheetRequestVersion] = useState(0);
-
   const sort = defaultSort(product);
   const registryKey = `${product}:${sort}`;
   const registryKeyRef = useRef(registryKey);
-  registryKeyRef.current = registryKey;
+
+  useEffect(() => {
+    registryKeyRef.current = registryKey;
+  }, [registryKey]);
 
   useEffect(() => {
     const controller = new AbortController();
-    setIsLoading(true);
-    setIsLoadingMore(false);
-    setError(undefined);
     loadMarkets({ product, availableOnly: false, sort, limit: 24 }, controller.signal)
       .then((response) => {
         setItems(response.items);
@@ -88,22 +90,36 @@ export function MarketHomeScreen() {
         if (reason instanceof Error && reason.name === 'AbortError') return;
         setItems([]);
         setNextCursor(undefined);
-        setError(reason instanceof Error ? reason.message : 'Markets are temporarily unavailable.');
+        setError(reason instanceof Error ? reason.message : 'Warren could not refresh Markets.');
       })
       .finally(() => {
-        if (!controller.signal.aborted) setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+          setRefreshingSection((current) => current === product ? undefined : current);
+        }
       });
     return () => controller.abort();
   }, [product, requestVersion, sort]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    loadLendingCatalog(controller.signal)
+      .then((response) => { setLendingCatalog(response); setLendingError(undefined); })
+      .catch((reason: unknown) => {
+        if (reason instanceof Error && reason.name === 'AbortError') return;
+        setLendingError(reason instanceof Error ? reason.message : 'Warren could not refresh lending markets.');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setRefreshingSection((current) => current === 'lending' ? undefined : current);
+        }
+      });
+    return () => controller.abort();
+  }, [lendingRequestVersion]);
+
+  useEffect(() => {
     const normalized = query.trim();
-    if (!normalized) {
-      setSearchResults([]);
-      setSearchError(undefined);
-      setIsSearching(false);
-      return;
-    }
+    if (!normalized) return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
       setIsSearching(true);
@@ -113,7 +129,7 @@ export function MarketHomeScreen() {
         .catch((reason: unknown) => {
           if (reason instanceof Error && reason.name === 'AbortError') return;
           setSearchResults([]);
-          setSearchError(reason instanceof Error ? reason.message : 'Search is temporarily unavailable.');
+          setSearchError(reason instanceof Error ? reason.message : 'Warren could not refresh search results.');
         })
         .finally(() => {
           if (!controller.signal.aborted) setIsSearching(false);
@@ -125,24 +141,6 @@ export function MarketHomeScreen() {
     };
   }, [query]);
 
-  useEffect(() => {
-    if (!selectedAssetId) return;
-    const controller = new AbortController();
-    setIsSheetLoading(true);
-    setSheetError(undefined);
-    setSelectedCompany(undefined);
-    loadMarketCompany(selectedAssetId, controller.signal)
-      .then(setSelectedCompany)
-      .catch((reason: unknown) => {
-        if (reason instanceof Error && reason.name === 'AbortError') return;
-        setSheetError(reason instanceof Error ? reason.message : 'Company markets are temporarily unavailable.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setIsSheetLoading(false);
-      });
-    return () => controller.abort();
-  }, [selectedAssetId, sheetRequestVersion]);
-
   useEffect(() => () => {
     if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current);
   }, []);
@@ -151,26 +149,55 @@ export function MarketHomeScreen() {
   const searchOpen = searchFocused && query.trim().length > 0;
 
   const chooseProduct = useCallback((next: MarketProduct) => {
+    setSection(next);
     setProduct(next);
+    setIsLoading(true);
     setIsLoadingMore(false);
+    setError(undefined);
     setItems([]);
     setNextCursor(undefined);
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, []);
 
-  const openCompany = useCallback((assetId: string, instrumentId?: string) => {
-    Keyboard.dismiss();
-    setSearchFocused(false);
-    setSelectedInstrumentId(instrumentId);
-    setSelectedAssetId(assetId);
+  const changeQuery = useCallback((nextQuery: string) => {
+    setQuery(nextQuery);
+    if (nextQuery.trim()) return;
+    setSearchResults([]);
+    setSearchError(undefined);
+    setIsSearching(false);
   }, []);
 
-  const closeCompany = useCallback(() => {
-    setSelectedAssetId(undefined);
-    setSelectedInstrumentId(undefined);
-    setSelectedCompany(undefined);
-    setSheetError(undefined);
+  const retryRegistry = useCallback(() => {
+    setIsLoading(true);
+    setIsLoadingMore(false);
+    setError(undefined);
+    setRequestVersion((current) => current + 1);
   }, []);
+
+  const pullToRefresh = useCallback(() => {
+    setRefreshingSection(section);
+    if (section === 'lending') {
+      setLendingError(undefined);
+      setLendingRequestVersion((current) => current + 1);
+      return;
+    }
+    setError(undefined);
+    setRequestVersion((current) => current + 1);
+  }, [section]);
+
+  const openCompany = useCallback((assetId: string, instrumentId?: string, entrySource: 'markets' | 'search' = 'markets') => {
+    Keyboard.dismiss();
+    setSearchFocused(false);
+    router.push({
+      pathname: '/stocks/[assetId]',
+      params: {
+        assetId,
+        product,
+        source: entrySource,
+        ...(instrumentId ? { instrumentId } : {}),
+      },
+    } as Href);
+  }, [product, router]);
 
   const loadMore = useCallback(async () => {
     if (!nextCursor || isLoadingMore) return;
@@ -228,7 +255,7 @@ export function MarketHomeScreen() {
                 onBlur={() => {
                   searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 120);
                 }}
-                onChangeText={setQuery}
+                onChangeText={changeQuery}
                 onFocus={() => {
                   if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current);
                   setSearchFocused(true);
@@ -246,8 +273,7 @@ export function MarketHomeScreen() {
                   accessibilityRole="button"
                   hitSlop={7}
                   onPress={() => {
-                    setQuery('');
-                    setSearchResults([]);
+                    changeQuery('');
                   }}
                   style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}>
                   <Text style={[styles.clearText, { color: theme.muted }]}>×</Text>
@@ -266,7 +292,7 @@ export function MarketHomeScreen() {
                 ) : (
                   <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled showsVerticalScrollIndicator={false}>
                     {searchResults.map((company) => (
-                      <SearchResult key={company.assetId} company={company} onPress={() => openCompany(company.assetId)} />
+                      <SearchResult key={company.assetId} company={company} onPress={() => openCompany(company.assetId, undefined, 'search')} />
                     ))}
                   </ScrollView>
                 )}
@@ -283,13 +309,19 @@ export function MarketHomeScreen() {
             style={styles.productTabs}>
             {productOrder.map((item) => (
               <ProductTab
-                active={product === item}
+                active={section === item}
                 count={counts[item]}
                 key={item}
                 label={productLabels[item]}
                 onPress={() => chooseProduct(item)}
               />
             ))}
+            <ProductTab
+              active={section === 'lending'}
+              count={lendingCatalog?.assets.length ?? 9}
+              label="Lending"
+              onPress={() => setSection('lending')}
+            />
           </ScrollView>
 
           {warning ? (
@@ -298,7 +330,16 @@ export function MarketHomeScreen() {
             </View>
           ) : null}
 
-          <FlatList
+          {section === 'lending' ? (
+            <LendingList
+              catalog={lendingCatalog}
+              error={lendingError}
+              onRefresh={pullToRefresh}
+              onOpen={(assetId) => router.push({ pathname: '/lending/[assetId]', params: { assetId } } as Href)}
+              onRetry={() => setLendingRequestVersion((version) => version + 1)}
+              refreshing={refreshingSection === 'lending'}
+            />
+          ) : <FlatList
             contentContainerStyle={!items.length ? styles.emptyListContent : undefined}
             data={items}
             keyboardDismissMode="on-drag"
@@ -311,8 +352,8 @@ export function MarketHomeScreen() {
                 <RegistryMessage
                   action="Try again"
                   message={error}
-                  onAction={() => setRequestVersion((current) => current + 1)}
-                  title="Markets unavailable"
+                  onAction={retryRegistry}
+                  title="Markets need a refresh"
                 />
               ) : (
                 <RegistryMessage
@@ -345,25 +386,65 @@ export function MarketHomeScreen() {
               ) : null
             }
             ref={listRef}
+            refreshControl={(
+              <RefreshControl
+                colors={[theme.proof]}
+                onRefresh={pullToRefresh}
+                refreshing={refreshingSection === section}
+                tintColor={theme.proof}
+              />
+            )}
             renderItem={renderItem}
             showsVerticalScrollIndicator={false}
             style={[styles.instrumentList, { borderTopColor: theme.outline }]}
-          />
+          />}
         </View>
       </View>
 
-      <CompanyMarketsSheet
-        company={selectedCompany}
-        error={sheetError}
-        focusedInstrumentId={selectedInstrumentId}
-        isLoading={isSheetLoading}
-        onClose={closeCompany}
-        onRetry={() => setSheetRequestVersion((current) => current + 1)}
-        visible={Boolean(selectedAssetId)}
-      />
     </SafeAreaView>
   );
 }
+
+function LendingList({ catalog, error, onRefresh, onRetry, onOpen, refreshing }: { catalog?: LendingCatalogResponse; error?: string; onRefresh: () => void; onRetry: () => void; onOpen: (assetId: string) => void; refreshing: boolean }) {
+  const theme = useTheme();
+  if (error) return <RegistryMessage action="Try again" message={error} onAction={onRetry} title="Lending markets need a refresh" />;
+  if (!catalog) return <LoadingRows />;
+  return (
+    <ScrollView
+      contentContainerStyle={styles.lendingList}
+      refreshControl={<RefreshControl colors={[theme.proof]} onRefresh={onRefresh} refreshing={refreshing} tintColor={theme.proof} />}
+      showsVerticalScrollIndicator={false}>
+      <View style={[styles.lendingIntro, { borderBottomColor: theme.outline }]}>
+        <Text style={[styles.lendingHeading, { color: theme.ink }]}>Supply xStocks, borrow USDC</Text>
+        <Text style={[styles.lendingCopy, { color: theme.muted }]}>Kamino · Solana mainnet · Terms refresh from the market. Borrowing the stock token is not supported.</Text>
+      </View>
+      {catalog.assets.map((asset) => <LendingRow key={asset.assetId} asset={asset} onPress={() => onOpen(asset.assetId)} />)}
+      <Text style={[styles.lendingNotice, { color: theme.muted }]}>Market terms can change. Each action is refreshed, simulated and shown for wallet review before signing. New borrowing remains subject to Warren’s risk controls.</Text>
+    </ScrollView>
+  );
+}
+
+function LendingRow({ asset, onPress }: { asset: LendingAsset; onPress: () => void }) {
+  const theme = useTheme();
+  const status = asset.routeAvailable ? 'USDC route active' : asset.marketStatus ?? 'No active route';
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={`${asset.symbol}, lending details`} onPress={onPress} style={[styles.lendingRow, { borderBottomColor: theme.outline }]}>
+      <View style={styles.lendingIdentity}>
+        <Text style={[styles.lendingSymbol, { color: theme.ink }]}>{asset.symbol}</Text>
+        <Text numberOfLines={1} style={[styles.lendingName, { color: theme.muted }]}>{asset.name} · xStock collateral</Text>
+        <Text selectable numberOfLines={1} style={[styles.lendingMint, { color: theme.muted }]}>Mint {asset.mintAddress}</Text>
+      </View>
+      <View style={styles.lendingTerms}>
+        <Text style={[styles.lendingTerm, { color: theme.ink }]}>{percent(asset.borrowApy)} USDC borrow</Text>
+        <Text style={[styles.lendingTermSmall, { color: theme.muted }]}>{percent(asset.supplyApy)} supply APY</Text>
+        <Text style={[styles.lendingStatus, { color: asset.routeAvailable ? theme.proof : theme.caution }]}>{status}</Text>
+        <Text style={[styles.lendingTermSmall, { color: theme.muted }]}>{asset.actionsPaused ? 'Actions paused' : 'See current terms'}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function percent(value: string | null): string { return value === null ? '—' : `${(Number(value) * 100).toFixed(2)}%`; }
 
 function MarketHeader({ onBrandPress }: { onBrandPress: () => void }) {
   const theme = useTheme();
@@ -377,10 +458,7 @@ function MarketHeader({ onBrandPress }: { onBrandPress: () => void }) {
         style={({ pressed }) => [styles.brand, pressed && styles.pressed]}>
         <BrandLogo decorative />
       </Pressable>
-      <View accessibilityLabel="Browsing as guest" style={[styles.guestPill, { backgroundColor: theme.surface, borderColor: theme.outline }]}>
-        <View style={[styles.guestDot, { backgroundColor: theme.proof }]} />
-        <Text style={[styles.guestText, { color: theme.muted }]}>Guest</Text>
-      </View>
+      <AppAccountButton />
     </View>
   );
 }
@@ -527,155 +605,15 @@ function Coverage({ count }: { count: number }) {
   );
 }
 
-function CompanyMarketsSheet({
-  company,
-  error,
-  focusedInstrumentId,
-  isLoading,
-  onClose,
-  onRetry,
-  visible,
-}: {
-  company?: MarketCompanyResponse;
-  error?: string;
-  focusedInstrumentId?: string;
-  isLoading: boolean;
-  onClose: () => void;
-  onRetry: () => void;
-  visible: boolean;
-}) {
-  const theme = useTheme();
-  return (
-    <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
-      <View style={styles.modalLayer}>
-        <Pressable accessibilityLabel="Close company markets" accessibilityRole="button" onPress={onClose} style={styles.modalBackdrop} />
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.sheet, { backgroundColor: theme.surface, borderColor: theme.outline }]}>
-          <View style={[styles.sheetHandle, { backgroundColor: theme.outline }]} />
-          {isLoading ? (
-            <View style={styles.sheetLoading}>
-              <ActivityIndicator color={theme.proof} />
-              <Text style={[styles.sheetLoadingText, { color: theme.muted }]}>Checking company markets</Text>
-            </View>
-          ) : error ? (
-            <RegistryMessage action="Try again" message={error} onAction={onRetry} title="Company markets unavailable" />
-          ) : company ? (
-            <ScrollView contentContainerStyle={styles.sheetContent} showsVerticalScrollIndicator={false}>
-              <View style={styles.sheetHeader}>
-                <CompanyLogo companyName={company.company.companyName} logoUrl={company.company.logoUrl} size={48} />
-                <View style={styles.sheetTitleBlock}>
-                  <Text style={[styles.sheetEyebrow, { color: theme.proof }]}>Markets for</Text>
-                  <Text numberOfLines={1} style={[styles.sheetTitle, { color: theme.ink }]}>{company.company.companyName}</Text>
-                </View>
-                <Pressable
-                  accessibilityLabel="Close company markets"
-                  accessibilityRole="button"
-                  onPress={onClose}
-                  style={({ pressed }) => [styles.sheetClose, { borderColor: theme.outline }, pressed && styles.pressed]}>
-                  <Text style={[styles.sheetCloseText, { color: theme.ink }]}>×</Text>
-                </Pressable>
-              </View>
-
-              <View style={[styles.sheetEvidence, { backgroundColor: theme.canvas, borderColor: theme.outline }]}>
-                <Text style={[styles.sheetEvidenceSummary, { color: theme.muted }]}>
-                  {company.instruments.length} {company.instruments.length === 1 ? 'market' : 'markets'} · {company.availableNow} available now
-                </Text>
-                <Text style={[styles.sheetEvidenceState, { color: theme.proof }]}>Registry checked</Text>
-              </View>
-
-              <View style={styles.capabilityGroup}>
-                <View style={styles.capabilityGroupHeading}>
-                  <Text style={[styles.capabilityGroupTitle, { color: theme.ink }]}>Invest</Text>
-                  <Text style={[styles.capabilityGroupMeta, { color: theme.muted }]}>Read-only</Text>
-                </View>
-                <View style={[styles.capabilityList, { borderColor: theme.outline }]}>
-                  {company.instruments.map((instrument, index) => (
-                    <CapabilityRow
-                      focused={instrument.instrumentId === focusedInstrumentId}
-                      instrument={instrument}
-                      isLast={index === company.instruments.length - 1}
-                      key={instrument.instrumentId}
-                    />
-                  ))}
-                </View>
-              </View>
-
-              <View style={styles.capabilityGroup}>
-                <View style={styles.capabilityGroupHeading}>
-                  <Text style={[styles.capabilityGroupTitle, { color: theme.ink }]}>Use holdings</Text>
-                  <Text style={[styles.capabilityGroupMeta, { color: theme.muted }]}>Future</Text>
-                </View>
-                <View style={[styles.capabilityList, { borderColor: theme.outline }]}>
-                  <LaterCapability icon="lend" label="Lend" subtitle="Earn against a supported stock position" />
-                  <LaterCapability icon="borrow" isLast label="Borrow" subtitle="Use a supported position as collateral" />
-                </View>
-              </View>
-
-              <Text style={[styles.sheetDisclosure, { color: theme.muted }]}>
-                Product availability and market-data freshness are separate. Inspecting a product here does not request a quote, connect a wallet, or place a trade.
-              </Text>
-            </ScrollView>
-          ) : null}
-        </SafeAreaView>
-      </View>
-    </Modal>
-  );
-}
-
-function CapabilityRow({ focused, instrument, isLast }: { focused: boolean; instrument: MarketInstrument; isLast: boolean }) {
-  const theme = useTheme();
-  return (
-    <View style={[
-      styles.capabilityRow,
-      { backgroundColor: focused ? theme.proofWash : 'transparent', borderBottomColor: theme.outline, borderBottomWidth: isLast ? 0 : StyleSheet.hairlineWidth },
-    ]}>
-      <View style={[styles.capabilityIcon, { backgroundColor: theme.proofWash }]}>
-        <MarketIcon color={theme.proof} name={instrument.productType} size={17} />
-      </View>
-      <View style={styles.capabilityCopy}>
-        <Text style={[styles.capabilityName, { color: theme.ink }]}>{fullProductLabel(instrument.productType)}</Text>
-        <Text numberOfLines={2} style={[styles.capabilityDescription, { color: theme.muted }]}>
-          {capabilityDescription(instrument)}
-        </Text>
-        <Text numberOfLines={1} selectable style={[styles.capabilityIdentifier, { color: theme.muted }]}>
-          ID {instrument.exactIdentifier}
-        </Text>
-      </View>
-      <View style={styles.capabilityState}>
-        <Text style={[styles.capabilityStateText, { color: instrument.availability === 'available' ? theme.proof : theme.muted }]}>
-          {availabilityLabel(instrument.availability)}
-        </Text>
-        <Text style={[styles.capabilityValueLabel, { color: theme.muted }]}>{instrument.marketValue.label}</Text>
-        <Text style={[styles.capabilityPrice, { color: theme.ink }]}>{formatMoney(instrument.marketValue.amount)}</Text>
-      </View>
-    </View>
-  );
-}
-
-function LaterCapability({ icon, isLast = false, label, subtitle }: { icon: 'lend' | 'borrow'; isLast?: boolean; label: string; subtitle: string }) {
-  const theme = useTheme();
-  return (
-    <View style={[styles.capabilityRow, { borderBottomColor: theme.outline, borderBottomWidth: isLast ? 0 : StyleSheet.hairlineWidth }]}>
-      <View style={[styles.capabilityIcon, { backgroundColor: theme.disabledSurface }]}>
-        <MarketIcon color={theme.muted} name={icon} size={17} />
-      </View>
-      <View style={styles.capabilityCopy}>
-        <Text style={[styles.capabilityName, { color: theme.ink }]}>{label}</Text>
-        <Text style={[styles.capabilityDescription, { color: theme.muted }]}>{subtitle}</Text>
-      </View>
-      <Text style={[styles.laterText, { color: theme.muted }]}>Later</Text>
-    </View>
-  );
-}
-
 function CompanyLogo({ companyName, logoUrl, size }: { companyName: string; logoUrl: string | null; size: number }) {
   const theme = useTheme();
-  const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [logoUrl]);
+  const [failedLogoUrl, setFailedLogoUrl] = useState<string>();
+  const failed = Boolean(logoUrl && failedLogoUrl === logoUrl);
   const canRender = Boolean(logoUrl && !logoUrl.toLowerCase().endsWith('.svg') && !failed);
   return (
     <View style={[styles.companyLogo, { backgroundColor: theme.proofWash, borderRadius: Math.round(size * 0.25), height: size, width: size }]}>
       {canRender ? (
-        <Image onError={() => setFailed(true)} resizeMode="contain" source={{ uri: logoUrl! }} style={{ height: size, width: size }} />
+        <Image onError={() => setFailedLogoUrl(logoUrl ?? undefined)} resizeMode="contain" source={{ uri: logoUrl! }} style={{ height: size, width: size }} />
       ) : (
         <Text style={[styles.companyInitials, { color: theme.proof, fontSize: Math.max(9, size * 0.24) }]}>{initials(companyName)}</Text>
       )}
@@ -683,7 +621,7 @@ function CompanyLogo({ companyName, logoUrl, size }: { companyName: string; logo
   );
 }
 
-function MarketIcon({ color, name, size }: { color: string; name: MarketProduct | 'search' | 'lend' | 'borrow'; size: number }) {
+function MarketIcon({ color, name, size }: { color: string; name: 'search'; size: number }) {
   const strokeWidth = 1.8;
   return (
     <Svg fill="none" height={size} viewBox="0 0 24 24" width={size}>
@@ -693,21 +631,6 @@ function MarketIcon({ color, name, size }: { color: string; name: MarketProduct 
           <Path d="m15.4 15.4 4.2 4.2" stroke={color} strokeLinecap="round" strokeWidth={strokeWidth} />
         </>
       ) : null}
-      {name === 'spot' ? <Path d="M5 18V9m7 9V5m7 13v-6" stroke={color} strokeLinecap="round" strokeWidth={strokeWidth} /> : null}
-      {name === 'prestock' ? (
-        <>
-          <Path d="M4.5 19.5h15M6.5 19.5v-9h11v9M9 10.5V7l3-2 3 2v3.5" stroke={color} strokeLinejoin="round" strokeWidth={strokeWidth} />
-          <Path d="M10 14h4" stroke={color} strokeLinecap="round" strokeWidth={strokeWidth} />
-        </>
-      ) : null}
-      {name === 'perpetual' ? (
-        <>
-          <Path d="M4 7h11a4 4 0 0 1 4 4v1" stroke={color} strokeLinecap="round" strokeWidth={strokeWidth} />
-          <Path d="m16 9 3 3 3-3M20 17H9a4 4 0 0 1-4-4v-1M8 15l-3-3-3 3" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} />
-        </>
-      ) : null}
-      {name === 'lend' ? <Path d="M4 7h16M6 7l2-3m10 3-2-3M7 11h10v9H7z" stroke={color} strokeLinejoin="round" strokeWidth={strokeWidth} /> : null}
-      {name === 'borrow' ? <Path d="M4 17h16M6 17l2 3m10-3-2 3M7 4h10v9H7z" stroke={color} strokeLinejoin="round" strokeWidth={strokeWidth} /> : null}
     </Svg>
   );
 }
@@ -726,31 +649,6 @@ function fullProductLabel(product: MarketProduct) {
   if (product === 'prestock') return 'PreStock';
   if (product === 'perpetual') return 'Equity perpetual';
   return 'Spot stock';
-}
-
-function capabilityDescription(instrument: MarketInstrument) {
-  if (instrument.productType === 'spot') {
-    const tier = instrument.stockVariantTier === 'share_redeemable'
-      ? 'share redeemable'
-      : instrument.stockVariantTier === 'cash_redeemable'
-        ? 'cash redeemable'
-        : instrument.stockVariantTier === 'not_redeemable'
-          ? 'not redeemable'
-          : 'redemption unknown';
-    return `${instrument.symbol} · ${instrument.issuer} · ${tier}`;
-  }
-  if (instrument.productType === 'prestock') {
-    const fee = instrument.transferFeeBps === null ? '' : ` · ${instrument.transferFeeBps / 100}% transfer fee`;
-    return `${instrument.symbol} · ${instrument.provider} · ${instrument.structureLabel}${fee}`;
-  }
-  return `${instrument.symbol} · Phoenix · ${instrument.marginMode} margin · up to ${instrument.maxLeverage}×`;
-}
-
-function availabilityLabel(availability: MarketAvailability) {
-  if (availability === 'available') return 'Available';
-  if (availability === 'preview') return 'Preview';
-  if (availability === 'paused') return 'Paused';
-  return 'Unavailable';
 }
 
 function formatMoney(value: number | null) {
@@ -775,7 +673,7 @@ function initials(companyName: string) {
 }
 
 function instrumentAccessibilityLabel(instrument: MarketInstrument) {
-  const price = instrument.marketValue.amount === null ? 'value unavailable' : formatMoney(instrument.marketValue.amount);
+  const price = instrument.marketValue.amount === null ? 'value not provided' : formatMoney(instrument.marketValue.amount);
   return `${instrument.companyName}, ${fullProductLabel(instrument.productType)}, ${instrument.symbol}, ${price}`;
 }
 
@@ -825,6 +723,20 @@ const styles = StyleSheet.create({
   warningBar: { paddingHorizontal: 10, paddingVertical: 7 },
   warningText: { fontFamily: Fonts.sans, fontSize: 9, lineHeight: 13 },
   instrumentList: { borderTopWidth: StyleSheet.hairlineWidth, flex: 1 },
+  lendingList: { paddingHorizontal: 12, paddingBottom: 24 },
+  lendingIntro: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 13 },
+  lendingHeading: { fontFamily: Fonts.serif, fontSize: 18, fontWeight: '700' },
+  lendingCopy: { fontFamily: Fonts.sans, fontSize: 9, lineHeight: 14, marginTop: 5 },
+  lendingRow: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 8, minHeight: 88, paddingVertical: 10 },
+  lendingIdentity: { flex: 1, minWidth: 0 },
+  lendingSymbol: { fontFamily: Fonts.mono, fontSize: 12, fontWeight: '800' },
+  lendingName: { fontFamily: Fonts.sans, fontSize: 8, marginTop: 3 },
+  lendingMint: { fontFamily: Fonts.mono, fontSize: 6.5, marginTop: 5 },
+  lendingTerms: { alignItems: 'flex-end', maxWidth: 148 },
+  lendingTerm: { fontFamily: Fonts.mono, fontSize: 8, fontWeight: '700' },
+  lendingTermSmall: { fontFamily: Fonts.mono, fontSize: 7, marginTop: 4 },
+  lendingStatus: { fontFamily: Fonts.mono, fontSize: 7, fontWeight: '700', marginTop: 5 },
+  lendingNotice: { fontFamily: Fonts.sans, fontSize: 8, lineHeight: 13, paddingTop: 13 },
   instrumentRow: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 10, minHeight: 82, padding: 10 },
   companyLogo: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   companyInitials: { fontFamily: Fonts.sans, fontWeight: '800', letterSpacing: -0.3 },
@@ -860,7 +772,7 @@ const styles = StyleSheet.create({
   coverageCount: { fontFamily: Fonts.mono, fontSize: 8 },
   coverageBody: { fontFamily: Fonts.sans, fontSize: 8, lineHeight: 13, marginTop: 8 },
   modalLayer: { flex: 1, justifyContent: 'flex-end' },
-  modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.62)' },
+  modalBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.62)' },
   sheet: { borderTopLeftRadius: 22, borderTopRightRadius: 22, borderWidth: 1, maxHeight: '82%', minHeight: 310, paddingHorizontal: Spacing.three, paddingTop: 10 },
   sheetHandle: { alignSelf: 'center', borderRadius: 2, height: 4, marginBottom: 12, width: 38 },
   sheetLoading: { alignItems: 'center', gap: 12, justifyContent: 'center', minHeight: 260 },

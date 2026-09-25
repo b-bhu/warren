@@ -13,11 +13,30 @@ const configSchema = z.object({
   HOME_HTTP_CACHE_SECONDS: z.coerce.number().int().min(0).default(15), HOME_HTTP_STALE_SECONDS: z.coerce.number().int().min(0).default(60),
   PRESTOCKS_API_URL: z.string().url().default('https://prestocks.com/api/prestocks'),
   PHOENIX_API_BASE_URL: z.string().url().default('https://perp-api.phoenix.trade'),
+  PHOENIX_REFERRAL_CODE: z.preprocess(
+    (value) => typeof value === 'string' && value.trim() === '' ? undefined : value,
+    z.string().trim().min(1).max(128).optional(),
+  ),
+  PRIVY_APP_ID: z.string().min(1).optional(),
+  PRIVY_APP_SECRET: z.string().min(1).optional(),
+  JUPITER_API_BASE_URL: z.string().url().default('https://api.jup.ag'),
+  JUPITER_API_KEY: z.string().min(1).optional(),
+  SOLANA_RPC_URL: z.string().url().default('https://api.mainnet-beta.solana.com'),
+  HELIUS_RPC_URL: z.string().url().optional(),
+  EXECUTION_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(250).max(60_000).default(12_000),
+  EXECUTION_INTENT_TTL_SECONDS: z.coerce.number().int().min(30).max(300).default(90),
   MARKETS_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(250).max(30_000).default(8_000),
   MARKETS_REGISTRY_CACHE_SECONDS: z.coerce.number().int().min(1).default(60),
   MARKETS_REGISTRY_STALE_SECONDS: z.coerce.number().int().min(0).default(900),
   MARKETS_HTTP_CACHE_SECONDS: z.coerce.number().int().min(0).default(15),
   MARKETS_HTTP_STALE_SECONDS: z.coerce.number().int().min(0).default(60),
+  KAMINO_API_BASE_URL: z.string().url().default('https://api.kamino.finance'),
+  KAMINO_MARKET_TIMEOUT_MS: z.coerce.number().int().min(250).max(30_000).default(8_000),
+  KAMINO_LENDING_ENABLED: z.enum(['true', 'false']).default('true'),
+  KAMINO_LENDING_NEW_RISK_ENABLED: z.enum(['true', 'false']).default('false'),
+  KAMINO_LENDING_REPAY_ENABLED: z.enum(['true', 'false']).default('false'),
+  KAMINO_LENDING_WITHDRAW_ENABLED: z.enum(['true', 'false']).default('false'),
+  KAMINO_BORROW_HEADROOM_BPS: z.coerce.number().int().min(1).max(10_000).default(5_000),
 });
 export type Config = z.infer<typeof configSchema>;
 export const readConfig = (env: NodeJS.ProcessEnv = process.env): Config => {
@@ -35,6 +54,9 @@ export const readConfig = (env: NodeJS.ProcessEnv = process.env): Config => {
     const origins = config.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean);
     if (!origins.length || origins.includes('*')) throw new Error('CORS_ORIGINS must contain explicit production origins');
     if (!config.TOKENS_API_KEY) throw new Error('TOKENS_API_KEY is required in production');
+    if (!config.PRIVY_APP_ID || !config.PRIVY_APP_SECRET) throw new Error('PRIVY_APP_ID and PRIVY_APP_SECRET are required in production');
+    if (!config.JUPITER_API_KEY) throw new Error('JUPITER_API_KEY is required in production');
+    if (!config.HELIUS_RPC_URL) throw new Error('HELIUS_RPC_URL is required in production');
   }
   return config;
 };

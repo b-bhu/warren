@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {
+  marketCompanyNewsResponseSchema,
   marketCompanyResponseSchema,
+  marketHistoryResponseSchema,
   marketSearchResponseSchema,
   marketsResponseSchema,
   type MarketProduct,
@@ -47,19 +49,51 @@ try {
   const companyResponse = await app.inject({ method: 'GET', url: `/v1/markets/companies/${search.items[0].assetId}` });
   assert.equal(companyResponse.statusCode, 200, companyResponse.payload);
   const company = marketCompanyResponseSchema.parse(companyResponse.json());
+  assert.equal(company.primaryInstrumentId, company.hero?.instrumentId ?? null);
+  assert.equal(company.hero?.productType, 'spot');
+  assert.ok(company.company.description);
+  assert.ok(company.history, 'NVIDIA Spot must expose exact-instrument chart capability.');
+
+  const historyResponse = await app.inject({
+    method: 'GET',
+    url: `/v1/markets/companies/${company.company.assetId}/history?instrumentId=${encodeURIComponent(company.history.instrumentId)}&range=${company.history.defaultRange}`,
+  });
+  assert.equal(historyResponse.statusCode, 200, historyResponse.payload);
+  const history = marketHistoryResponseSchema.parse(historyResponse.json());
+  assert.equal(history.instrumentId, company.history.instrumentId);
+  assert.ok(history.points.length > 0, 'NVIDIA exact-mint chart must contain live provider candles.');
+
+  const newsResponse = await app.inject({ method: 'GET', url: `/v1/markets/companies/${company.company.assetId}/news` });
+  assert.equal(newsResponse.statusCode, 200, newsResponse.payload);
+  const news = marketCompanyNewsResponseSchema.parse(newsResponse.json());
+  assert.ok(news.items.every((item) => item.assetId === company.company.assetId));
 
   const privateSearchResponse = await app.inject({ method: 'GET', url: '/v1/markets/search?q=anthropic&limit=12' });
   assert.equal(privateSearchResponse.statusCode, 200, privateSearchResponse.payload);
   const privateSearch = marketSearchResponseSchema.parse(privateSearchResponse.json());
   assert.ok(privateSearch.items.some((item) => item.companyName === 'Anthropic'));
+  const anthropicResult = privateSearch.items.find((item) => item.companyName === 'Anthropic')!;
+  const anthropicResponse = await app.inject({ method: 'GET', url: `/v1/markets/companies/${anthropicResult.assetId}` });
+  assert.equal(anthropicResponse.statusCode, 200, anthropicResponse.payload);
+  const anthropic = marketCompanyResponseSchema.parse(anthropicResponse.json());
+  assert.equal(anthropic.hero?.productType, 'prestock');
+  assert.equal(anthropic.history, null, 'PreStock must not reuse unrelated Spot chart semantics.');
 
   console.log(JSON.stringify({
     products: productResults,
     nvidia: {
       assetId: company.company.assetId,
+      hero: company.hero,
+      historyPoints: history.points.length,
+      companyNews: news.items.length,
       capabilities: company.instruments.map((item) => ({ product: item.productType, symbol: item.symbol, provider: item.provider })),
     },
-    anthropic: privateSearch.items.map((item) => ({ assetId: item.assetId, capabilities: item.capabilities })),
+    anthropic: {
+      assetId: anthropic.company.assetId,
+      hero: anthropic.hero,
+      historyAvailable: Boolean(anthropic.history),
+      capabilities: anthropic.instruments.map((item) => ({ product: item.productType, symbol: item.symbol, provider: item.provider })),
+    },
     tokensApiKeyConfigured: Boolean(process.env.TOKENS_API_KEY),
   }, null, 2));
 } finally {

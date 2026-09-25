@@ -80,7 +80,7 @@ function requireDemoAttempt(attempts: Map<string, DemoAttempt>, attemptId: strin
 }
 
 function providerError(attemptReference: string): Reconciliation {
-  return { kind: 'recoverable_error', error: { category: 'provider_unavailable', message: 'The wallet provider is unavailable. Try again when it is available.', diagnosticCategory: 'DEMO_PROVIDER_UNAVAILABLE', attemptReference } };
+  return { kind: 'recoverable_error', error: { category: 'provider_unavailable', message: 'Warren could not reach the wallet provider. Try again shortly.', diagnosticCategory: 'DEMO_PROVIDER_UNAVAILABLE', attemptReference } };
 }
 
 function assertDevelopmentOnly() {

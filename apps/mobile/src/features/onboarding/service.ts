@@ -98,7 +98,7 @@ export function createDeterministicApiOnboardingService(transport: OnboardingApi
       if (input.providerId !== 'deterministic') throw unsupportedProvider();
       const attemptDto = await transport.request<ApiAttemptDto>({ method: 'POST', path: '/v1/auth/attempts', accessToken: input.purpose === 'link_wallet' ? getAccessToken?.() : undefined, body: input });
       const credential = attemptDto.developmentCredential;
-      if (!credential || credential.family !== input.family) throw new OnboardingApiFault({ code: 'PROVIDER_UNAVAILABLE', message: 'The development wallet credential is unavailable.', retryable: true, requestId: attemptDto.attemptId, attemptId: attemptDto.attemptId });
+      if (!credential || credential.family !== input.family) throw new OnboardingApiFault({ code: 'PROVIDER_UNAVAILABLE', message: 'The development wallet credential could not be loaded.', retryable: true, requestId: attemptDto.attemptId, attemptId: attemptDto.attemptId });
       const wallet: WalletContext = { family: credential.family, address: credential.address, addressDisplay: shortenAddress(credential.address), context: credential.network, credentialRef: credential.credentialRef };
       const attempt: AttemptContext = { attemptId: attemptDto.attemptId, attemptCapability: attemptDto.attemptCapability, expiresAt: attemptDto.expiresAt, providerId: 'deterministic' };
       const challenge = await createChallenge(attempt, wallet);
@@ -128,7 +128,7 @@ export function createDeterministicApiOnboardingService(transport: OnboardingApi
       const credential = serverAttempt.state === 'connecting'
         ? credentials.credentials.find((item) => item.family === restored.family)
         : credentials.credentials.find((item) => item.credentialRef === restored.credentialRef && item.family === restored.family && item.network === restored.chainContext && shortenAddress(item.address) === restored.addressDisplay);
-      if (!credential) throw new OnboardingApiFault({ code: 'ADDRESS_MISMATCH', message: 'The previously selected wallet is unavailable.', retryable: false, requestId: restored.attempt.attemptId, attemptId: restored.attempt.attemptId });
+      if (!credential) throw new OnboardingApiFault({ code: 'ADDRESS_MISMATCH', message: 'The previously selected wallet could not be restored.', retryable: false, requestId: restored.attempt.attemptId, attemptId: restored.attempt.attemptId });
       const wallet: WalletContext = { family: credential.family, address: credential.address, addressDisplay: shortenAddress(credential.address), context: credential.network, credentialRef: credential.credentialRef };
       if (serverAttempt.state === 'connecting') {
         // The deterministic development provider has no redirect state to restore. Re-query its
@@ -174,7 +174,7 @@ export function mapApiError(error: ApiErrorDto['error']): SafeError | SafeBlocke
     case 'PROOF_INVALID': return { category: 'verification_failed', message: 'Warren could not verify that signature. Try again with this wallet.', diagnosticCategory: error.code, attemptReference };
     case 'OFFLINE': return { category: 'offline', message: 'You appear to be offline. Reconnect, then try again.', diagnosticCategory: error.code, attemptReference };
     case 'PROVIDER_DISABLED': return { category: 'provider_unavailable', message: 'Wallet sign-in is not configured for this build.', diagnosticCategory: error.code, attemptReference };
-    case 'PROVIDER_UNAVAILABLE': return { category: 'provider_unavailable', message: 'The wallet provider is temporarily unavailable. Try again shortly.', diagnosticCategory: error.code, attemptReference };
+    case 'PROVIDER_UNAVAILABLE': return { category: 'provider_unavailable', message: 'Warren could not reach the wallet provider. Try again shortly.', diagnosticCategory: error.code, attemptReference };
     case 'RATE_LIMITED': return { category: 'rate_limited', message: error.details?.retryAfterSeconds ? `Too many requests. Try again in about ${error.details.retryAfterSeconds} seconds.` : 'Too many requests. Try again shortly.', diagnosticCategory: error.code, attemptReference };
     case 'SESSION_INVALID': return { category: 'session_invalid', message: 'Your session ended. Sign in again to continue.', diagnosticCategory: error.code, attemptReference };
     default: return { category: 'unknown', message: error.message || 'Something interrupted verification. Try again.', diagnosticCategory: error.code, attemptReference };

@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Gate A complete; live provider verification passes |
+| Status | Registry Gate A complete; [Market Details Gate A](./market_details_api.md) complete |
 | PRD | [Markets Instrument Registry](../prds/markets_prd.md) |
 | Runtime | Fastify, Node.js, TypeScript |
 | Contract package | `@warren/markets-contract` |
@@ -226,6 +226,12 @@ MARKETS_HTTP_STALE_SECONDS=60
 Only Tokens.xyz currently needs a key, and it is already stored server-side. No provider
 credential is shipped to the mobile client.
 
+## Market Details extension
+
+The company endpoint now also returns backend-owned hero selection, verified description,
+and exact-instrument history capability. Separately cacheable company history and news
+routes are documented in the [Market Details API handoff](./market_details_api.md).
+
 ## Verification
 
 Automated verification:
@@ -244,7 +250,8 @@ discovery, runtime schemas, and provider availability without printing credentia
 As of 2026-09-19:
 
 - both contract and API typechecking pass;
-- all 46 API tests pass;
-- the live verifier returns 396 Spot, 11 PreStock, and 37 stock-perpetual instruments;
+- all 50 API tests pass;
+- the live verifier returns current Spot, PreStock, and stock-perpetual instruments;
 - NVIDIA resolves to one company with Tokens Spot and Phoenix Perpetual capabilities; and
-- Anthropic resolves with its live provider capabilities.
+- NVIDIA exact-mint history and company news validate against Tokens.xyz; and
+- Anthropic resolves with a PreStock hero and no misleading Spot history capability.

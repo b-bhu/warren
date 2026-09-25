@@ -10,7 +10,6 @@ import { useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -26,8 +25,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
-import { BrandLogo } from '@/components/brand-logo';
 import { Fonts } from '@/constants/theme';
+import { AppAccountButton } from '@/components/AppAccountButton';
+import { BrandLogo } from '@/components/brand-logo';
+import { NewsArticleSheet } from '@/components/NewsArticleSheet';
+import { useSavedCompanies } from '@/features/market/saved-companies';
 import { useTheme } from '@/hooks/use-theme';
 
 import {
@@ -44,7 +46,6 @@ type MarketMode = 'all' | 'watchlist' | 'earnings';
 type MovementView = 'gainers' | 'losers';
 type HomeIconName = 'calendar' | 'clock' | 'deposit' | 'grid' | 'long' | 'search' | 'send' | 'star' | 'swap' | 'plus';
 
-const SAVED_ASSET_IDS: readonly string[] = [];
 const BOARD_ROWS = 4;
 const SEARCH_DEBOUNCE_MS = 225;
 const SEARCH_CACHE_TTL_MS = 30_000;
@@ -60,6 +61,7 @@ export function HomeScreen() {
   const searchCacheRef = useRef(new Map<string, SearchCacheEntry>());
   const searchRequestRef = useRef(0);
   const cached = getCachedHome();
+  const { assetIds: savedAssetIds } = useSavedCompanies();
 
   const [home, setHome] = useState<HomeResponse | undefined>(cached);
   const [isLoading, setIsLoading] = useState(!cached);
@@ -82,7 +84,6 @@ export function HomeScreen() {
   const [currentPage, setCurrentPage] = useState(0);
 
   const loadInitialHome = useCallback(async (signal?: AbortSignal) => {
-    setLoadError(undefined);
     try {
       const next = await loadHome(signal);
       setHome(next);
@@ -96,8 +97,11 @@ export function HomeScreen() {
 
   useEffect(() => {
     const controller = new AbortController();
-    void loadInitialHome(controller.signal);
-    return () => controller.abort();
+    const timeout = setTimeout(() => void loadInitialHome(controller.signal), 0);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, [loadInitialHome]);
 
   const refreshHome = useCallback(async () => {
@@ -115,26 +119,19 @@ export function HomeScreen() {
 
   useEffect(() => {
     const normalized = normalizeSearchText(query);
+    if (!normalized) return;
     const requestId = ++searchRequestRef.current;
-    if (!normalized) {
-      setCompletedSearchQuery('');
-      setSearchError(undefined);
-      setIsSearching(false);
-      return;
-    }
-
-    setSearchError(undefined);
     const cachedSearch = searchCacheRef.current.get(normalized);
-    if (cachedSearch && Date.now() - cachedSearch.cachedAt < SEARCH_CACHE_TTL_MS) {
-      setRemoteSearchResults(cachedSearch.items);
-      setCompletedSearchQuery(normalized);
-      setIsSearching(false);
-      return;
-    }
-
-    setIsSearching(true);
     const controller = new AbortController();
     const timeout = setTimeout(() => {
+      setSearchError(undefined);
+      if (cachedSearch && Date.now() - cachedSearch.cachedAt < SEARCH_CACHE_TTL_MS) {
+        setRemoteSearchResults(cachedSearch.items);
+        setCompletedSearchQuery(normalized);
+        setIsSearching(false);
+        return;
+      }
+      setIsSearching(true);
       void searchAssets(normalized, controller.signal)
         .then((result) => {
           if (requestId !== searchRequestRef.current) return;
@@ -151,7 +148,7 @@ export function HomeScreen() {
         .finally(() => {
           if (requestId === searchRequestRef.current && !controller.signal.aborted) setIsSearching(false);
         });
-    }, SEARCH_DEBOUNCE_MS);
+    }, cachedSearch ? 0 : SEARCH_DEBOUNCE_MS);
 
     return () => {
       clearTimeout(timeout);
@@ -160,60 +157,65 @@ export function HomeScreen() {
   }, [query]);
 
   useEffect(() => {
-    setCurrentPage(0);
-    boardRef.current?.scrollTo({ x: 0, animated: false });
-    setModeError(undefined);
-
-    if (mode === 'all') {
-      setModeCompanies([]);
-      setIsModeLoading(false);
-      return;
-    }
-    if (mode === 'watchlist' && SAVED_ASSET_IDS.length === 0) {
-      setModeCompanies([]);
-      setIsModeLoading(false);
-      return;
-    }
-
+    if (mode === 'all') return;
     const controller = new AbortController();
-    setIsModeLoading(true);
-    const request = mode === 'earnings'
-      ? loadEarnings(controller.signal)
-      : loadWatchlist(SAVED_ASSET_IDS, controller.signal);
-    void request
-      .then((result) => setModeCompanies(result.items))
-      .catch((error) => {
-        if (!isAbort(error)) setModeError(messageFor(error));
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setIsModeLoading(false);
-      });
-    return () => controller.abort();
-  }, [mode]);
+    if (mode === 'watchlist' && savedAssetIds.length === 0) {
+      const timeout = setTimeout(() => {
+        setModeCompanies([]);
+        setIsModeLoading(false);
+      }, 0);
+      return () => {
+        clearTimeout(timeout);
+        controller.abort();
+      };
+    }
+
+    const timeout = setTimeout(() => {
+      setIsModeLoading(true);
+      const request = mode === 'earnings'
+        ? loadEarnings(controller.signal)
+        : loadWatchlist(savedAssetIds, controller.signal);
+      void request
+        .then((result) => setModeCompanies(result.items))
+        .catch((error) => {
+          if (!isAbort(error)) setModeError(messageFor(error));
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setIsModeLoading(false);
+        });
+    }, 0);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [mode, savedAssetIds]);
 
   useEffect(() => {
-    if (mode !== 'all' || movementView !== 'losers') {
-      setIsMoverLoading(false);
-      setMoverError(undefined);
-      return;
-    }
+    if (mode !== 'all' || movementView !== 'losers') return;
     const controller = new AbortController();
-    setIsMoverLoading(true);
-    setMoverError(undefined);
-    void loadMovers('losers', controller.signal)
-      .then((result) => setLoserCompanies(result.items))
-      .catch((error) => {
-        if (!isAbort(error)) setMoverError(messageFor(error));
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setIsMoverLoading(false);
-      });
-    return () => controller.abort();
+    const timeout = setTimeout(() => {
+      setIsMoverLoading(true);
+      setMoverError(undefined);
+      void loadMovers('losers', controller.signal)
+        .then((result) => setLoserCompanies(result.items))
+        .catch((error) => {
+          if (!isAbort(error)) setMoverError(messageFor(error));
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setIsMoverLoading(false);
+        });
+    }, 0);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, [home?.generatedAt, mode, movementView]);
 
-  const companies = mode === 'all'
-    ? movementView === 'gainers' ? home?.companies ?? [] : loserCompanies
-    : modeCompanies;
+  const companies = useMemo(() => (
+    mode === 'all'
+      ? movementView === 'gainers' ? home?.companies ?? [] : loserCompanies
+      : modeCompanies
+  ), [home?.companies, loserCompanies, mode, modeCompanies, movementView]);
   const normalizedQuery = normalizeSearchText(query);
   const searchResults = useMemo(
     () => rankSearchResults(normalizedQuery, [...(home?.companies ?? []), ...remoteSearchResults]),
@@ -226,17 +228,53 @@ export function HomeScreen() {
   const isCompanyBoardLoading = isModeLoading || (mode === 'all' && isMoverLoading);
   const companyBoardError = mode === 'all' ? moverError : modeError;
 
-  useEffect(() => {
+  const changeMode = useCallback((nextMode: MarketMode) => {
+    setMode(nextMode);
     setCurrentPage(0);
     boardRef.current?.scrollTo({ x: 0, animated: false });
-  }, [movementView]);
+    setModeError(undefined);
+    if (nextMode === 'all') {
+      setModeCompanies([]);
+      setIsModeLoading(false);
+    }
+  }, []);
 
-  const openCompany = useCallback((company: CompanySummary) => {
+  const changeMovementView = useCallback((nextView: MovementView) => {
+    setMovementView(nextView);
+    setCurrentPage(0);
+    boardRef.current?.scrollTo({ x: 0, animated: false });
+    if (nextView === 'gainers') {
+      setIsMoverLoading(false);
+      setMoverError(undefined);
+    }
+  }, []);
+
+  const changeQuery = useCallback((nextQuery: string) => {
+    setQuery(nextQuery);
+    if (normalizeSearchText(nextQuery)) return;
+    searchRequestRef.current += 1;
+    setRemoteSearchResults([]);
+    setCompletedSearchQuery('');
+    setSearchError(undefined);
+    setIsSearching(false);
+  }, []);
+
+  const retryInitialHome = useCallback(() => {
+    setIsLoading(true);
+    setLoadError(undefined);
+    void loadInitialHome();
+  }, [loadInitialHome]);
+
+  const openCompany = useCallback((company: CompanySummary, entrySource: 'home' | 'search' = 'home') => {
     router.push({
-      pathname: '/stocks/[symbol]',
-      params: { symbol: company.ticker, assetId: company.assetId },
+      pathname: '/stocks/[assetId]',
+      params: { assetId: company.assetId, product: 'spot', source: entrySource },
     } as Href);
   }, [router]);
+
+  const openSearchCompany = useCallback((company: CompanySummary) => {
+    openCompany(company, 'search');
+  }, [openCompany]);
 
   const updateBoardPage = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (!boardWidth) return;
@@ -269,29 +307,29 @@ export function HomeScreen() {
             <DiscoveryToolbar
               isSearching={searchPending}
               mode={mode}
-              onModeChange={setMode}
-              onQueryChange={setQuery}
+              onModeChange={changeMode}
+              onQueryChange={changeQuery}
               query={query}
             />
             {query.trim() ? (
               <SearchPanel
                 error={searchError}
                 isLoading={searchPending}
-                onSelect={openCompany}
+                onSelect={openSearchCompany}
                 results={searchResults}
               />
             ) : null}
 
             {home?.indices.length ? <IndexStrip indices={home.indices} /> : (
-              <SectionMessage compact message={isLoading ? 'Loading market indices…' : 'Market indices are unavailable.'} />
+              <SectionMessage compact message={isLoading ? 'Loading market indices…' : 'Could not refresh market indices. Pull down to try again.'} />
             )}
 
             <View style={[styles.boardHeading, { borderTopColor: theme.outline }]}>
               <Text style={[styles.boardTitle, { color: theme.ink }]}>Popular companies</Text>
               {mode === 'all' ? (
                 <View accessibilityLabel="Rank companies by daily movement" style={styles.movementSwitcher}>
-                  <MovementButton active={movementView === 'gainers'} label="Top gainers" onPress={() => setMovementView('gainers')} />
-                  <MovementButton active={movementView === 'losers'} label="Top losers" onPress={() => setMovementView('losers')} />
+                  <MovementButton active={movementView === 'gainers'} label="Top gainers" onPress={() => changeMovementView('gainers')} />
+                  <MovementButton active={movementView === 'losers'} label="Top losers" onPress={() => changeMovementView('losers')} />
                 </View>
               ) : (
                 <Text style={[styles.boardMeta, { color: theme.muted }]}>{modeLabel(mode)}</Text>
@@ -357,12 +395,16 @@ export function HomeScreen() {
           </View>
 
           {loadError ? (
-            <RetryNotice message={loadError} onRetry={() => void loadInitialHome()} />
+            <RetryNotice message={loadError} onRetry={retryInitialHome} />
           ) : null}
 
           <StaticActions />
 
-          <NewsSection news={home?.news ?? []} unavailable={!isLoading && !home?.news.length} />
+          <NewsSection
+            key={home?.generatedAt ?? 'pending-news'}
+            news={home?.news ?? []}
+            unavailable={!isLoading && !home?.news.length}
+          />
 
           <QuickActions />
 
@@ -388,10 +430,7 @@ function HomeHeader({ onBrandPress }: { onBrandPress: () => void }) {
         style={({ pressed }) => [styles.brand, pressed && styles.pressed]}>
         <BrandLogo decorative />
       </Pressable>
-      <View accessibilityLabel="Browsing as guest" style={[styles.guestPill, { backgroundColor: theme.surface, borderColor: theme.outline }]}>
-        <View style={[styles.guestDot, { backgroundColor: theme.proof }]} />
-        <Text style={[styles.guestText, { color: theme.muted }]}>Guest</Text>
-      </View>
+      <AppAccountButton />
     </View>
   );
 }
@@ -404,7 +443,7 @@ function MarketStatus({ home, isLoading }: { home?: HomeResponse; isLoading: boo
       <View style={styles.marketStatusLeft}>
         <View style={[styles.statusDot, { backgroundColor: status?.session === 'open' ? theme.proof : theme.muted }]} />
         <Text style={[styles.marketStatusLabel, { color: theme.ink }]}>
-          {status?.label ?? (isLoading ? 'Loading US market status' : 'US market status unavailable')}
+          {status?.label ?? (isLoading ? 'Loading US market status' : 'US market status needs a refresh')}
         </Text>
       </View>
       <Text style={[styles.marketStatusMeta, { color: theme.muted }]}>
@@ -720,11 +759,6 @@ function NewsSection({ news, unavailable }: { news: NewsSummary[]; unavailable: 
   const [selectedArticle, setSelectedArticle] = useState<NewsSummary>();
   const pages = useMemo(() => chunk(news, 3), [news]);
 
-  useEffect(() => {
-    setNewsPage(0);
-    newsRef.current?.scrollTo({ x: 0, animated: false });
-  }, [news]);
-
   const updatePage = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (!newsWidth) return;
     const nextPage = Math.max(0, Math.min(pages.length - 1, Math.round(event.nativeEvent.contentOffset.x / newsWidth)));
@@ -775,7 +809,7 @@ function NewsSection({ news, unavailable }: { news: NewsSummary[]; unavailable: 
             ))}
           </ScrollView>
         ) : null}
-        {unavailable ? <SectionMessage compact message="News is unavailable right now. Company discovery is still available." /> : null}
+        {unavailable ? <SectionMessage compact message="Could not refresh market news. Pull down to try again; company discovery still works." /> : null}
       </View>
       {pages.length > 1 ? (
         <View accessibilityLabel="News page selector" style={styles.newsPageDots}>
@@ -796,7 +830,11 @@ function NewsSection({ news, unavailable }: { news: NewsSummary[]; unavailable: 
           ))}
         </View>
       ) : null}
-      <NewsBottomSheet article={selectedArticle} onClose={() => setSelectedArticle(undefined)} />
+      <NewsArticleSheet
+        article={selectedArticle}
+        eyebrow={selectedArticle?.category ?? 'Market news'}
+        onClose={() => setSelectedArticle(undefined)}
+      />
     </View>
   );
 }
@@ -832,9 +870,8 @@ function NewsCard({ article, isLast, onPress }: { article: NewsSummary; isLast: 
 
 function NewsArtwork({ article, variant }: { article: NewsSummary; variant: 'hero' | 'thumbnail' }) {
   const theme = useTheme();
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => setFailed(false), [article.imageUrl]);
+  const [failedImageUrl, setFailedImageUrl] = useState<string>();
+  const failed = Boolean(article.imageUrl && failedImageUrl === article.imageUrl);
 
   return (
     <View
@@ -846,7 +883,7 @@ function NewsArtwork({ article, variant }: { article: NewsSummary; variant: 'her
         <Image
           accessibilityLabel={`Image for ${article.headline}`}
           contentFit="cover"
-          onError={() => setFailed(true)}
+          onError={() => setFailedImageUrl(article.imageUrl ?? undefined)}
           source={{ uri: article.imageUrl }}
           style={StyleSheet.absoluteFill}
           transition={150}
@@ -857,60 +894,6 @@ function NewsArtwork({ article, variant }: { article: NewsSummary; variant: 'her
         </Text>
       )}
     </View>
-  );
-}
-
-function NewsBottomSheet({ article, onClose }: { article?: NewsSummary; onClose: () => void }) {
-  const theme = useTheme();
-  return (
-    <Modal
-      animationType="slide"
-      onRequestClose={onClose}
-      statusBarTranslucent
-      transparent
-      visible={Boolean(article)}>
-      <View accessibilityViewIsModal style={styles.sheetRoot}>
-        <Pressable accessibilityLabel="Close article preview" accessibilityRole="button" onPress={onClose} style={styles.sheetBackdrop} />
-        <SafeAreaView edges={['bottom']} style={[styles.newsSheet, { backgroundColor: theme.surface, borderColor: theme.outline }]}>
-          <View style={[styles.sheetHandle, { backgroundColor: theme.outline }]} />
-          {article ? (
-            <ScrollView contentContainerStyle={styles.newsSheetContent} showsVerticalScrollIndicator={false}>
-              <NewsArtwork article={article} variant="hero" />
-              <View style={styles.newsSheetHeader}>
-                <View style={styles.newsSheetKicker}>
-                  <Text style={[styles.newsCategory, { color: theme.proof }]}>{article.category}</Text>
-                  <Text style={[styles.newsAge, { color: theme.muted }]}>{formatPublishedAt(article.publishedAt)}</Text>
-                </View>
-                <Pressable
-                  accessibilityLabel="Close article preview"
-                  accessibilityRole="button"
-                  onPress={onClose}
-                  style={({ pressed }) => [
-                    styles.sheetClose,
-                    { borderColor: theme.outline },
-                    pressed && { backgroundColor: theme.proofWash },
-                  ]}>
-                  <Text style={[styles.sheetCloseText, { color: theme.ink }]}>×</Text>
-                </Pressable>
-              </View>
-              <Text accessibilityRole="header" style={[styles.newsSheetHeadline, { color: theme.ink }]}>{article.headline}</Text>
-              <View style={[styles.newsSheetSource, { borderBottomColor: theme.outline, borderTopColor: theme.outline }]}>
-                <Text style={[styles.newsSheetSourceLabel, { color: theme.muted }]}>Published by</Text>
-                <Text style={[styles.newsSheetSourceName, { color: theme.ink }]}>{article.source}</Text>
-              </View>
-              <Text style={[styles.newsSheetSummary, { color: theme.muted }]}>
-                {article.summary ?? `This preview contains the headline and publishing details supplied by ${article.source}.`}
-              </Text>
-              {article.relatedAssetIds.length ? (
-                <Text style={[styles.newsSheetRelated, { color: theme.proof }]}>
-                  Related: {article.relatedAssetIds.join(' · ')}
-                </Text>
-              ) : null}
-            </ScrollView>
-          ) : null}
-        </SafeAreaView>
-      </View>
-    </Modal>
   );
 }
 
@@ -1026,7 +1009,7 @@ function searchScore(company: CompanySummary, query: string): number | null {
 }
 
 function messageFor(error: unknown): string {
-  return error instanceof HomeRequestError ? error.message : 'Market data is temporarily unavailable.';
+  return error instanceof HomeRequestError ? error.message : 'Warren could not refresh market data.';
 }
 
 function isAbort(error: unknown): boolean {
@@ -1040,9 +1023,9 @@ function modeLabel(mode: MarketMode): string {
 }
 
 function emptyModeMessage(mode: MarketMode): string {
-  if (mode === 'watchlist') return 'No companies are saved yet. You can still browse every supported company as a guest.';
+  if (mode === 'watchlist') return 'No companies are saved yet. You can still browse every supported company without signing in.';
   if (mode === 'earnings') return 'No upcoming earnings data is available for supported companies.';
-  return 'Company data is temporarily unavailable. Pull down or use Try again to refresh.';
+  return 'Warren could not refresh company data. Pull down or use Try again.';
 }
 
 function marketFreshness(state: DataState, asOf: string | null): string {
@@ -1056,7 +1039,7 @@ function stateLabel(state: DataState): string {
   if (state === 'delayed') return 'Delayed';
   if (state === 'stale') return 'Stale';
   if (state === 'sample') return 'Sample';
-  return 'Unavailable';
+  return 'Needs refresh';
 }
 
 function shortStateLabel(state: DataState): string {
@@ -1095,16 +1078,6 @@ function formatAge(value: string): string {
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours} hr`;
   return `${Math.floor(hours / 24)} d`;
-}
-
-function formatPublishedAt(value: string): string {
-  return new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value));
 }
 
 function movementColor(value: number | null, theme: ReturnType<typeof useTheme>): string {
@@ -1214,7 +1187,7 @@ const styles = StyleSheet.create({
   newsSource: { flex: 1, fontFamily: Fonts.sans, fontSize: 8, lineHeight: 11 },
   newsArrow: { fontFamily: Fonts.sans, fontSize: 13 },
   sheetRoot: { flex: 1, justifyContent: 'flex-end' },
-  sheetBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.56)' },
+  sheetBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0, 0, 0, 0.56)' },
   newsSheet: { borderTopLeftRadius: 22, borderTopRightRadius: 22, borderWidth: 1, maxHeight: '82%', minHeight: 340, overflow: 'hidden' },
   sheetHandle: { alignSelf: 'center', borderRadius: 999, height: 4, marginBottom: 4, marginTop: 10, width: 38 },
   newsSheetContent: { paddingBottom: 24, paddingHorizontal: 20, paddingTop: 10 },

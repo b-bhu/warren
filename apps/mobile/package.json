@@ -9,9 +9,14 @@
     "@privy-io/expo-native-extensions": "0.0.12",
     "@solana-mobile/mobile-wallet-adapter-protocol": "2.3.0",
     "@solana/kit": "7.0.0",
+    "@solana/web3.js": "1.99.0",
     "@tamagui/config": "^2.7.7",
     "@warren/home-contract": "workspace:*",
+    "@warren/lending-contract": "workspace:*",
+    "@warren/execution-contract": "workspace:*",
     "@warren/markets-contract": "workspace:*",
+    "@warren/portfolio-contract": "workspace:*",
+    "buffer": "6.0.3",
     "expo": "~57.0.22",
     "expo-apple-authentication": "~57.0.2",
     "expo-application": "~57.0.3",
@@ -54,6 +59,7 @@
     "@types/react": "~19.2.2",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.2",
+    "tsx": "4.20.6",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -63,7 +69,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/**/*.test.ts"
   },
   "private": true
 }

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import {
   marketCompanyParamsSchema,
+  marketHistoryQuerySchema,
   marketSearchQuerySchema,
   marketsQuerySchema,
 } from '@warren/markets-contract';
@@ -28,6 +29,19 @@ export function registerMarketsRoutes(
   app.get('/v1/markets/companies/:assetId', async (request, reply) => {
     const { assetId } = marketCompanyParamsSchema.parse(request.params);
     const payload = await service.getCompany(assetId);
+    return sendPublicRead(request, reply, payload, cacheSeconds, staleSeconds);
+  });
+
+  app.get('/v1/markets/companies/:assetId/history', async (request, reply) => {
+    const { assetId } = marketCompanyParamsSchema.parse(request.params);
+    const query = marketHistoryQuerySchema.parse(request.query);
+    const payload = await service.getCompanyHistory(assetId, query);
+    return sendPublicRead(request, reply, payload, cacheSeconds, staleSeconds);
+  });
+
+  app.get('/v1/markets/companies/:assetId/news', async (request, reply) => {
+    const { assetId } = marketCompanyParamsSchema.parse(request.params);
+    const payload = await service.getCompanyNews(assetId);
     return sendPublicRead(request, reply, payload, cacheSeconds, staleSeconds);
   });
 }

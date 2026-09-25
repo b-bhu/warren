@@ -29,7 +29,7 @@ export function BuyIntentScreen() {
       <MarketScreen>
         <MarketHeader showBack />
         <Text color="$ink" fontFamily="$serif" fontSize={30} fontWeight="700" paddingTop="$6">
-          Purchase unavailable
+          Purchase not supported
         </Text>
       </MarketScreen>
     );
@@ -42,7 +42,7 @@ export function BuyIntentScreen() {
       <YStack gap="$5" paddingTop="$3">
         <YStack gap="$3">
           <Text color="$proof" fontFamily="$mono" fontSize={11} letterSpacing={0.8} textTransform="uppercase">
-            Guest purchase ticket
+            Purchase preview
           </Text>
           <Text color="$ink" fontFamily="$serif" fontSize={36} fontWeight="700" letterSpacing={-1} lineHeight={41}>
             Choose your budget.

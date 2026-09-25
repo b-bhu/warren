@@ -1,11 +1,7 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import * as Linking from 'expo-linking';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  AccessibilityInfo,
   ActivityIndicator,
-  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,11 +10,10 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Path, Rect } from 'react-native-svg';
 
 import { BrandLogo } from '@/components/brand-logo';
 import { Fonts } from '@/constants/theme';
-
-import { GlassSurface } from './GlassSurface';
 
 export type LiquidLedgerMode =
   | 'sign-in'
@@ -27,6 +22,7 @@ export type LiquidLedgerMode =
   | 'error'
   | 'recovery-required'
   | 'missing-config'
+  | 'unsupported-platform'
   | 'web-preview';
 
 type Provider = 'email' | 'external-wallet';
@@ -43,33 +39,35 @@ type EmailAuth = {
   onVerifyCode?: () => void;
 };
 
-type WalletAuth = {
-  onConnect?: () => void;
-};
+type WalletAuth = { onConnect?: () => void };
 
 type LiquidLedgerScreenProps = {
   mode: LiquidLedgerMode;
   activeProvider?: Provider | null;
   contextLabel?: string;
   emailAuth?: EmailAuth;
-  evmAddress?: string | null;
   message?: string | null;
   onCancel?: () => void;
   onLogin?: (provider: Provider) => void;
+  onRecover?: () => void;
   onRetry?: () => void;
+  recoveryBusy?: boolean;
   onSignOut?: () => void;
+  presentation?: 'screen' | 'sheet';
   solanaAddress?: string | null;
   walletAuth?: WalletAuth;
 };
 
 const palette = {
-  harbour: '#07131A',
-  depth: '#0B1C24',
-  slate: '#122630',
-  pearl: '#F3F0E8',
-  seaGlass: '#A9D8C6',
-  ice: '#9AC9DA',
-  gold: '#C8AD82',
+  canvas: '#131918',
+  surface: '#1C2523',
+  ink: '#F2F5F1',
+  muted: '#B8C4BF',
+  proof: '#74C7DF',
+  proofWash: '#163640',
+  caution: '#FFAAA2',
+  cautionWash: '#42201F',
+  outline: '#51615C',
 } as const;
 
 export function LiquidLedgerScreen({
@@ -77,177 +75,376 @@ export function LiquidLedgerScreen({
   activeProvider,
   contextLabel,
   emailAuth,
-  evmAddress,
   message,
   onCancel,
   onLogin,
+  onRecover,
   onRetry,
+  recoveryBusy = false,
   onSignOut,
+  presentation = 'screen',
   solanaAddress,
   walletAuth,
 }: LiquidLedgerScreenProps) {
   const copy = useMemo(() => screenCopy(mode), [mode]);
-  const isBusy = mode === 'preparing' || Boolean(activeProvider);
-  const showSignIn = mode === 'sign-in' || mode === 'web-preview';
+  const [sheetProvider, setSheetProvider] = useState<Provider | null>(null);
+  const busy = mode === 'preparing' || Boolean(activeProvider) || recoveryBusy;
+  const showAuth = mode === 'sign-in' || mode === 'web-preview';
+
+  if (presentation === 'sheet') {
+    return (
+      <LiquidLedgerSheet
+        key={showAuth ? 'auth' : mode}
+        activeProvider={activeProvider}
+        contextLabel={contextLabel}
+        emailAuth={emailAuth}
+        message={message}
+        mode={mode}
+        onCancel={onCancel}
+        onChooseProvider={setSheetProvider}
+        onLogin={onLogin}
+        onRecover={onRecover}
+        onRetry={onRetry}
+        onSignOut={onSignOut}
+        recoveryBusy={recoveryBusy}
+        selectedProvider={sheetProvider}
+        solanaAddress={solanaAddress}
+        walletAuth={walletAuth}
+      />
+    );
+  }
 
   return (
-    <LinearGradient
-      colors={[palette.harbour, '#091820', '#061117']}
-      end={{ x: 0.78, y: 1 }}
-      start={{ x: 0.16, y: 0 }}
-      style={styles.background}>
+    <View style={styles.background}>
       <StatusBar style="light" />
-      <View pointerEvents="none" style={styles.iceGlow} />
-      <View pointerEvents="none" style={styles.seaGlow} />
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'bottom', 'left', 'right']} style={styles.safeArea}>
+        <View style={styles.header}>
+          <BrandLogo appearance="dark" />
+          <Text style={styles.headerStatus}>{copy.status}</Text>
+        </View>
+
         <ScrollView
           alwaysBounceVertical={false}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
           <View style={styles.shell}>
-            <Header status={copy.status} />
-
             {contextLabel ? (
-              <View style={styles.intentBanner}>
-                <Text style={styles.intentEyebrow}>PURCHASE INTENT SAVED</Text>
-                <Text style={styles.intentText}>{contextLabel}</Text>
+              <View style={styles.contextBanner}>
+                <Text style={styles.contextEyebrow}>YOUR TICKET IS SAVED</Text>
+                <Text style={styles.contextText}>{contextLabel}</Text>
               </View>
             ) : null}
 
             <View style={styles.hero}>
-              <WalletLens
-                evmAddress={evmAddress}
-                mode={mode}
-                solanaAddress={solanaAddress}
-              />
+              <View style={styles.heroMark}><ShieldIcon color={palette.proof} /></View>
               <Text style={styles.eyebrow}>{copy.eyebrow}</Text>
-              <Text accessibilityRole="header" style={styles.title}>
-                {copy.titleBefore}
-                <Text style={styles.titleAccent}>{copy.titleAccent}</Text>
-              </Text>
+              <Text accessibilityRole="header" style={styles.title}>{copy.title}</Text>
               <Text style={styles.intro}>{copy.intro}</Text>
             </View>
 
-            <View style={styles.actions}>
+            <View style={styles.panel}>
               {mode === 'preparing' ? (
-                <View accessibilityLiveRegion="polite" style={styles.progressPanel}>
-                  <ActivityIndicator color={palette.seaGlass} size="small" />
+                <View accessibilityLiveRegion="polite" style={styles.progress}>
+                  <ActivityIndicator color={palette.proof} size="small" />
                   <View style={styles.progressCopy}>
                     <Text style={styles.progressTitle}>Preparing your account</Text>
-                    <Text style={styles.progressBody}>
-                      {activeProvider
-                        ? `Finishing ${providerName(activeProvider)} sign-in…`
-                        : 'Securing your Solana and EVM wallets…'}
-                    </Text>
+                    <Text style={styles.progressBody}>{activeProvider ? `Finishing ${providerName(activeProvider)} sign-in…` : 'Restoring your Solana wallet securely…'}</Text>
                   </View>
                 </View>
               ) : null}
 
-              {showSignIn ? (
+              {showAuth ? (
                 <>
                   {emailAuth ? (
-                    <EmailAuthForm auth={emailAuth} disabled={isBusy} />
+                    <EmailAuthForm auth={emailAuth} disabled={busy} />
                   ) : (
-                    <ProviderButton
-                      disabled={isBusy}
-                      glyph="@"
+                    <AuthButton
+                      icon="email"
                       label="Continue with email"
                       onPress={() => onLogin?.('email')}
                       primary
                     />
                   )}
-                  {walletAuth ? (
-                    <ExternalWalletAuth auth={walletAuth} disabled={isBusy} />
-                  ) : (
-                    <ProviderButton
-                      disabled={isBusy}
-                      glyph="◇"
-                      label="Continue with external wallet"
-                      onPress={() => onLogin?.('external-wallet')}
-                    />
-                  )}
-                  <LegalNotice />
-                  {mode === 'sign-in' && message ? <Notice>{message}</Notice> : null}
+                  <View style={styles.divider}><View style={styles.dividerLine} /><Text style={styles.dividerText}>or</Text><View style={styles.dividerLine} /></View>
+                  <AuthButton
+                    disabled={busy}
+                    icon="wallet"
+                    label="Continue with Solana wallet"
+                    onPress={walletAuth?.onConnect ?? (() => onLogin?.('external-wallet'))}
+                  />
+                  <View style={styles.safetyNote}>
+                    <ShieldIcon color={palette.proof} size={17} />
+                    <Text style={styles.safetyText}>Signing in never approves a trade or moves funds. Warren never stores your wallet keys.</Text>
+                  </View>
+                  {message ? <Notice message={message} /> : null}
                 </>
               ) : null}
 
-              {mode === 'missing-config' ? (
-                <Notice>
-                  Add EXPO_PUBLIC_PRIVY_APP_ID and EXPO_PUBLIC_PRIVY_CLIENT_ID to your
-                  local .env, then restart Expo.
-                </Notice>
-              ) : null}
-
-              {mode === 'web-preview' ? (
-                <Notice message={message ?? undefined}>
-                  Email and external-wallet sign-in run in the Warren native development build.
-                </Notice>
+              {mode === 'ready' ? (
+                <>
+                  <WalletCard address={solanaAddress} />
+                  <AuthButton icon="arrow" label="Return to Warren" onPress={onCancel} primary />
+                  <AuthButton icon="sign-out" label="Sign out" onPress={onSignOut} />
+                </>
               ) : null}
 
               {mode === 'error' ? (
                 <>
-                  <Notice tone="error">{message ?? 'Sign-in could not be completed.'}</Notice>
-                  {onRetry ? (
-                    <ProviderButton glyph="↻" label="Try again" onPress={onRetry} primary />
-                  ) : null}
-                  {onSignOut ? (
-                    <ProviderButton glyph="×" label="Sign out" onPress={onSignOut} />
-                  ) : null}
+                  <Notice message={message ?? 'Sign-in could not be completed.'} tone="error" />
+                  {onRetry ? <AuthButton icon="retry" label="Try again" onPress={onRetry} primary /> : null}
+                  {onSignOut ? <AuthButton icon="sign-out" label="Sign out" onPress={onSignOut} /> : null}
                 </>
               ) : null}
 
               {mode === 'recovery-required' ? (
                 <>
-                  <Notice tone="error">
-                    {message ?? 'Your existing wallets need recovery on this device.'}
-                  </Notice>
-                  <ProviderButton glyph="×" label="Sign out" onPress={onSignOut} />
+                  <Notice message={message ?? 'Your existing Solana wallet needs recovery on this device.'} tone="error" />
+                  <AuthButton
+                    disabled={recoveryBusy}
+                    icon="retry"
+                    label={recoveryBusy ? 'Recovering wallet…' : 'Recover wallet'}
+                    onPress={onRecover}
+                    primary
+                  />
+                  <AuthButton disabled={recoveryBusy} icon="sign-out" label="Sign out" onPress={onSignOut} />
                 </>
               ) : null}
 
-              {mode === 'ready' ? (
-                <ProviderButton glyph="↗" label="Sign out" onPress={onSignOut} />
+              {mode === 'missing-config' ? (
+                <Notice message="Sign-in is not available in this build. You can keep browsing and try again after updating Warren." />
               ) : null}
 
-              {onCancel ? (
-                <ProviderButton
-                  glyph="←"
-                  label={mode === 'ready' ? 'Return to Warren' : 'Keep browsing'}
-                  onPress={onCancel}
-                />
+              {mode === 'unsupported-platform' ? (
+                <Notice message="Expo Go cannot run Warren sign-in or Solana wallet modules. Open Warren in its Android or iOS development build." />
               ) : null}
 
-              <View style={styles.assurance}>
-                <Text style={styles.assuranceGlyph}>◇</Text>
-                <Text style={styles.assuranceText}>
-                  Warren does not store your wallet keys.
-                </Text>
-              </View>
+              {onCancel && mode !== 'ready' ? (
+                <Pressable accessibilityRole="button" onPress={onCancel} style={({ pressed }) => [styles.keepBrowsing, pressed && styles.pressed]}>
+                  <Text style={styles.keepBrowsingText}>Keep browsing</Text>
+                </Pressable>
+              ) : null}
             </View>
           </View>
         </ScrollView>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
-function ExternalWalletAuth({ auth, disabled }: { auth: WalletAuth; disabled: boolean }) {
+function LiquidLedgerSheet({
+  activeProvider,
+  contextLabel,
+  emailAuth,
+  message,
+  mode,
+  onCancel,
+  onChooseProvider,
+  onLogin,
+  onRecover,
+  onRetry,
+  onSignOut,
+  recoveryBusy,
+  selectedProvider,
+  solanaAddress,
+  walletAuth,
+}: Omit<LiquidLedgerScreenProps, 'presentation'> & {
+  onChooseProvider: (provider: Provider | null) => void;
+  selectedProvider: Provider | null;
+}) {
+  const showAuth = mode === 'sign-in' || mode === 'web-preview';
+  const busy = mode === 'preparing' || Boolean(activeProvider) || Boolean(recoveryBusy);
+  const copy = sheetCopy(mode, selectedProvider);
+
   return (
-    <ProviderButton
-      disabled={disabled}
-      glyph="◇"
-      label="Continue with Solana wallet"
-      onPress={auth.onConnect}
-    />
+    <View style={styles.sheetRoot}>
+      <View style={styles.sheetHandle} />
+      <View style={styles.sheetHeader}>
+        <View style={styles.sheetHeadingCopy}>
+          <Text accessibilityRole="header" style={styles.sheetTitle}>{copy.title}</Text>
+          <Text style={styles.sheetIntro}>{copy.intro}</Text>
+        </View>
+        <Pressable
+          accessibilityLabel="Close"
+          accessibilityRole="button"
+          hitSlop={6}
+          onPress={onCancel}
+          style={({ pressed }) => [styles.sheetClose, pressed && styles.pressed]}>
+          <Text style={styles.sheetCloseText}>×</Text>
+        </Pressable>
+      </View>
+
+      <ScrollView
+        alwaysBounceVertical={false}
+        contentContainerStyle={styles.sheetScroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        {contextLabel ? (
+          <View style={styles.contextBanner}>
+            <Text style={styles.contextEyebrow}>YOUR TICKET IS SAVED</Text>
+            <Text style={styles.contextText}>{contextLabel}</Text>
+          </View>
+        ) : null}
+
+        {mode === 'preparing' ? (
+          <View accessibilityLiveRegion="polite" style={styles.progress}>
+            <ActivityIndicator color={palette.proof} size="small" />
+            <View style={styles.progressCopy}>
+              <Text style={styles.progressTitle}>Preparing your account</Text>
+              <Text style={styles.progressBody}>{activeProvider ? `Finishing ${providerName(activeProvider)} sign-in…` : 'Restoring your Solana wallet securely…'}</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {showAuth && !selectedProvider ? (
+          <>
+            <View style={styles.authChoices}>
+              <AuthChoice
+                icon="email"
+                label="Continue with email"
+                onPress={() => onChooseProvider('email')}
+                primary
+                supporting="Create or restore your account and Warren wallet."
+              />
+              <AuthChoice
+                icon="wallet"
+                label="Use an existing wallet"
+                onPress={() => onChooseProvider('external-wallet')}
+                supporting="Connect a Solana wallet, then confirm control with a message."
+              />
+            </View>
+            <SheetFact message="Secure wallet infrastructure by Privy. Companies saved on this device remain available." />
+            <Pressable accessibilityRole="button" onPress={onCancel} style={({ pressed }) => [styles.sheetNotNow, pressed && styles.pressed]}>
+              <Text style={styles.sheetNotNowText}>Not now</Text>
+            </Pressable>
+          </>
+        ) : null}
+
+        {showAuth && selectedProvider === 'email' ? (
+          <View style={styles.sheetMethod}>
+            {emailAuth ? (
+              <EmailAuthForm auth={emailAuth} disabled={busy} />
+            ) : (
+              <AuthButton
+                disabled={busy}
+                icon="email"
+                label="Continue with email"
+                onPress={() => onLogin?.('email')}
+                primary
+              />
+            )}
+            {message ? <Notice message={message} /> : null}
+            <SheetFact message="Privy securely creates or restores the same Warren account and embedded Solana wallet." />
+            <ChooseAnotherMethod disabled={busy} onPress={() => onChooseProvider(null)} />
+          </View>
+        ) : null}
+
+        {showAuth && selectedProvider === 'external-wallet' ? (
+          <View style={styles.sheetMethod}>
+            <AuthButton
+              disabled={busy}
+              icon="wallet"
+              label={activeProvider === 'external-wallet' ? 'Connecting wallet…' : 'Connect Solana wallet'}
+              onPress={walletAuth?.onConnect ?? (() => onLogin?.('external-wallet'))}
+              primary
+            />
+            {message ? <Notice message={message} /> : null}
+            <SheetFact message="The signature confirms wallet control. It is not a transaction and has no network fee." />
+            <ChooseAnotherMethod disabled={busy} onPress={() => onChooseProvider(null)} />
+          </View>
+        ) : null}
+
+        {mode === 'ready' ? (
+          <View style={styles.sheetMethod}>
+            <WalletCard address={solanaAddress} />
+            <AuthButton icon="arrow" label="Return to Warren" onPress={onCancel} primary />
+            <AuthButton icon="sign-out" label="Sign out" onPress={onSignOut} />
+          </View>
+        ) : null}
+
+        {mode === 'error' ? (
+          <View style={styles.sheetMethod}>
+            <Notice message={message ?? 'Sign-in could not be completed.'} tone="error" />
+            {onRetry ? <AuthButton icon="retry" label="Try again" onPress={onRetry} primary /> : null}
+            {onSignOut ? <AuthButton icon="sign-out" label="Sign out" onPress={onSignOut} /> : null}
+          </View>
+        ) : null}
+
+        {mode === 'recovery-required' ? (
+          <View style={styles.sheetMethod}>
+            <Notice message={message ?? 'Your existing Solana wallet needs recovery on this device.'} tone="error" />
+            <AuthButton
+              disabled={recoveryBusy}
+              icon="retry"
+              label={recoveryBusy ? 'Recovering wallet…' : 'Recover wallet'}
+              onPress={onRecover}
+              primary
+            />
+            <AuthButton disabled={recoveryBusy} icon="sign-out" label="Sign out" onPress={onSignOut} />
+          </View>
+        ) : null}
+
+        {mode === 'missing-config' ? (
+          <Notice message="Sign-in is not available in this build. You can keep browsing and try again after updating Warren." />
+        ) : null}
+
+        {mode === 'unsupported-platform' ? (
+          <Notice message="Expo Go cannot run Warren sign-in or Solana wallet modules. Open Warren in its Android or iOS development build." />
+        ) : null}
+      </ScrollView>
+    </View>
   );
+}
+
+function AuthChoice({
+  icon,
+  label,
+  onPress,
+  primary = false,
+  supporting,
+}: {
+  icon: 'email' | 'wallet';
+  label: string;
+  onPress: () => void;
+  primary?: boolean;
+  supporting: string;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.authChoice, primary && styles.authChoicePrimary, pressed && styles.pressed]}>
+      <View style={styles.authChoiceIcon}><AuthIcon color={palette.proof} name={icon} /></View>
+      <View style={styles.authChoiceCopy}>
+        <Text style={styles.authChoiceLabel}>{label}</Text>
+        <Text style={styles.authChoiceSupporting}>{supporting}</Text>
+      </View>
+      <Text accessible={false} style={styles.authChoiceArrow}>›</Text>
+    </Pressable>
+  );
+}
+
+function ChooseAnotherMethod({ disabled, onPress }: { disabled: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [styles.chooseAnother, pressed && styles.pressed, disabled && styles.disabled]}>
+      <Text style={styles.chooseAnotherText}>Choose another method</Text>
+    </Pressable>
+  );
+}
+
+function SheetFact({ message }: { message: string }) {
+  return <View style={styles.sheetFact}><Text style={styles.sheetFactText}>{message}</Text></View>;
 }
 
 function EmailAuthForm({ auth, disabled }: { auth: EmailAuth; disabled: boolean }) {
   if (auth.codeSent) {
     return (
       <View style={styles.emailForm}>
-        <Text style={styles.emailHint}>Code sent to {auth.email}</Text>
+        <Text style={styles.inputLabel}>Code sent to {auth.email}</Text>
         <TextInput
           accessibilityLabel="Six-digit email code"
           autoComplete="one-time-code"
@@ -258,26 +455,16 @@ function EmailAuthForm({ auth, disabled }: { auth: EmailAuth; disabled: boolean 
           onChangeText={auth.onCodeChange}
           onSubmitEditing={auth.onVerifyCode}
           placeholder="6-digit code"
-          placeholderTextColor="rgba(243, 240, 232, 0.38)"
+          placeholderTextColor="rgba(184,196,191,0.58)"
           returnKeyType="done"
-          style={styles.emailInput}
+          style={styles.input}
           textContentType="oneTimeCode"
           value={auth.code}
         />
-        {auth.message ? <Text style={styles.emailError}>{auth.message}</Text> : null}
-        <ProviderButton
-          disabled={disabled}
-          glyph="→"
-          label="Verify email"
-          onPress={auth.onVerifyCode}
-          primary
-        />
-        <Pressable
-          accessibilityRole="button"
-          disabled={disabled || !auth.onReset}
-          onPress={auth.onReset}
-          style={styles.emailReset}>
-          <Text style={styles.emailResetText}>Use a different email</Text>
+        {auth.message ? <Text style={styles.inputError}>{auth.message}</Text> : null}
+        <AuthButton disabled={disabled} icon="arrow" label="Verify email" onPress={auth.onVerifyCode} primary />
+        <Pressable accessibilityRole="button" disabled={disabled || !auth.onReset} onPress={auth.onReset} style={({ pressed }) => [styles.changeEmail, pressed && styles.pressed]}>
+          <Text style={styles.changeEmailText}>Use a different email</Text>
         </Pressable>
       </View>
     );
@@ -285,6 +472,7 @@ function EmailAuthForm({ auth, disabled }: { auth: EmailAuth; disabled: boolean 
 
   return (
     <View style={styles.emailForm}>
+      <Text style={styles.inputLabel}>Email</Text>
       <TextInput
         accessibilityLabel="Email address"
         autoCapitalize="none"
@@ -295,328 +483,119 @@ function EmailAuthForm({ auth, disabled }: { auth: EmailAuth; disabled: boolean 
         keyboardType="email-address"
         onChangeText={auth.onEmailChange}
         onSubmitEditing={auth.onSendCode}
-        placeholder="Email address"
-        placeholderTextColor="rgba(243, 240, 232, 0.38)"
+        placeholder="you@example.com"
+        placeholderTextColor="rgba(184,196,191,0.58)"
         returnKeyType="send"
-        style={styles.emailInput}
+        style={styles.input}
         textContentType="emailAddress"
         value={auth.email}
       />
-      {auth.message ? <Text style={styles.emailError}>{auth.message}</Text> : null}
-      <ProviderButton
-        disabled={disabled}
-        glyph="@"
-        label="Continue with email"
-        onPress={auth.onSendCode}
-        primary
-      />
+      {auth.message ? <Text style={styles.inputError}>{auth.message}</Text> : null}
+      <AuthButton disabled={disabled} icon="email" label="Continue with email" onPress={auth.onSendCode} primary />
     </View>
   );
 }
 
-function Header({ status }: { status: string }) {
+function WalletCard({ address }: { address?: string | null }) {
   return (
-    <View style={styles.topbar}>
-      <BrandLogo appearance="dark" />
-      <View style={styles.statusPill}>
-        <Text style={styles.statusText}>{status}</Text>
+    <View accessibilityLabel={address ? `Solana wallet ${shortenAddress(address)} ready` : 'Solana wallet ready'} style={styles.walletCard}>
+      <View style={styles.walletGlyph}><WalletIcon color={palette.proof} /></View>
+      <View style={styles.walletCopy}>
+        <Text style={styles.walletLabel}>ACTIVE WALLET</Text>
+        <Text style={styles.walletTitle}>Warren wallet</Text>
+        <Text numberOfLines={1} style={styles.walletAddress}>{address ? shortenAddress(address) : 'Solana wallet ready'}</Text>
       </View>
+      <Text style={styles.walletReady}>● Ready</Text>
     </View>
   );
 }
 
-function WalletLens({
-  evmAddress,
-  mode,
-  solanaAddress,
-}: {
-  evmAddress?: string | null;
-  mode: LiquidLedgerMode;
-  solanaAddress?: string | null;
-}) {
-  const [pulse] = useState(() => new Animated.Value(1));
-  const [reduceMotion, setReduceMotion] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
-      if (active) setReduceMotion(enabled);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (reduceMotion) {
-      pulse.setValue(1);
-      return;
-    }
-
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          duration: 3600,
-          toValue: 1.014,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          duration: 3600,
-          toValue: 1,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [pulse, reduceMotion]);
-
-  return (
-    <View
-      accessibilityLabel={walletLensAccessibilityLabel(mode, solanaAddress, evmAddress)}
-      style={styles.lensField}>
-      <View accessible={false} style={styles.orbit}>
-        <View style={[styles.orbitDot, styles.orbitDotTop]} />
-        <View style={[styles.orbitDot, styles.orbitDotBottom]} />
-      </View>
-      <Animated.View style={[styles.lensMotion, { transform: [{ scale: pulse }] }]}>
-        <GlassSurface style={styles.liquidLens}>
-          <View pointerEvents="none" style={styles.lensHighlight} />
-          <WalletCard
-            accent={palette.seaGlass}
-            address={solanaAddress}
-            chain="Solana wallet"
-            glyph="S"
-            mode={mode}
-            style={styles.solanaCard}
-          />
-          <WalletCard
-            accent={palette.ice}
-            address={evmAddress}
-            chain="EVM wallet"
-            glyph="E"
-            mode={mode}
-            style={styles.evmCard}
-          />
-        </GlassSurface>
-      </Animated.View>
-      <View accessible={false} style={styles.custodySeal}>
-        <Text style={styles.custodyText}>YOURS{`\n`}TO KEEP</Text>
-      </View>
-    </View>
-  );
-}
-
-function WalletCard({
-  accent,
-  address,
-  chain,
-  glyph,
-  mode,
-  style,
-}: {
-  accent: string;
-  address?: string | null;
-  chain: string;
-  glyph: string;
-  mode: LiquidLedgerMode;
-  style: object;
-}) {
-  return (
-    <View accessible={false} style={[styles.walletCard, style]}>
-      <View style={styles.walletLine}>
-        <View style={styles.chainLabel}>
-          <View style={[styles.chainGlyph, { backgroundColor: accent }]}>
-            <Text style={styles.chainGlyphText}>{glyph}</Text>
-          </View>
-          <Text numberOfLines={1} style={styles.chainText}>{chain}</Text>
-        </View>
-        <Text style={styles.defaultText}>{walletBadge(mode, address)}</Text>
-      </View>
-      <Text numberOfLines={1} style={styles.addressText}>
-        {walletAddressCopy(mode, address)}
-      </Text>
-    </View>
-  );
-}
-
-function ProviderButton({
-  disabled,
-  glyph,
-  label,
-  onPress,
-  primary = false,
-}: {
-  disabled?: boolean;
-  glyph: string;
-  label: string;
-  onPress?: () => void;
-  primary?: boolean;
-}) {
+function AuthButton({ disabled, icon, label, onPress, primary = false }: { disabled?: boolean; icon: 'arrow' | 'email' | 'retry' | 'sign-out' | 'wallet'; label: string; onPress?: () => void; primary?: boolean }) {
   return (
     <Pressable
       accessibilityRole="button"
       disabled={disabled || !onPress}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.button,
-        primary ? styles.primaryButton : styles.secondaryButton,
-        pressed && styles.pressedButton,
-        (disabled || !onPress) && styles.disabledButton,
-      ]}>
-      <Text style={[styles.providerGlyph, primary && styles.primaryButtonText]}>{glyph}</Text>
+      style={({ pressed }) => [styles.button, primary ? styles.primaryButton : styles.secondaryButton, pressed && styles.pressed, (disabled || !onPress) && styles.disabled]}>
+      <AuthIcon color={primary ? palette.canvas : palette.proof} name={icon} />
       <Text style={[styles.buttonText, primary && styles.primaryButtonText]}>{label}</Text>
+      <Text accessible={false} style={[styles.buttonArrow, primary && styles.primaryButtonText]}>→</Text>
     </Pressable>
   );
 }
 
-function Notice({
-  children,
-  message,
-  tone = 'information',
-}: {
-  children: React.ReactNode;
-  message?: string;
-  tone?: 'error' | 'information';
-}) {
+function Notice({ message, tone = 'information' }: { message: string; tone?: 'error' | 'information' }) {
   return (
-    <View
-      accessibilityLiveRegion="polite"
-      style={[styles.notice, tone === 'error' && styles.errorNotice]}>
-      <Text style={[styles.noticeText, tone === 'error' && styles.errorNoticeText]}>
-        {message ?? children}
-      </Text>
+    <View accessibilityLiveRegion="polite" style={[styles.notice, tone === 'error' && styles.errorNotice]}>
+      <Text style={[styles.noticeText, tone === 'error' && styles.errorNoticeText]}>{message}</Text>
     </View>
   );
 }
 
-function LegalNotice() {
-  const termsUrl = process.env.EXPO_PUBLIC_TERMS_URL?.trim();
-  const privacyUrl = process.env.EXPO_PUBLIC_PRIVACY_URL?.trim();
-
-  if (!termsUrl || !privacyUrl) {
-    return (
-      <Text style={styles.consent}>
-        Development access only. Terms and Privacy links must be configured before
-        public sign-in. Two embedded wallets will be created automatically.
-      </Text>
-    );
+function AuthIcon({ color, name }: { color: string; name: 'arrow' | 'email' | 'retry' | 'sign-out' | 'wallet' }) {
+  if (name === 'email') {
+    return <Svg fill="none" height={19} viewBox="0 0 24 24" width={19}><Rect height={14} rx={2.5} stroke={color} strokeWidth={1.8} width={18} x={3} y={5} /><Path d="m4.5 7 7.5 6 7.5-6" stroke={color} strokeLinejoin="round" strokeWidth={1.8} /></Svg>;
   }
+  if (name === 'wallet') return <WalletIcon color={color} />;
+  if (name === 'retry') return <Svg fill="none" height={19} viewBox="0 0 24 24" width={19}><Path d="M19 8a8 8 0 1 0 1 7M19 4v4h-4" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} /></Svg>;
+  if (name === 'sign-out') return <Svg fill="none" height={19} viewBox="0 0 24 24" width={19}><Path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4m5-4 4-3-4-3m4 3H9" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} /></Svg>;
+  return <Svg fill="none" height={19} viewBox="0 0 24 24" width={19}><Path d="M5 12h14m-5-5 5 5-5 5" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} /></Svg>;
+}
 
-  return (
-    <Text style={styles.consent}>
-      By continuing, you agree to the{' '}
-      <Text
-        accessibilityRole={termsUrl ? 'link' : undefined}
-        onPress={termsUrl ? () => void Linking.openURL(termsUrl) : undefined}
-        style={termsUrl ? styles.legalLink : undefined}>
-        Terms
-      </Text>{' '}
-      and acknowledge the{' '}
-      <Text
-        accessibilityRole={privacyUrl ? 'link' : undefined}
-        onPress={privacyUrl ? () => void Linking.openURL(privacyUrl) : undefined}
-        style={privacyUrl ? styles.legalLink : undefined}>
-        Privacy Notice
-      </Text>
-      . Two embedded wallets will be created automatically.
-    </Text>
-  );
+function WalletIcon({ color }: { color: string }) {
+  return <Svg fill="none" height={19} viewBox="0 0 24 24" width={19}><Rect height={13} rx={2.5} stroke={color} strokeWidth={1.8} width={17} x={3.5} y={6} /><Path d="M3.5 10h17M16.5 13.5H18" stroke={color} strokeLinecap="round" strokeWidth={1.8} /></Svg>;
+}
+
+function ShieldIcon({ color, size = 22 }: { color: string; size?: number }) {
+  return <Svg fill="none" height={size} viewBox="0 0 24 24" width={size}><Path d="M12 3 5 6v5c0 4.5 2.8 7.7 7 10 4.2-2.3 7-5.5 7-10V6l-7-3Z" stroke={color} strokeLinejoin="round" strokeWidth={1.8} /><Path d="m9 12 2 2 4-4" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} /></Svg>;
 }
 
 function screenCopy(mode: LiquidLedgerMode) {
   switch (mode) {
-    case 'ready':
-      return {
-        status: 'Wallets ready',
-        eyebrow: 'Your private market account',
-        titleBefore: 'One account.\nTwo markets.\n',
-        titleAccent: 'Ready.',
-        intro: 'Your default Solana and EVM wallets are available in this Privy session.',
-      };
+    case 'ready': return { status: 'Signed in', eyebrow: 'ACCOUNT READY', title: 'Your Solana account is ready.', intro: 'Your portfolio and Warren-recognized activity can now load from the wallet linked to this Privy session.' };
+    case 'preparing': return { status: 'Securing', eyebrow: 'PRIVATE ACCOUNT', title: 'Restoring your Warren account.', intro: 'Keep Warren open while Privy finishes sign-in and prepares your Solana wallet.' };
+    case 'missing-config': return { status: 'Not configured', eyebrow: 'THIS BUILD', title: 'Sign-in is not ready here.', intro: 'You can keep browsing public markets. A configured Warren build is required for private portfolio access.' };
+    case 'unsupported-platform': return { status: 'Development build', eyebrow: 'EXPO GO', title: 'Open the Warren development build.', intro: 'Privy and Solana wallet modules require Warren’s native development build and cannot run inside Expo Go.' };
+    case 'web-preview': return { status: 'Preview', eyebrow: 'PRIVATE ACCOUNT', title: 'Your portfolio, when you want it.', intro: 'Use email or a Solana wallet in the native Warren app to create or restore your private account.' };
+    case 'error': return { status: 'Try again', eyebrow: 'NOTHING MOVED', title: 'Sign-in did not finish.', intro: 'Your funds and saved companies are unchanged. Retry the same account safely.' };
+    case 'recovery-required': return { status: 'Recovery', eyebrow: 'EXISTING WALLET', title: 'Recover the same wallet.', intro: 'Warren will not create a replacement while your existing Solana wallet needs recovery on this device.' };
+    default: return { status: 'Sign in', eyebrow: 'PRIVATE ACCOUNT', title: 'Your portfolio, when you want it.', intro: 'Continue with email or prove control of a Solana wallet. Warren will create or restore one private account.' };
+  }
+}
+
+function sheetCopy(mode: LiquidLedgerMode, provider: Provider | null) {
+  if ((mode === 'sign-in' || mode === 'web-preview') && provider === 'email') {
+    return {
+      title: 'Continue with email',
+      intro: 'Enter your email to create or restore your private Warren account and Solana wallet.',
+    };
+  }
+  if ((mode === 'sign-in' || mode === 'web-preview') && provider === 'external-wallet') {
+    return {
+      title: 'Use an existing wallet',
+      intro: 'Connect a compatible Solana wallet, then sign a message to confirm control of the address.',
+    };
+  }
+  switch (mode) {
     case 'preparing':
-      return {
-        status: 'Securing',
-        eyebrow: 'Creating your private account',
-        titleBefore: 'One sign-in.\nTwo wallets.\n',
-        titleAccent: 'Almost yours.',
-        intro: 'Keep Warren open while Privy finishes your account and restores both wallets.',
-      };
-    case 'missing-config':
-      return {
-        status: 'Setup needed',
-        eyebrow: 'Privy configuration',
-        titleBefore: 'Add two IDs.\nRestart Expo.\n',
-        titleAccent: 'Then sign in.',
-        intro: 'Warren is ready for Privy; this local build only needs its public app and client IDs.',
-      };
-    case 'web-preview':
-      return {
-        status: 'Web preview',
-        eyebrow: 'Your private market account',
-        titleBefore: 'One sign-in.\nTwo wallets.\n',
-        titleAccent: 'Yours.',
-        intro: 'This browser shows the approved experience. Use a native development build for real social sign-in.',
-      };
+      return { title: 'Finishing sign in', intro: 'Keep Warren open while Privy restores your account and Solana wallet.' };
+    case 'ready':
+      return { title: 'Account ready', intro: 'Your private Portfolio can now load from this Solana wallet.' };
     case 'error':
-      return {
-        status: 'Needs attention',
-        eyebrow: 'Your account is safe',
-        titleBefore: 'Nothing moved.\nTry once more.\n',
-        titleAccent: 'We’re here.',
-        intro: 'The sign-in or wallet setup did not finish. You can retry without creating another account.',
-      };
+      return { title: 'Sign-in needs attention', intro: 'Nothing moved. Retry the same account safely.' };
     case 'recovery-required':
-      return {
-        status: 'Recovery needed',
-        eyebrow: 'Your existing account',
-        titleBefore: 'Same wallets.\nNew device.\n',
-        titleAccent: 'Recover safely.',
-        intro: 'Warren will not create replacement wallets while your existing wallets need recovery.',
-      };
+      return { title: 'Recover the same wallet', intro: 'Warren will not create a replacement for your existing Solana wallet.' };
+    case 'missing-config':
+      return { title: 'Sign-in is not configured', intro: 'This build is not configured for private Warren accounts.' };
+    case 'unsupported-platform':
+      return { title: 'Open the Warren development build', intro: 'Expo Go cannot load the native Privy and Solana wallet modules used by Warren.' };
     default:
-      return {
-        status: 'Private beta',
-        eyebrow: 'Your private market account',
-        titleBefore: 'One sign-in.\nTwo wallets.\n',
-        titleAccent: 'Yours.',
-        intro: 'Continue once and Warren prepares secure Solana and EVM wallets for you. Both appear automatically inside your account.',
-      };
+      return { title: 'Sign in to Warren', intro: 'Restore your portfolio or create an account. Signing in never approves a trade or moves funds.' };
   }
-}
-
-function walletBadge(mode: LiquidLedgerMode, address?: string | null) {
-  if (mode === 'ready' && address) return 'Default';
-  if (mode === 'preparing') return 'Securing';
-  if (mode === 'missing-config') return 'Waiting';
-  return 'Included';
-}
-
-function walletAddressCopy(mode: LiquidLedgerMode, address?: string | null) {
-  if (address) return shortenAddress(address);
-  if (mode === 'preparing') return 'Creating securely…';
-  if (mode === 'missing-config') return 'Available after setup';
-  return 'Created after sign-in';
-}
-
-function walletLensAccessibilityLabel(
-  mode: LiquidLedgerMode,
-  solanaAddress?: string | null,
-  evmAddress?: string | null,
-) {
-  if (mode === 'ready' && solanaAddress && evmAddress) {
-    return 'Default Solana wallet ready. Default EVM wallet ready.';
-  }
-  if (mode === 'preparing') return 'Warren is preparing default Solana and EVM wallets.';
-  if (mode === 'recovery-required') {
-    return 'Your existing Solana and EVM wallets require recovery on this device.';
-  }
-  return 'A default Solana wallet and default EVM wallet are included after sign-in.';
 }
 
 function shortenAddress(address: string) {
-  if (address.length <= 16) return address;
-  return `${address.slice(0, 7)}···${address.slice(-5)}`;
+  return address.length <= 15 ? address : `${address.slice(0, 6)}…${address.slice(-5)}`;
 }
 
 function providerName(provider: Provider) {
@@ -624,452 +603,79 @@ function providerName(provider: Provider) {
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
-  iceGlow: {
-    backgroundColor: 'rgba(154, 201, 218, 0.08)',
-    borderRadius: 240,
-    height: 420,
-    position: 'absolute',
-    right: -230,
-    top: -150,
-    width: 420,
-  },
-  seaGlow: {
-    backgroundColor: 'rgba(169, 216, 198, 0.055)',
-    borderRadius: 260,
-    height: 500,
-    left: -330,
-    position: 'absolute',
-    top: '42%',
-    width: 500,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  shell: {
-    alignSelf: 'center',
-    flex: 1,
-    maxWidth: 430,
-    paddingBottom: 20,
-    paddingHorizontal: 22,
-    width: '100%',
-  },
-  topbar: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    minHeight: 48,
-  },
-  statusPill: {
-    borderColor: 'rgba(243, 240, 232, 0.12)',
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-  },
-  statusText: {
-    color: 'rgba(243, 240, 232, 0.72)',
-    fontFamily: Fonts.mono,
-    fontSize: 9,
-    letterSpacing: 1.3,
-    textTransform: 'uppercase',
-  },
-  intentBanner: {
-    backgroundColor: 'rgba(169, 216, 198, 0.08)',
-    borderColor: 'rgba(169, 216, 198, 0.24)',
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 5,
-    marginTop: 8,
-    paddingHorizontal: 13,
-    paddingVertical: 11,
-  },
-  intentEyebrow: {
-    color: palette.seaGlass,
-    fontFamily: Fonts.mono,
-    fontSize: 9,
-    letterSpacing: 1.2,
-  },
-  intentText: {
-    color: palette.pearl,
-    fontFamily: Fonts.sans,
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  hero: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingBottom: 18,
-    paddingTop: 8,
-  },
-  lensField: {
-    height: 268,
-    marginHorizontal: -5,
-    marginTop: 1,
-    position: 'relative',
-  },
-  orbit: {
-    borderColor: 'rgba(243, 240, 232, 0.08)',
-    borderRadius: 999,
-    borderWidth: 1,
-    bottom: 24,
-    left: 42,
-    position: 'absolute',
-    right: 42,
-    top: 26,
-    transform: [{ rotate: '-9deg' }],
-  },
-  orbitDot: {
-    backgroundColor: palette.gold,
-    borderRadius: 2,
-    height: 4,
-    position: 'absolute',
-    shadowColor: palette.gold,
-    shadowOpacity: 0.7,
-    shadowRadius: 8,
-    width: 4,
-  },
-  orbitDotTop: {
-    right: '19%',
-    top: '9%',
-  },
-  orbitDotBottom: {
-    bottom: '10%',
-    left: '18%',
-  },
-  lensMotion: {
-    alignSelf: 'center',
-    height: 226,
-    position: 'absolute',
-    top: 20,
-    width: 258,
-  },
-  liquidLens: {
-    backgroundColor: 'rgba(18, 38, 48, 0.62)',
-    borderBottomLeftRadius: 96,
-    borderBottomRightRadius: 118,
-    borderColor: 'rgba(243, 240, 232, 0.26)',
-    borderTopLeftRadius: 118,
-    borderTopRightRadius: 101,
-    borderWidth: 1,
-    flex: 1,
-    overflow: 'hidden',
-    shadowColor: '#01080C',
-    shadowOffset: { height: 28, width: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 35,
-  },
-  lensHighlight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.075)',
-    borderRadius: 60,
-    height: 84,
-    left: 24,
-    position: 'absolute',
-    top: 10,
-    transform: [{ rotate: '-18deg' }],
-    width: 96,
-  },
-  walletCard: {
-    backgroundColor: 'rgba(243, 240, 232, 0.10)',
-    borderColor: 'rgba(243, 240, 232, 0.17)',
-    borderRadius: 17,
-    borderWidth: 1,
-    left: 36,
-    minHeight: 76,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    position: 'absolute',
-    shadowColor: '#020A0E',
-    shadowOffset: { height: 14, width: 0 },
-    shadowOpacity: 0.28,
-    shadowRadius: 16,
-    width: 184,
-  },
-  solanaCard: {
-    top: 36,
-    transform: [{ rotate: '-5deg' }],
-  },
-  evmCard: {
-    left: 40,
-    top: 126,
-    transform: [{ rotate: '4deg' }],
-  },
-  walletLine: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 8,
-    justifyContent: 'space-between',
-  },
-  chainLabel: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexShrink: 1,
-    gap: 8,
-  },
-  chainGlyph: {
-    alignItems: 'center',
-    borderRadius: 10,
-    height: 20,
-    justifyContent: 'center',
-    width: 20,
-  },
-  chainGlyphText: {
-    color: palette.harbour,
-    fontFamily: Fonts.mono,
-    fontSize: 8,
-    fontWeight: '700',
-  },
-  chainText: {
-    color: palette.pearl,
-    flexShrink: 1,
-    fontFamily: Fonts.sans,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  defaultText: {
-    color: 'rgba(243, 240, 232, 0.68)',
-    fontFamily: Fonts.mono,
-    fontSize: 8,
-    letterSpacing: 0.7,
-    textTransform: 'uppercase',
-  },
-  addressText: {
-    color: 'rgba(243, 240, 232, 0.58)',
-    fontFamily: Fonts.mono,
-    fontSize: 11,
-    letterSpacing: 0.35,
-    marginTop: 11,
-  },
-  custodySeal: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(7, 19, 26, 0.82)',
-    borderColor: 'rgba(200, 173, 130, 0.43)',
-    borderRadius: 30,
-    borderWidth: 1,
-    bottom: 8,
-    height: 60,
-    justifyContent: 'center',
-    position: 'absolute',
-    right: 24,
-    shadowColor: '#01070A',
-    shadowOffset: { height: 12, width: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    transform: [{ rotate: '7deg' }],
-    width: 60,
-  },
-  custodyText: {
-    color: palette.gold,
-    fontFamily: Fonts.mono,
-    fontSize: 8,
-    letterSpacing: 0.7,
-    lineHeight: 11,
-    textAlign: 'center',
-  },
-  eyebrow: {
-    color: palette.seaGlass,
-    fontFamily: Fonts.mono,
-    fontSize: 9,
-    letterSpacing: 1.7,
-    marginBottom: 11,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: palette.pearl,
-    fontFamily: Fonts.serif,
-    fontSize: 46,
-    fontWeight: '400',
-    letterSpacing: -1.9,
-    lineHeight: 43,
-  },
-  titleAccent: {
-    color: palette.seaGlass,
-    fontFamily: Fonts.serif,
-    fontStyle: 'italic',
-    fontWeight: '400',
-  },
-  intro: {
-    color: 'rgba(243, 240, 232, 0.72)',
-    fontFamily: Fonts.sans,
-    fontSize: 13,
-    letterSpacing: 0.05,
-    lineHeight: 20,
-    marginTop: 17,
-    maxWidth: 350,
-  },
-  actions: {
-    gap: 10,
-    marginTop: 'auto',
-  },
-  emailForm: {
-    gap: 8,
-  },
-  emailHint: {
-    color: 'rgba(243, 240, 232, 0.66)',
-    fontFamily: Fonts.sans,
-    fontSize: 12,
-    marginHorizontal: 4,
-  },
-  emailInput: {
-    backgroundColor: 'rgba(243, 240, 232, 0.055)',
-    borderColor: 'rgba(243, 240, 232, 0.17)',
-    borderRadius: 18,
-    borderWidth: 1,
-    color: palette.pearl,
-    fontFamily: Fonts.sans,
-    fontSize: 15,
-    height: 54,
-    paddingHorizontal: 18,
-    width: '100%',
-  },
-  emailError: {
-    color: '#E7B8A9',
-    fontFamily: Fonts.sans,
-    fontSize: 12,
-    lineHeight: 17,
-    marginHorizontal: 4,
-  },
-  emailReset: {
-    alignSelf: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  emailResetText: {
-    color: 'rgba(243, 240, 232, 0.68)',
-    fontFamily: Fonts.sans,
-    fontSize: 12,
-    textDecorationLine: 'underline',
-  },
-  button: {
-    alignItems: 'center',
-    borderRadius: 18,
-    flexDirection: 'row',
-    gap: 10,
-    height: 54,
-    justifyContent: 'center',
-    width: '100%',
-  },
-  primaryButton: {
-    backgroundColor: palette.pearl,
-    shadowColor: '#01070A',
-    shadowOffset: { height: 13, width: 0 },
-    shadowOpacity: 0.28,
-    shadowRadius: 18,
-  },
-  secondaryButton: {
-    backgroundColor: 'rgba(243, 240, 232, 0.055)',
-    borderColor: 'rgba(243, 240, 232, 0.17)',
-    borderWidth: 1,
-  },
-  pressedButton: {
-    opacity: 0.82,
-    transform: [{ scale: 0.995 }],
-  },
-  disabledButton: {
-    opacity: 0.48,
-  },
-  providerGlyph: {
-    color: palette.pearl,
-    fontFamily: Fonts.sans,
-    fontSize: 18,
-    fontWeight: '600',
-    minWidth: 18,
-    textAlign: 'center',
-  },
-  buttonText: {
-    color: palette.pearl,
-    fontFamily: Fonts.sans,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  primaryButtonText: {
-    color: palette.harbour,
-  },
-  consent: {
-    color: 'rgba(243, 240, 232, 0.52)',
-    fontFamily: Fonts.sans,
-    fontSize: 11,
-    lineHeight: 16,
-    marginHorizontal: 14,
-    marginTop: 2,
-    textAlign: 'center',
-  },
-  legalLink: {
-    color: 'rgba(243, 240, 232, 0.80)',
-    textDecorationLine: 'underline',
-  },
-  assurance: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: 7,
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  assuranceGlyph: {
-    color: palette.gold,
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  assuranceText: {
-    color: 'rgba(243, 240, 232, 0.50)',
-    fontFamily: Fonts.sans,
-    fontSize: 12,
-    lineHeight: 17,
-    textAlign: 'center',
-  },
-  progressPanel: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(169, 216, 198, 0.08)',
-    borderColor: 'rgba(169, 216, 198, 0.24)',
-    borderRadius: 18,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: 12,
-    minHeight: 64,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  progressCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  progressTitle: {
-    color: palette.pearl,
-    fontFamily: Fonts.sans,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  progressBody: {
-    color: 'rgba(243, 240, 232, 0.60)',
-    fontFamily: Fonts.sans,
-    fontSize: 11,
-    lineHeight: 16,
-  },
-  notice: {
-    backgroundColor: 'rgba(154, 201, 218, 0.08)',
-    borderColor: 'rgba(154, 201, 218, 0.24)',
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  errorNotice: {
-    backgroundColor: 'rgba(200, 173, 130, 0.10)',
-    borderColor: 'rgba(200, 173, 130, 0.36)',
-  },
-  noticeText: {
-    color: 'rgba(243, 240, 232, 0.74)',
-    fontFamily: Fonts.sans,
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: 'center',
-  },
-  errorNoticeText: {
-    color: palette.pearl,
-  },
+  background: { backgroundColor: palette.canvas, flex: 1 },
+  safeArea: { flex: 1 },
+  header: { alignItems: 'center', borderBottomColor: 'rgba(81,97,92,0.58)', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', justifyContent: 'space-between', minHeight: 64, paddingHorizontal: 20 },
+  headerStatus: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 12, fontWeight: '700' },
+  scrollContent: { flexGrow: 1 },
+  shell: { alignSelf: 'center', flex: 1, maxWidth: 430, paddingBottom: 22, paddingHorizontal: 20, width: '100%' },
+  contextBanner: { backgroundColor: palette.proofWash, borderRadius: 14, marginTop: 14, paddingHorizontal: 14, paddingVertical: 12 },
+  contextEyebrow: { color: palette.proof, fontFamily: Fonts.mono, fontSize: 9, fontWeight: '700', letterSpacing: 1 },
+  contextText: { color: palette.ink, fontFamily: Fonts.sans, fontSize: 12, lineHeight: 18, marginTop: 4 },
+  hero: { paddingBottom: 25, paddingTop: 38 },
+  heroMark: { alignItems: 'center', backgroundColor: palette.proofWash, borderRadius: 18, height: 54, justifyContent: 'center', marginBottom: 23, width: 54 },
+  eyebrow: { color: palette.proof, fontFamily: Fonts.mono, fontSize: 10, fontWeight: '700', letterSpacing: 1.15 },
+  title: { color: palette.ink, fontFamily: Fonts.sans, fontSize: 34, fontWeight: '800', letterSpacing: -1.5, lineHeight: 39, marginTop: 9 },
+  intro: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 14, lineHeight: 21, marginTop: 12, maxWidth: 370 },
+  panel: { backgroundColor: palette.surface, borderRadius: 22, gap: 11, padding: 16 },
+  progress: { alignItems: 'center', flexDirection: 'row', gap: 13, minHeight: 76, paddingHorizontal: 5 },
+  progressCopy: { flex: 1 },
+  progressTitle: { color: palette.ink, fontFamily: Fonts.sans, fontSize: 14, fontWeight: '700' },
+  progressBody: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 12, lineHeight: 18, marginTop: 4 },
+  emailForm: { gap: 9 },
+  inputLabel: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 11, fontWeight: '700', marginLeft: 2 },
+  input: { backgroundColor: palette.canvas, borderColor: palette.outline, borderRadius: 14, borderWidth: 1, color: palette.ink, fontFamily: Fonts.sans, fontSize: 15, height: 54, paddingHorizontal: 15, paddingVertical: 0 },
+  inputError: { color: palette.caution, fontFamily: Fonts.sans, fontSize: 11, lineHeight: 16, paddingHorizontal: 2 },
+  button: { alignItems: 'center', borderRadius: 14, flexDirection: 'row', gap: 11, minHeight: 54, paddingHorizontal: 15 },
+  primaryButton: { backgroundColor: palette.proof },
+  secondaryButton: { backgroundColor: 'rgba(242,245,241,0.055)' },
+  buttonText: { color: palette.ink, flex: 1, fontFamily: Fonts.sans, fontSize: 14, fontWeight: '800' },
+  primaryButtonText: { color: palette.canvas },
+  buttonArrow: { color: palette.ink, fontFamily: Fonts.sans, fontSize: 18 },
+  disabled: { opacity: 0.48 },
+  pressed: { opacity: 0.74, transform: [{ scale: 0.992 }] },
+  divider: { alignItems: 'center', flexDirection: 'row', gap: 10, marginVertical: 1 },
+  dividerLine: { backgroundColor: 'rgba(81,97,92,0.55)', flex: 1, height: StyleSheet.hairlineWidth },
+  dividerText: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 11 },
+  safetyNote: { alignItems: 'flex-start', flexDirection: 'row', gap: 9, paddingHorizontal: 3, paddingTop: 4 },
+  safetyText: { color: palette.muted, flex: 1, fontFamily: Fonts.sans, fontSize: 11, lineHeight: 17 },
+  notice: { backgroundColor: 'rgba(116,199,223,0.08)', borderRadius: 13, padding: 12 },
+  noticeText: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 12, lineHeight: 18 },
+  errorNotice: { backgroundColor: palette.cautionWash },
+  errorNoticeText: { color: palette.caution },
+  keepBrowsing: { alignItems: 'center', justifyContent: 'center', minHeight: 46 },
+  keepBrowsingText: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 13, fontWeight: '700' },
+  changeEmail: { alignItems: 'center', justifyContent: 'center', minHeight: 40 },
+  sheetRoot: { flexShrink: 1, maxHeight: '100%' },
+  sheetHandle: { alignSelf: 'center', backgroundColor: 'rgba(241,245,242,.22)', borderRadius: 2, height: 4, marginBottom: 4, marginTop: 10, width: 40 },
+  sheetHeader: { alignItems: 'flex-start', flexDirection: 'row', gap: 14, paddingHorizontal: 20, paddingTop: 12 },
+  sheetHeadingCopy: { flex: 1, minWidth: 0, paddingTop: 3 },
+  sheetTitle: { color: palette.ink, fontFamily: Fonts.sans, fontSize: 23, fontWeight: '800', letterSpacing: -0.8, lineHeight: 27 },
+  sheetIntro: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 13, lineHeight: 20, marginTop: 7 },
+  sheetClose: { alignItems: 'center', backgroundColor: 'rgba(241,245,242,.055)', borderRadius: 14, height: 44, justifyContent: 'center', width: 44 },
+  sheetCloseText: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 25, lineHeight: 27 },
+  sheetScroll: { paddingBottom: 18, paddingHorizontal: 20, paddingTop: 16 },
+  authChoices: { gap: 10 },
+  authChoice: { alignItems: 'center', backgroundColor: 'rgba(241,245,242,.045)', borderRadius: 16, flexDirection: 'row', gap: 12, minHeight: 76, padding: 12 },
+  authChoicePrimary: { backgroundColor: palette.proofWash },
+  authChoiceIcon: { alignItems: 'center', backgroundColor: 'rgba(241,245,242,.06)', borderRadius: 12, height: 40, justifyContent: 'center', width: 40 },
+  authChoiceCopy: { flex: 1, minWidth: 0 },
+  authChoiceLabel: { color: palette.ink, fontFamily: Fonts.sans, fontSize: 14, fontWeight: '700' },
+  authChoiceSupporting: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 11, lineHeight: 16, marginTop: 4 },
+  authChoiceArrow: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 20 },
+  sheetFact: { backgroundColor: 'rgba(241,245,242,.045)', borderRadius: 13, marginTop: 15, padding: 13 },
+  sheetFactText: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 12, lineHeight: 18 },
+  sheetNotNow: { alignItems: 'center', justifyContent: 'center', marginTop: 4, minHeight: 46 },
+  sheetNotNowText: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 13, fontWeight: '700' },
+  sheetMethod: { gap: 11 },
+  chooseAnother: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
+  chooseAnotherText: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 13, fontWeight: '700' },
+  changeEmailText: { color: palette.muted, fontFamily: Fonts.sans, fontSize: 12, fontWeight: '700' },
+  walletCard: { alignItems: 'center', backgroundColor: palette.canvas, borderRadius: 17, flexDirection: 'row', gap: 12, marginBottom: 4, padding: 14 },
+  walletGlyph: { alignItems: 'center', backgroundColor: palette.proofWash, borderRadius: 13, height: 42, justifyContent: 'center', width: 42 },
+  walletCopy: { flex: 1, minWidth: 0 },
+  walletLabel: { color: palette.muted, fontFamily: Fonts.mono, fontSize: 8, fontWeight: '700', letterSpacing: 0.7 },
+  walletTitle: { color: palette.ink, fontFamily: Fonts.sans, fontSize: 14, fontWeight: '700', marginTop: 3 },
+  walletAddress: { color: palette.muted, fontFamily: Fonts.mono, fontSize: 10, marginTop: 4 },
+  walletReady: { color: palette.proof, fontFamily: Fonts.sans, fontSize: 10, fontWeight: '700' },
 });

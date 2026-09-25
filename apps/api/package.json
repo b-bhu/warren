@@ -2,7 +2,9 @@
   "name": "@warren/api",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "type": "module",
   "scripts": {
     "dev": "node --env-file-if-exists=.env.local --env-file-if-exists=.env.providers.local --import tsx --watch src/server.ts",
@@ -10,22 +12,38 @@
     "test": "NODE_ENV=test tsx --test test/**/*.test.ts",
     "verify:home:live": "node --env-file-if-exists=.env.local --env-file-if-exists=.env.providers.local --import tsx scripts/verify-home-live.ts",
     "verify:markets:live": "node --env-file-if-exists=.env.local --env-file-if-exists=.env.providers.local --import tsx scripts/verify-markets-live.ts",
+    "verify:lending:live": "node --env-file-if-exists=.env.local --env-file-if-exists=.env.providers.local --import tsx scripts/verify-lending-live.ts",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@ellipsis-labs/rise": "0.5.28",
+    "@fastify/cors": "11.2.0",
+    "@kamino-finance/klend-sdk": "12.0.0",
+    "@privy-io/node": "0.34.0",
+    "@solana/kit": "2.3.0",
+    "@solana/spl-token": "0.4.15",
+    "@solana/web3.js": "1.99.0",
     "@warren/auth-contract": "workspace:*",
+    "@warren/execution-contract": "workspace:*",
     "@warren/home-contract": "workspace:*",
+    "@warren/lending-contract": "workspace:*",
     "@warren/markets-contract": "workspace:*",
+    "@warren/portfolio-contract": "workspace:*",
     "@warren/provider-contract": "workspace:*",
     "@warren/test-wallet-provider": "workspace:*",
-    "@fastify/cors": "11.2.0",
     "better-sqlite3": "13.0.3",
     "bs58": "6.0.0",
+    "decimal.js": "10.4.3",
     "fastify": "5.12.4",
     "tweetnacl": "1.0.3",
     "viem": "2.56.3",
     "zod": "4.1.12"
   },
-  "devDependencies": { "@types/better-sqlite3": "7.6.13", "@types/node": "24.10.1", "tsx": "4.20.6", "typescript": "6.0.3" }
+  "devDependencies": {
+    "@types/better-sqlite3": "7.6.13",
+    "@types/node": "24.10.1",
+    "tsx": "4.20.6",
+    "typescript": "6.0.3"
+  }
 }

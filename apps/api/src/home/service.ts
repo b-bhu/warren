@@ -152,7 +152,7 @@ export class HomeService {
         }))
         : result.value;
     } catch {
-      throw new HomeServiceFault('CATALOG_UNAVAILABLE', 'The company catalogue is temporarily unavailable.', true);
+      throw new HomeServiceFault('CATALOG_UNAVAILABLE', 'The company catalogue could not be refreshed.', true);
     }
   }
 
@@ -176,19 +176,19 @@ export class HomeService {
     if (!marketParsed.success) warnings.push({
       section: 'market',
       code: 'MARKET_STATUS_UNAVAILABLE',
-      message: 'US market status is temporarily unavailable.',
+      message: 'US market status could not be refreshed.',
       retryable: true,
     });
     if (!indicesParsed.success) warnings.push({
       section: 'indices',
       code: 'INDICES_UNAVAILABLE',
-      message: 'Market indices are temporarily unavailable.',
+      message: 'Market indices could not be refreshed.',
       retryable: true,
     });
     if (!newsParsed.success) warnings.push({
       section: 'news',
       code: 'NEWS_UNAVAILABLE',
-      message: 'Market news is temporarily unavailable.',
+      message: 'Market news could not be refreshed.',
       retryable: true,
     });
     else if (newsParsed.data.length === 0) warnings.push({
@@ -201,7 +201,7 @@ export class HomeService {
     const market: MarketStatus = marketParsed.success ? marketParsed.data : {
       region: 'US',
       session: 'unavailable',
-      label: 'US market status unavailable',
+      label: 'US market status needs a refresh',
       asOf: null,
       nextOpenAt: null,
       nextCloseAt: null,

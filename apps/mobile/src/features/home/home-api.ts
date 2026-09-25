@@ -6,6 +6,8 @@ import {
   type HomeResponse,
 } from '@warren/home-contract';
 
+import { configuredApiUrl } from '@/lib/api-config';
+
 let cachedHome: HomeResponse | undefined;
 let cachedHomeEtag: string | undefined;
 
@@ -61,9 +63,9 @@ async function loadAssets(path: string, signal?: AbortSignal): Promise<AssetsRes
 }
 
 async function request(path: string, init: RequestInit): Promise<Response> {
-  const baseUrl = process.env.EXPO_PUBLIC_API_URL?.trim().replace(/\/$/, '');
+  const baseUrl = configuredApiUrl();
   if (!baseUrl) {
-    throw new HomeRequestError('Add EXPO_PUBLIC_API_URL to the mobile environment to load Home.');
+    throw new HomeRequestError('Warren could not load Home. Please try again shortly.');
   }
 
   let response: Response;
@@ -78,7 +80,7 @@ async function request(path: string, init: RequestInit): Promise<Response> {
     const payload = await readOptionalJson(response);
     const parsed = homeApiErrorSchema.safeParse(payload);
     throw new HomeRequestError(
-      parsed.success ? parsed.data.error.message : 'Market data is temporarily unavailable.',
+      parsed.success ? parsed.data.error.message : 'Warren could not refresh market data.',
       response.status,
     );
   }

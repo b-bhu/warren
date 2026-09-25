@@ -8,7 +8,12 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { TamaguiProvider } from 'tamagui';
 
 import { Colors } from '@/constants/theme';
-import { PrivyRuntimeProvider } from '@/features/privy';
+import {
+  PrivyAuthSheetProvider,
+  PrivyRuntimeProvider,
+  TransactionWalletProvider,
+  ViewerStatusProvider,
+} from '@/features/privy';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { tamaguiConfig } from '../../tamagui.config';
 
@@ -45,13 +50,21 @@ function AppProviders() {
       <View onLayout={onLayout} style={{ flex: 1, backgroundColor: colors.canvas }}>
         <ThemeProvider value={warrenTheme}>
           <PrivyRuntimeProvider>
-            <StatusBar style={appearance === 'dark' ? 'light' : 'dark'} />
-            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="stocks/[symbol]" />
-              <Stack.Screen name="buy/[symbol]" />
-              <Stack.Screen name="sign-in" />
-            </Stack>
+            <TransactionWalletProvider>
+              <ViewerStatusProvider>
+                <PrivyAuthSheetProvider>
+                  <StatusBar style={appearance === 'dark' ? 'light' : 'dark'} />
+                  <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="stocks/[assetId]" />
+                    <Stack.Screen name="trade/[assetId]" />
+                    <Stack.Screen name="lending/[assetId]" />
+                    <Stack.Screen name="buy/[symbol]" />
+                    <Stack.Screen name="sign-in" />
+                  </Stack>
+                </PrivyAuthSheetProvider>
+              </ViewerStatusProvider>
+            </TransactionWalletProvider>
           </PrivyRuntimeProvider>
         </ThemeProvider>
       </View>

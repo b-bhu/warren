@@ -2,7 +2,6 @@ import {
   hasError,
   isConnected,
   needsRecovery,
-  useEmbeddedEthereumWallet,
   useEmbeddedSolanaWallet,
   useLoginWithEmail,
   useLoginWithSiws,
@@ -19,6 +18,7 @@ type Provider = 'email' | 'external-wallet';
 type PrivyEntryProps = {
   contextLabel?: string;
   onCancel?: () => void;
+  presentation?: 'screen' | 'sheet';
 };
 
 const CANCELLED_AUTH = /association cancelled|plugin closed|user rejected|user denied|request rejected|cancell?ed/i;
@@ -34,27 +34,38 @@ const mobileWalletIdentity: AppIdentity = {
   uri: walletIdentity.mobileWalletUri,
 };
 
-export function PrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
+export function PrivyEntry({ contextLabel, onCancel, presentation = 'screen' }: PrivyEntryProps) {
   const runtimeStatus = usePrivyRuntimeStatus();
 
-  if (runtimeStatus !== 'configured') {
+  if (runtimeStatus === 'unsupported-platform') {
+    return (
+      <LiquidLedgerScreen
+        contextLabel={contextLabel}
+        mode="unsupported-platform"
+        onCancel={onCancel}
+        presentation={presentation}
+      />
+    );
+  }
+
+  if (runtimeStatus === 'missing-config') {
     return (
       <LiquidLedgerScreen
         contextLabel={contextLabel}
         mode="missing-config"
         onCancel={onCancel}
+        presentation={presentation}
       />
     );
   }
 
-  return <ConfiguredPrivyEntry contextLabel={contextLabel} onCancel={onCancel} />;
+  return <ConfiguredPrivyEntry contextLabel={contextLabel} onCancel={onCancel} presentation={presentation} />;
 }
 
-function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
+function ConfiguredPrivyEntry({ contextLabel, onCancel, presentation = 'screen' }: PrivyEntryProps) {
   const { error: initializationError, isReady, logout, refreshUser, user } = usePrivy();
   const { loginWithCode, sendCode } = useLoginWithEmail();
   const { generateMessage, login: loginWithSiws } = useLoginWithSiws();
-  const ethereumWallet = useEmbeddedEthereumWallet();
   const solanaWallet = useEmbeddedSolanaWallet();
   const [activeProvider, setActiveProvider] = useState<Provider | null>(null);
   const [awaitingSession, setAwaitingSession] = useState(false);
@@ -63,18 +74,16 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
   const [emailCodeSent, setEmailCodeSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [recoveringWallet, setRecoveringWallet] = useState(false);
   const [sessionTimedOut, setSessionTimedOut] = useState(false);
   const [timedOutUserId, setTimedOutUserId] = useState<string | null>(null);
 
-  const evmAddress = ethereumWallet.wallets[0]?.address ?? null;
   const solanaAddress = isConnected(solanaWallet)
     ? solanaWallet.wallets[0]?.address ?? null
     : null;
-  const walletsReady = Boolean(evmAddress && solanaAddress);
-  const recordedEvmAddress = findEmbeddedWalletAddress(user?.linked_accounts, 'ethereum');
-  const evmNeedsRecovery = Boolean(recordedEvmAddress && !evmAddress);
+  const walletReady = Boolean(solanaAddress);
   const walletTimedOut = Boolean(
-    user && !walletsReady && timedOutUserId === user.id,
+    user && !walletReady && timedOutUserId === user.id,
   );
 
   useEffect(() => {
@@ -88,14 +97,14 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
   }, [awaitingSession, user]);
 
   useEffect(() => {
-    if (!user || walletsReady) return;
+    if (!user || walletReady) return;
 
     const timeout = setTimeout(
       () => setTimedOutUserId(user.id),
       WALLET_PREPARATION_TIMEOUT_MS,
     );
     return () => clearTimeout(timeout);
-  }, [user, walletsReady]);
+  }, [user, walletReady]);
 
   const beginExternalWalletLogin = useCallback(async () => {
     setLocalError(null);
@@ -141,6 +150,13 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
           signature,
         });
       });
+      if (authenticatedUser) {
+        try {
+          await refreshUser();
+        } catch (error) {
+          logDevelopmentAuthError('wallet session reconciliation', errorMessage(error));
+        }
+      }
       setAwaitingSession(Boolean(authenticatedUser));
     } catch (error) {
       const message = errorMessage(error);
@@ -151,7 +167,7 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
     } finally {
       setActiveProvider(null);
     }
-  }, [generateMessage, loginWithSiws]);
+  }, [generateMessage, loginWithSiws, refreshUser]);
 
   const requestEmailCode = useCallback(async () => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -197,6 +213,13 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
         code: normalizedCode,
         email,
       });
+      if (authenticatedUser) {
+        try {
+          await refreshUser();
+        } catch (error) {
+          logDevelopmentAuthError('email session reconciliation', errorMessage(error));
+        }
+      }
       setAwaitingSession(Boolean(authenticatedUser));
     } catch (error) {
       const message = errorMessage(error);
@@ -205,7 +228,7 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
     } finally {
       setActiveProvider(null);
     }
-  }, [email, emailCode, loginWithCode]);
+  }, [email, emailCode, loginWithCode, refreshUser]);
 
   const resetEmail = useCallback(() => {
     setEmailCode('');
@@ -244,7 +267,25 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
     }
   }, [logout]);
 
-  const recoveryRequired = needsRecovery(solanaWallet) || (walletTimedOut && evmNeedsRecovery);
+  const recoverWallet = useCallback(async () => {
+    setLocalError(null);
+    setRecoveringWallet(true);
+    try {
+      // This action lets Privy use the recovery method already attached to the
+      // user's wallet, so Warren never creates a replacement wallet here.
+      const recoverExistingWallet = solanaWallet.recover;
+      if (!recoverExistingWallet) throw new Error('Wallet recovery is not configured in this build.');
+      await recoverExistingWallet();
+      await refreshUser();
+    } catch (error) {
+      logDevelopmentAuthError('wallet recovery', errorMessage(error));
+      setLocalError('Wallet recovery could not be completed. Check your connection and try again.');
+    } finally {
+      setRecoveringWallet(false);
+    }
+  }, [refreshUser, solanaWallet]);
+
+  const recoveryRequired = needsRecovery(solanaWallet);
   const walletError = hasError(solanaWallet)
     ? 'Privy could not prepare the Solana wallet. Please try again.'
     : walletTimedOut && !recoveryRequired
@@ -262,11 +303,13 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
     return (
       <LiquidLedgerScreen
         contextLabel={contextLabel}
-        evmAddress={evmAddress}
-        message="Your existing wallet keys are not available on this device. An approved Privy recovery method must be configured before continuing."
+        message={localError ?? 'Your existing wallet keys are not available on this device. Recover the same wallet to continue.'}
         mode="recovery-required"
         onCancel={onCancel}
+        onRecover={() => void recoverWallet()}
         onSignOut={() => void signOut()}
+        presentation={presentation}
+        recoveryBusy={recoveringWallet}
         solanaAddress={solanaAddress}
       />
     );
@@ -276,38 +319,38 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
     return (
       <LiquidLedgerScreen
         contextLabel={contextLabel}
-        evmAddress={evmAddress}
         message={visibleError}
         mode="error"
         onCancel={onCancel}
         onRetry={initializationError ? undefined : () => void retry()}
         onSignOut={user ? () => void signOut() : undefined}
+        presentation={presentation}
         solanaAddress={solanaAddress}
       />
     );
   }
 
-  if (!isReady || activeProvider || (!user && awaitingSession) || (user && !walletsReady)) {
+  if (!isReady || activeProvider || (!user && awaitingSession) || (user && !walletReady)) {
     return (
       <LiquidLedgerScreen
         activeProvider={activeProvider}
         contextLabel={contextLabel}
-        evmAddress={evmAddress}
         mode="preparing"
         onCancel={onCancel}
+        presentation={presentation}
         solanaAddress={solanaAddress}
       />
     );
   }
 
-  if (user && walletsReady) {
+  if (user && walletReady) {
     return (
       <LiquidLedgerScreen
         contextLabel={contextLabel}
-        evmAddress={evmAddress}
         mode="ready"
         onCancel={onCancel}
         onSignOut={() => void signOut()}
+        presentation={presentation}
         solanaAddress={solanaAddress}
       />
     );
@@ -325,14 +368,14 @@ function ConfiguredPrivyEntry({ contextLabel, onCancel }: PrivyEntryProps) {
         onCodeChange: (value) => setEmailCode(value.replace(/\D/g, '').slice(0, 6)),
         onEmailChange: setEmail,
         onReset: resetEmail,
-        onSendCode: canBeginLogin() ? () => void requestEmailCode() : undefined,
-        onVerifyCode: canBeginLogin() ? () => void verifyEmailCode() : undefined,
+        onSendCode: () => void requestEmailCode(),
+        onVerifyCode: () => void verifyEmailCode(),
       }}
-      message={legalConfigurationMessage()}
       mode="sign-in"
       onCancel={onCancel}
+      presentation={presentation}
       walletAuth={{
-        onConnect: canBeginLogin() ? () => void beginExternalWalletLogin() : undefined,
+        onConnect: () => void beginExternalWalletLogin(),
       }}
     />
   );
@@ -413,36 +456,4 @@ function logDevelopmentAuthError(flow: string, message: string) {
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
     console.warn(`[Privy ${flow}] ${message}`);
   }
-}
-
-function findEmbeddedWalletAddress(
-  linkedAccounts: readonly unknown[] | undefined,
-  chainType: 'ethereum' | 'solana',
-) {
-  const account = (linkedAccounts ?? []).find((candidate) => {
-    const wallet = candidate as { address?: unknown; chain_type?: unknown; type?: unknown };
-    return wallet.type === 'wallet'
-      && wallet.chain_type === chainType
-      && typeof wallet.address === 'string';
-  }) as { address?: string } | undefined;
-
-  return account?.address ?? null;
-}
-
-function legalConfigurationMessage() {
-  if (hasLegalConfiguration()) return null;
-  return typeof __DEV__ !== 'undefined' && __DEV__
-    ? 'Legal links are not configured, so this sign-in is for development testing only.'
-    : 'Terms and Privacy links must be configured before sign-in can be enabled.';
-}
-
-function canBeginLogin() {
-  return hasLegalConfiguration() || (typeof __DEV__ !== 'undefined' && __DEV__);
-}
-
-function hasLegalConfiguration() {
-  return Boolean(
-    process.env.EXPO_PUBLIC_TERMS_URL?.trim()
-      && process.env.EXPO_PUBLIC_PRIVACY_URL?.trim(),
-  );
 }

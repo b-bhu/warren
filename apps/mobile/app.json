@@ -7,7 +7,6 @@
     "icon": "./assets/brand/derived/icons/app-icon-dark.png",
     "scheme": "warren",
     "userInterfaceStyle": "automatic",
-    "primaryColor": "#0B5C78",
     "ios": {
       "icon": {
         "light": "./assets/brand/derived/icons/app-icon-light.png",
@@ -17,6 +16,7 @@
     },
     "android": {
       "package": "com.warren.app",
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#131918",
         "foregroundImage": "./assets/brand/derived/android/adaptive-foreground.png",
@@ -49,6 +49,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "primaryColor": "#0B5C78"
   }
 }

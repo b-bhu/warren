@@ -1,11 +1,16 @@
 import {
+  marketCompanyNewsResponseSchema,
   marketCompanyResponseSchema,
+  marketHistoryResponseSchema,
   marketInstrumentSchema,
   marketSearchResponseSchema,
   marketsResponseSchema,
   type MarketAvailability,
+  type MarketCompanyNewsResponse,
   type MarketCompanyResponse,
   type MarketCompanySummary,
+  type MarketHistoryQuery,
+  type MarketHistoryResponse,
   type MarketInstrument,
   type MarketProduct,
   type MarketsQuery,
@@ -16,6 +21,11 @@ import {
   type MarketSort,
 } from '@warren/markets-contract';
 import { FreshStaleCache } from '../home/cache.js';
+import type {
+  MarketCompanyNewsSource,
+  MarketHistoryResult,
+  MarketHistorySource,
+} from './details-sources.js';
 import type { MarketsSource } from './sources.js';
 
 export class MarketsServiceFault extends Error {
@@ -30,12 +40,14 @@ export class MarketsServiceFault extends Error {
 
 type MarketsServiceOptions = {
   sources: readonly MarketsSource[];
+  historySource?: MarketHistorySource;
+  newsSource?: MarketCompanyNewsSource;
   cacheTtlMs: number;
   staleTtlMs: number;
   now?: () => Date;
 };
 
-type RegistrySnapshot = {
+export type RegistrySnapshot = {
   instruments: MarketInstrument[];
   warnings: MarketsWarning[];
 };
@@ -51,6 +63,8 @@ const availabilityRank: Record<MarketAvailability, number> = {
 export class MarketsService {
   private readonly now: () => Date;
   private readonly caches = new Map<string, FreshStaleCache<MarketInstrument[]>>();
+  private readonly historyCaches = new Map<string, FreshStaleCache<MarketHistoryResult>>();
+  private readonly newsCaches = new Map<string, FreshStaleCache<MarketCompanyNewsResponse['items']>>();
 
   constructor(private readonly options: MarketsServiceOptions) {
     this.now = options.now ?? (() => new Date());
@@ -125,15 +139,12 @@ export class MarketsService {
 
   async getCompany(assetId: string): Promise<MarketCompanyResponse> {
     const snapshot = await this.readRegistry();
-    const instruments = snapshot.instruments
-      .filter((instrument) => instrument.assetId === assetId)
-      .sort((left, right) => productOrder.indexOf(left.productType) - productOrder.indexOf(right.productType)
-        || availabilityRank[right.availability] - availabilityRank[left.availability]
-        || left.provider.localeCompare(right.provider));
-    if (instruments.length === 0) {
-      throw new MarketsServiceFault('NOT_FOUND', 'This company is not in the Markets registry.', false);
-    }
+    const instruments = companyInstruments(snapshot, assetId);
     const representative = chooseRepresentative(instruments);
+    const primaryInstrument = choosePrimaryInstrument(instruments);
+    const history = primaryInstrument
+      ? this.options.historySource?.capability(primaryInstrument) ?? null
+      : null;
 
     try {
       return marketCompanyResponseSchema.parse({
@@ -143,7 +154,16 @@ export class MarketsService {
           companyName: representative.companyName,
           ticker: representative.ticker,
           logoUrl: representative.logoUrl,
+          description: chooseCompanyDescription(instruments, primaryInstrument),
         },
+        primaryInstrumentId: primaryInstrument?.instrumentId ?? null,
+        hero: primaryInstrument ? {
+          instrumentId: primaryInstrument.instrumentId,
+          productType: primaryInstrument.productType,
+          provider: primaryInstrument.provider,
+          value: primaryInstrument.marketValue,
+        } : null,
+        history,
         availableNow: instruments.filter((instrument) => instrument.availability === 'available').length,
         instruments,
         warnings: snapshot.warnings,
@@ -153,8 +173,186 @@ export class MarketsService {
     }
   }
 
+  /** Internal read model used by authenticated portfolio aggregation. */
+  async getPortfolioRegistry(): Promise<RegistrySnapshot> {
+    const snapshot = await this.readRegistry();
+    return {
+      instruments: snapshot.instruments.filter((instrument) =>
+        instrument.verificationState === 'verified'
+        && instrument.availability === 'available'),
+      warnings: snapshot.warnings,
+    };
+  }
+
+  async getCompanyHistory(assetId: string, query: MarketHistoryQuery): Promise<MarketHistoryResponse> {
+    const snapshot = await this.readRegistry();
+    const instruments = companyInstruments(snapshot, assetId);
+    const instrument = instruments.find((candidate) => candidate.instrumentId === query.instrumentId);
+    if (!instrument) throw new MarketsServiceFault('NOT_FOUND', 'This instrument is not available for the company.', false);
+    const source = this.options.historySource;
+    const capability = source?.capability(instrument) ?? null;
+    if (!source || !capability || !capability.supportedRanges.includes(query.range)) {
+      return this.unavailableHistory(assetId, instrument, query, snapshot.warnings, false);
+    }
+
+    const cacheKey = `${instrument.instrumentId}:${query.range}`;
+    let cache = this.historyCaches.get(cacheKey);
+    if (!cache) {
+      cache = new FreshStaleCache(
+        this.options.cacheTtlMs,
+        this.options.staleTtlMs,
+        () => this.now().getTime(),
+      );
+      this.historyCaches.set(cacheKey, cache);
+    }
+
+    try {
+      const result = await cache.read(() => source.loadHistory(instrument, query.range));
+      const history = result.value;
+      const warnings = [...snapshot.warnings];
+      const dataState = history.points.length === 0
+        ? 'unavailable' as const
+        : result.state === 'stale' ? 'stale' as const : history.dataState;
+      if (result.state === 'stale') warnings.push({
+        section: 'history',
+        provider: source.id,
+        product: instrument.productType,
+        code: 'HISTORY_STALE',
+        message: 'The latest chart refresh failed, so Warren is showing cached history.',
+        retryable: true,
+      });
+      if (history.points.length === 0) warnings.push({
+        section: 'history',
+        provider: source.id,
+        product: instrument.productType,
+        code: 'HISTORY_UNAVAILABLE',
+        message: 'Matching history is not available for this instrument and range.',
+        retryable: false,
+      });
+      return marketHistoryResponseSchema.parse({
+        generatedAt: this.now().toISOString(),
+        assetId,
+        instrumentId: instrument.instrumentId,
+        range: query.range,
+        interval: history.points.length ? history.interval : null,
+        valueLabel: instrument.marketValue.label,
+        currency: instrument.marketValue.currency,
+        provider: history.points.length ? source.id : null,
+        asOf: history.points.length ? history.asOf : null,
+        dataState,
+        points: history.points,
+        warnings,
+      });
+    } catch {
+      return this.unavailableHistory(assetId, instrument, query, snapshot.warnings, true);
+    }
+  }
+
+  async getCompanyNews(assetId: string): Promise<MarketCompanyNewsResponse> {
+    const snapshot = await this.readRegistry();
+    const instruments = companyInstruments(snapshot, assetId);
+    const representative = chooseRepresentative(instruments);
+    const source = this.options.newsSource;
+    if (!source) return marketCompanyNewsResponseSchema.parse({
+      generatedAt: this.now().toISOString(),
+      assetId,
+      items: [],
+      warnings: [...snapshot.warnings, {
+        section: 'news',
+        provider: 'Warren',
+        product: null,
+        code: 'NEWS_UNAVAILABLE',
+        message: 'Company news is not configured for this environment.',
+        retryable: false,
+      }],
+    });
+
+    let cache = this.newsCaches.get(assetId);
+    if (!cache) {
+      cache = new FreshStaleCache(
+        this.options.cacheTtlMs,
+        this.options.staleTtlMs,
+        () => this.now().getTime(),
+      );
+      this.newsCaches.set(assetId, cache);
+    }
+    try {
+      const result = await cache.read(() => source.loadCompanyNews({
+        assetId,
+        companyName: representative.companyName,
+        ticker: representative.ticker,
+      }));
+      const items = result.state === 'stale'
+        ? result.value.map((item) => ({ ...item, dataState: item.dataState === 'sample' ? 'sample' as const : 'stale' as const }))
+        : result.value;
+      const warnings = [...snapshot.warnings];
+      if (result.state === 'stale') warnings.push({
+        section: 'news',
+        provider: source.id,
+        product: null,
+        code: 'NEWS_STALE',
+        message: 'The latest news refresh failed, so Warren is showing cached company news.',
+        retryable: true,
+      });
+      return marketCompanyNewsResponseSchema.parse({
+        generatedAt: this.now().toISOString(),
+        assetId,
+        items,
+        warnings,
+      });
+    } catch {
+      return marketCompanyNewsResponseSchema.parse({
+        generatedAt: this.now().toISOString(),
+        assetId,
+        items: [],
+        warnings: [...snapshot.warnings, {
+          section: 'news',
+          provider: source.id,
+          product: null,
+          code: 'NEWS_UNAVAILABLE',
+          message: 'Company news could not be refreshed.',
+          retryable: true,
+        }],
+      });
+    }
+  }
+
   clearCache() {
     for (const cache of this.caches.values()) cache.clear();
+    for (const cache of this.historyCaches.values()) cache.clear();
+    for (const cache of this.newsCaches.values()) cache.clear();
+  }
+
+  private unavailableHistory(
+    assetId: string,
+    instrument: MarketInstrument,
+    query: MarketHistoryQuery,
+    registryWarnings: MarketsWarning[],
+    retryable: boolean,
+  ): MarketHistoryResponse {
+    return marketHistoryResponseSchema.parse({
+      generatedAt: this.now().toISOString(),
+      assetId,
+      instrumentId: instrument.instrumentId,
+      range: query.range,
+      interval: null,
+      valueLabel: instrument.marketValue.label,
+      currency: instrument.marketValue.currency,
+      provider: null,
+      asOf: null,
+      dataState: 'unavailable',
+      points: [],
+      warnings: [...registryWarnings, {
+        section: 'history',
+        provider: this.options.historySource?.id ?? 'Warren',
+        product: instrument.productType,
+        code: 'HISTORY_UNAVAILABLE',
+        message: retryable
+          ? 'Matching history could not be refreshed.'
+          : 'Matching history is not available for this instrument and range.',
+        retryable,
+      }],
+    });
   }
 
   private async readRegistry(): Promise<RegistrySnapshot> {
@@ -177,10 +375,11 @@ export class MarketsService {
     for (const result of results) {
       if ('error' in result) {
         warnings.push({
+          section: 'registry',
           provider: result.source.id,
           product: null,
           code: 'PROVIDER_UNAVAILABLE',
-          message: `${result.source.id} market data is temporarily unavailable.`,
+          message: `${result.source.id} market data could not be refreshed.`,
           retryable: true,
         });
         continue;
@@ -188,6 +387,7 @@ export class MarketsService {
       healthySources += 1;
       if (result.state === 'stale') {
         warnings.push({
+          section: 'registry',
           provider: result.source.id,
           product: null,
           code: 'PROVIDER_STALE',
@@ -198,7 +398,7 @@ export class MarketsService {
       instruments.push(...result.instruments);
     }
     if (healthySources === 0) {
-      throw new MarketsServiceFault('REGISTRY_UNAVAILABLE', 'The Markets registry is temporarily unavailable.', true);
+      throw new MarketsServiceFault('REGISTRY_UNAVAILABLE', 'The Markets registry could not be refreshed.', true);
     }
 
     return {
@@ -276,6 +476,67 @@ function groupCompanies(instruments: readonly MarketInstrument[]): MarketCompany
 function chooseRepresentative(instruments: readonly MarketInstrument[]) {
   return [...instruments].sort((left, right) => identityPriority(right) - identityPriority(left)
     || Number(Boolean(right.logoUrl)) - Number(Boolean(left.logoUrl)))[0];
+}
+
+function companyInstruments(snapshot: RegistrySnapshot, assetId: string) {
+  const instruments = snapshot.instruments
+    .filter((instrument) => instrument.assetId === assetId)
+    .sort((left, right) => productOrder.indexOf(left.productType) - productOrder.indexOf(right.productType)
+      || availabilityRank[right.availability] - availabilityRank[left.availability]
+      || left.provider.localeCompare(right.provider)
+      || left.instrumentId.localeCompare(right.instrumentId));
+  if (instruments.length === 0) {
+    throw new MarketsServiceFault('NOT_FOUND', 'This company is not in the Markets registry.', false);
+  }
+  return instruments;
+}
+
+function choosePrimaryInstrument(instruments: readonly MarketInstrument[]): MarketInstrument | undefined {
+  const known = instruments.filter((instrument) => instrument.marketValue.amount !== null);
+  const priorities = [
+    (instrument: MarketInstrument) => instrument.verificationState === 'verified'
+      && instrument.availability === 'available' && instrument.productType === 'spot',
+    (instrument: MarketInstrument) => instrument.verificationState === 'verified'
+      && instrument.availability === 'available' && instrument.productType === 'prestock',
+    (instrument: MarketInstrument) => instrument.verificationState === 'verified'
+      && instrument.availability === 'available' && instrument.productType === 'perpetual',
+    (instrument: MarketInstrument) => instrument.verificationState === 'verified'
+      && ['preview', 'paused'].includes(instrument.availability),
+  ];
+  for (const matches of priorities) {
+    const candidates = known.filter(matches).sort(compareHeroCandidates);
+    if (candidates[0]) return candidates[0];
+  }
+  return undefined;
+}
+
+function compareHeroCandidates(left: MarketInstrument, right: MarketInstrument) {
+  if (left.productType === 'spot' && right.productType === 'spot') {
+    const tierRank = { share_redeemable: 4, cash_redeemable: 3, not_redeemable: 2, unknown: 1 } as const;
+    const tierDifference = tierRank[right.stockVariantTier] - tierRank[left.stockVariantTier];
+    if (tierDifference) return tierDifference;
+    const liquidityDifference = (right.liquidityUsd ?? -1) - (left.liquidityUsd ?? -1);
+    if (liquidityDifference) return liquidityDifference;
+  }
+  return productOrder.indexOf(left.productType) - productOrder.indexOf(right.productType)
+    || left.provider.localeCompare(right.provider)
+    || left.instrumentId.localeCompare(right.instrumentId);
+}
+
+function chooseCompanyDescription(
+  instruments: readonly MarketInstrument[],
+  primaryInstrument: MarketInstrument | undefined,
+) {
+  const candidates = [primaryInstrument, ...instruments]
+    .filter((instrument): instrument is MarketInstrument => Boolean(instrument))
+    .filter((instrument, index, all) => all.findIndex((candidate) => candidate.instrumentId === instrument.instrumentId) === index)
+    .filter((instrument) => instrument.verificationState === 'verified' && Boolean(instrument.description));
+  const selected = candidates[0];
+  return selected?.description ? {
+    text: selected.description,
+    source: selected.provider,
+    sourceUrl: selected.providerUrl,
+  } : null;
 }
 
 function identityPriority(instrument: MarketInstrument) {

@@ -1,0 +1,2011 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Warren · Portfolio workspace concept</title>
+  <style>
+    :root {
+      --canvas: #0c1211;
+      --surface: #151e1c;
+      --surface-raised: #1b2724;
+      --ink: #f1f5f2;
+      --muted: #9eaca7;
+      --proof: #69cdea;
+      --on-proof: #071113;
+      --proof-wash: rgba(105, 205, 234, 0.11);
+      --outline: rgba(241, 245, 242, 0.16);
+      --outline-soft: rgba(241, 245, 242, 0.09);
+      --gain: #79d5a3;
+      --gain-wash: rgba(121, 213, 163, 0.1);
+      --caution: #ff817a;
+      --caution-wash: rgba(255, 129, 122, 0.11);
+      --private: #aab8b3;
+      --private-wash: rgba(170, 184, 179, 0.09);
+      --font-sans: Manrope, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-serif: Fraunces, "Iowan Old Style", Georgia, serif;
+      --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+      color: var(--ink);
+      background: #080d0c;
+      font-family: var(--font-sans);
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { margin: 0; }
+    button, input { color: inherit; font: inherit; -webkit-tap-highlight-color: transparent; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid rgba(116, 199, 223, 0.42);
+      outline-offset: 2px;
+    }
+    button:disabled { cursor: not-allowed; }
+    h1, h2, h3, p { margin: 0; }
+    svg { display: block; }
+    [hidden] { display: none !important; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .prototype-stage {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: #0b100f;
+    }
+
+    .prototype-switcher {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 60;
+      display: grid;
+      gap: 8px;
+      width: 228px;
+      padding: 11px;
+      border: 1px solid var(--outline-soft);
+      border-radius: 12px;
+      background: rgba(28, 37, 35, 0.98);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+    }
+
+    .prototype-switcher > span {
+      color: var(--muted);
+      font: 700 10px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .switcher-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+      padding: 3px;
+      border: 1px solid var(--outline-soft);
+      border-radius: 9px;
+      background: var(--canvas);
+    }
+
+    .switcher-buttons button {
+      min-height: 44px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 7px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .switcher-buttons button[aria-pressed="true"] { color: var(--on-proof); background: var(--proof); }
+
+    .phone {
+      position: relative;
+      width: min(430px, 100%);
+      height: min(900px, calc(100dvh - 48px));
+      min-height: 700px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: var(--canvas);
+      border: 7px solid #050807;
+      border-radius: 42px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.24);
+    }
+
+    .status-bar {
+      position: relative;
+      height: 34px;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 24px 5px;
+      background: var(--canvas);
+      font-size: 11px;
+      font-weight: 800;
+      z-index: 12;
+    }
+
+    .dynamic-island {
+      position: absolute;
+      top: 7px;
+      left: 50%;
+      width: 84px;
+      height: 18px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: #050807;
+    }
+
+    .status-icons { display: flex; align-items: center; gap: 5px; }
+
+    .app-header {
+      min-height: 58px;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 18px;
+      background: rgba(19, 25, 24, 0.98);
+      z-index: 10;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .brand-mark {
+      width: 31px;
+      height: 31px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--outline);
+      border-radius: 10px;
+      color: var(--proof);
+      background: var(--proof-wash);
+      font: 700 16px/1 var(--font-serif);
+      transform: rotate(-8deg);
+    }
+
+    .brand-mark span { transform: rotate(8deg); }
+    .wordmark { font: 700 21px/1 var(--font-serif); letter-spacing: -0.035em; }
+
+    .account-chip {
+      max-width: 148px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 12px;
+      border: 1px solid var(--outline-soft);
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .account-chip.signed-out { color: var(--proof); border-color: rgba(116, 199, 223, 0.36); background: var(--proof-wash); }
+    .account-chip.unverified,
+    .account-chip.wallet-setup { color: var(--proof); border-color: rgba(116, 199, 223, 0.36); background: var(--proof-wash); }
+    .account-chip.checking { min-width: 126px; justify-content: center; color: var(--muted); }
+    .account-chip.ready { color: var(--ink); }
+    .account-chip.issue,
+    .account-chip.expired { color: var(--caution); border-color: rgba(255, 170, 162, 0.36); background: var(--caution-wash); }
+    .account-chip:disabled { cursor: wait; opacity: 1; }
+    .account-chip-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wallet-glyph { flex: 0 0 auto; color: currentColor; }
+    .account-dot { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: var(--gain); box-shadow: 0 0 0 3px rgba(139, 196, 161, 0.12); }
+    .account-chevron { flex: 0 0 auto; color: var(--muted); }
+    .account-spinner { width: 14px; height: 14px; flex: 0 0 auto; border: 2px solid var(--outline); border-top-color: var(--proof); border-radius: 50%; animation: spin 800ms linear infinite; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .portfolio-shell {
+      flex: 0 0 auto;
+      border-top: 1px solid var(--outline-soft);
+      border-bottom: 1px solid var(--outline-soft);
+      background: rgba(19, 25, 24, 0.98);
+      z-index: 9;
+    }
+
+    .portfolio-titlebar {
+      min-height: 55px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 7px 18px 5px;
+    }
+
+    .portfolio-titlebar h1 { font: 700 26px/1 var(--font-serif); letter-spacing: -0.04em; }
+    .portfolio-titlebar p { margin-top: 5px; color: var(--muted); font-size: 12px; }
+
+    .privacy-button {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 10px;
+      color: var(--muted);
+      background: transparent;
+    }
+
+    .view-tabs { display: grid; grid-template-columns: repeat(3, 1fr); padding: 0 12px; }
+    .view-tab {
+      position: relative;
+      min-height: 45px;
+      padding: 0 6px;
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .view-tab[aria-selected="true"] { color: var(--ink); }
+    .view-tab[aria-selected="true"]::after {
+      content: "";
+      position: absolute;
+      right: 8px;
+      bottom: 0;
+      left: 8px;
+      height: 2px;
+      border-radius: 999px;
+      background: var(--proof);
+    }
+
+    .signed-out-lock { display: inline-flex; margin-left: 4px; color: var(--muted); vertical-align: -2px; }
+
+    .screen-scroll {
+      min-width: 0;
+      min-height: 0;
+      flex: 1;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scrollbar-width: none;
+      overscroll-behavior-y: contain;
+    }
+
+    .screen-scroll::-webkit-scrollbar { display: none; }
+    .pane { display: none; padding: 0 17px 30px; }
+    .pane.active { display: block; animation: pane-in 160ms ease-out both; }
+
+    @keyframes pane-in {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-copy { padding: 23px 2px 20px; border-bottom: 1px solid var(--outline-soft); }
+    .eyebrow { color: var(--proof); font: 700 12px/1.2 var(--font-mono); letter-spacing: 0.055em; text-transform: uppercase; }
+    .hero-copy h2 { max-width: 320px; margin-top: 10px; font: 700 23px/1.13 var(--font-serif); letter-spacing: -0.03em; }
+    .hero-copy p { max-width: 350px; margin-top: 9px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .primary-button {
+      width: 100%;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+      padding: 0 15px;
+      border: 1px solid var(--proof);
+      border-radius: 10px;
+      color: var(--on-proof);
+      background: var(--proof);
+      font-size: 14px;
+      font-weight: 850;
+    }
+    .primary-button:disabled { cursor: wait; color: var(--muted); border-color: var(--outline); background: var(--surface); }
+
+    .section { padding-top: 22px; }
+    .section-heading {
+      min-height: 28px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 2px 8px;
+    }
+
+    .section-heading h2 { font: 700 18px/1.1 var(--font-serif); letter-spacing: -0.025em; }
+    .section-heading .label, .text-button {
+      padding: 0;
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      font: 650 12px/1.2 var(--font-mono);
+    }
+    .text-button { min-height: 44px; color: var(--proof); }
+
+    .equity-block { padding: 20px 2px 18px; border-bottom: 1px solid var(--outline-soft); }
+    .equity-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+    .equity-label { color: var(--muted); font-size: 13px; }
+    .equity-value { margin-top: 7px; font: 760 34px/1 var(--font-mono); letter-spacing: -0.055em; }
+    .equity-change { color: var(--gain); font: 700 12px/1.3 var(--font-mono); text-align: right; }
+    .equity-change small { display: block; margin-bottom: 5px; color: var(--muted); font: 600 12px/1.2 var(--font-sans); }
+    .equity-caption { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+    .metric-rail {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 16px;
+      border-top: 1px solid var(--outline-soft);
+      border-bottom: 1px solid var(--outline-soft);
+    }
+
+    .metric { min-width: 0; padding: 12px 9px 12px 0; }
+    .metric + .metric { padding-left: 10px; border-left: 1px solid var(--outline-soft); }
+    .metric span { display: block; color: var(--muted); font-size: 12px; line-height: 1.2; }
+    .metric strong { display: block; margin-top: 7px; overflow: hidden; font: 700 13px/1.1 var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
+
+    .quick-actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 14px; }
+    .quiet-button {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 11px;
+      border: 1px solid var(--outline-soft);
+      border-radius: 9px;
+      color: var(--muted);
+      background: var(--surface);
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .quiet-button.primary { color: var(--proof); border-color: rgba(116, 199, 223, 0.4); background: var(--proof-wash); }
+    .quiet-button:disabled { cursor: not-allowed; color: var(--caution); border-color: rgba(255, 170, 162, 0.34); background: var(--caution-wash); }
+
+    .attention-row {
+      width: 100%;
+      min-height: 72px;
+      display: grid;
+      grid-template-columns: 9px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 11px;
+      padding: 12px;
+      border: 1px solid rgba(255, 170, 162, 0.38);
+      border-radius: 10px;
+      color: var(--ink);
+      background: var(--caution-wash);
+      text-align: left;
+    }
+    .attention-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--caution); }
+    .attention-copy strong { display: block; font-size: 14px; }
+    .attention-copy span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .arrow { color: var(--muted); font-size: 20px; }
+
+    .register { border-top: 1px solid var(--outline); }
+    .register-row {
+      width: 100%;
+      min-height: 68px;
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 2px;
+      border: 0;
+      border-bottom: 1px solid var(--outline-soft);
+      background: transparent;
+      text-align: left;
+    }
+    .register-row:active { background: rgba(28, 37, 35, 0.72); }
+    .company-logo {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--outline-soft);
+      border-radius: 10px;
+      color: var(--proof);
+      background: var(--proof-wash);
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .company-logo.nvda { color: #b7e68d; background: #20351f; }
+    .company-logo.apple { color: var(--ink); background: #303735; }
+    .company-logo.tesla { color: var(--caution); background: #412120; }
+    .company-logo.anthropic { color: var(--private); background: var(--private-wash); }
+    .register-copy { min-width: 0; }
+    .register-copy strong { display: block; overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+    .register-copy span { display: block; margin-top: 5px; color: var(--muted); font: 550 12px/1.3 var(--font-mono); }
+    .register-value { min-width: 94px; text-align: right; }
+    .register-value strong { display: block; font: 700 13px/1 var(--font-mono); }
+    .register-value span { display: block; margin-top: 6px; color: var(--gain); font: 650 12px/1 var(--font-mono); }
+    .register-value span.negative { color: var(--caution); }
+    .register-value span.private { color: var(--private); }
+
+    .order-row {
+      width: 100%;
+      min-height: 78px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--outline-soft);
+      border-radius: 10px;
+      background: var(--surface);
+      text-align: left;
+    }
+    .order-row strong { display: block; font-size: 14px; }
+    .order-row span { display: block; margin-top: 5px; color: var(--muted); font: 550 12px/1.3 var(--font-mono); }
+    .status-tag {
+      display: inline-flex !important;
+      align-items: center;
+      min-height: 26px;
+      margin: 0 !important;
+      padding: 0 8px;
+      border-radius: 999px;
+      color: var(--private) !important;
+      background: var(--private-wash);
+      font: 750 12px/1 var(--font-sans) !important;
+      text-transform: uppercase;
+    }
+
+    .position-card {
+      padding: 14px;
+      border: 1px solid var(--outline);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .position-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .position-identity { display: flex; align-items: center; gap: 10px; }
+    .position-identity strong { display: block; font-size: 15px; }
+    .position-identity span { display: block; margin-top: 5px; color: var(--muted); font: 600 12px/1.2 var(--font-mono); }
+    .open-tag { color: var(--gain); font: 750 12px/1 var(--font-mono); letter-spacing: .04em; text-transform: uppercase; }
+    .position-pnl { margin-top: 17px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+    .position-pnl strong { color: var(--gain); font: 750 22px/1 var(--font-mono); letter-spacing: -0.04em; }
+    .position-pnl span { color: var(--muted); font: 650 12px/1.2 var(--font-mono); text-align: right; }
+    .position-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 17px; padding-top: 13px; border-top: 1px solid var(--outline-soft); }
+    .position-fact span { display: block; color: var(--muted); font-size: 12px; }
+    .position-fact strong { display: block; margin-top: 6px; font: 700 12px/1.1 var(--font-mono); }
+    .risk-line { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--outline-soft); color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .risk-line strong { color: var(--ink); }
+    .position-button {
+      width: 100%;
+      min-height: 44px;
+      margin-top: 13px;
+      border: 1px solid rgba(116, 199, 223, 0.42);
+      border-radius: 9px;
+      color: var(--proof);
+      background: var(--proof-wash);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .exposure-summary { padding: 18px 2px 14px; border-bottom: 1px solid var(--outline-soft); }
+    .exposure-summary h2 { font: 700 21px/1.1 var(--font-serif); }
+    .exposure-summary p { margin-top: 8px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .exposure-numbers { display: flex; gap: 22px; margin-top: 15px; }
+    .exposure-numbers span { color: var(--muted); font-size: 12px; }
+    .exposure-numbers strong { display: block; margin-top: 6px; color: var(--ink); font: 700 14px/1 var(--font-mono); }
+
+    .search-field {
+      min-height: 48px;
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+      margin: 16px 0 12px;
+      padding: 0 13px;
+      border: 1px solid var(--outline);
+      border-radius: 10px;
+      color: var(--muted);
+      background: var(--surface);
+    }
+    .search-field input { width: 100%; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 14px; }
+    .search-field input::placeholder { color: var(--muted); opacity: 1; }
+
+    .filter-strip {
+      display: flex;
+      gap: 7px;
+      margin: 0 -17px;
+      padding: 0 17px 13px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      border-bottom: 1px solid var(--outline-soft);
+    }
+    .filter-strip::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      min-width: max-content;
+      min-height: 44px;
+      padding: 0 13px;
+      border: 1px solid var(--outline-soft);
+      border-radius: 999px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .filter-chip[aria-pressed="true"] { color: var(--on-proof); border-color: var(--proof); background: var(--proof); }
+
+    .activity-tools {
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--outline-soft);
+    }
+
+    .activity-tools button {
+      min-height: 44px;
+      padding: 0;
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .activity-tools button:last-child { color: var(--proof); }
+
+    .attention-strip { width: 100%; margin-top: 15px; padding: 12px; border: 0; border-left: 2px solid var(--caution); color: var(--ink); background: var(--caution-wash); text-align: left; }
+    .attention-strip strong { display: block; font-size: 13px; }
+    .attention-strip span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+
+    .date-label { margin: 20px 2px 6px; color: var(--muted); font: 700 12px/1 var(--font-mono); letter-spacing: .055em; text-transform: uppercase; }
+    .activity-list { border-top: 1px solid var(--outline); }
+    .activity-row {
+      width: 100%;
+      min-height: 66px;
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 2px;
+      border: 0;
+      border-bottom: 1px solid var(--outline-soft);
+      background: transparent;
+      text-align: left;
+    }
+    .activity-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--proof); background: var(--proof-wash); font: 750 12px/1 var(--font-mono); }
+    .activity-icon.perp { color: var(--gain); background: var(--gain-wash); }
+    .activity-icon.transfer { color: var(--private); background: var(--private-wash); }
+    .activity-copy { min-width: 0; }
+    .activity-copy strong { display: block; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+    .activity-copy span { display: block; margin-top: 5px; overflow: hidden; color: var(--muted); font: 550 12px/1.2 var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
+    .activity-value { min-width: 76px; text-align: right; }
+    .activity-value strong { display: block; font: 700 12px/1 var(--font-mono); }
+    .activity-value span { display: block; margin-top: 6px; color: var(--gain); font: 700 12px/1 var(--font-sans); text-transform: uppercase; }
+    .activity-value span.pending { color: var(--private); }
+    .activity-value span.failed { color: var(--caution); }
+    .activity-row.filtered { display: none; }
+
+    .load-more {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 16px;
+      border: 1px solid var(--outline-soft);
+      border-radius: 9px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .empty-results { margin-top: 18px; padding: 18px; border: 1px dashed var(--outline); border-radius: 10px; color: var(--muted); font-size: 13px; line-height: 1.5; text-align: center; }
+    .local-note, .sample-note { margin: 12px 2px 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .sample-note { margin-top: 24px; padding-top: 13px; border-top: 1px solid var(--outline-soft); }
+
+    .utility-list { margin-top: 22px; border-top: 1px solid var(--outline-soft); }
+    .utility-row {
+      width: 100%;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 2px;
+      border: 0;
+      border-bottom: 1px solid var(--outline-soft);
+      color: var(--muted);
+      background: transparent;
+      font-size: 13px;
+      text-align: left;
+    }
+    .utility-row span:last-child { font-size: 18px; }
+
+    .bottom-nav {
+      position: relative;
+      min-height: 74px;
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: start;
+      padding: 8px 20px 13px;
+      border-top: 1px solid var(--outline-soft);
+      background: rgba(28, 37, 35, 0.99);
+      z-index: 12;
+    }
+    .nav-item {
+      position: relative;
+      min-height: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: 0;
+      border-radius: 10px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .nav-item.active { color: var(--proof); }
+    .nav-item.active::before { content: ""; position: absolute; top: -8px; width: 22px; height: 2px; border-radius: 999px; background: var(--proof); }
+
+    .sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      align-items: flex-end;
+      padding: 16px;
+      background: rgba(5, 8, 7, 0.74);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 180ms ease, visibility 180ms;
+    }
+    .sheet-backdrop.open { opacity: 1; visibility: visible; }
+    .bottom-sheet { width: 100%; max-height: 82%; overflow: hidden; border: 1px solid var(--outline); border-radius: 16px; background: var(--surface); box-shadow: 0 18px 50px rgba(0,0,0,.4); transform: translateY(10px); transition: transform 180ms ease; }
+    .sheet-backdrop.open .bottom-sheet { transform: translateY(0); }
+    .sheet-handle { width: 38px; height: 4px; margin: 8px auto 3px; border-radius: 999px; background: var(--outline); }
+    .sheet-content { max-height: calc(82vh - 15px); overflow-y: auto; padding: 12px 17px 18px; }
+    .sheet-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .sheet-header h2 { font: 700 21px/1.15 var(--font-serif); letter-spacing: -0.025em; }
+    .sheet-close { width: 44px; height: 44px; display: grid; place-items: center; flex: 0 0 auto; padding: 0; border: 1px solid var(--outline-soft); border-radius: 9px; color: var(--muted); background: var(--canvas); font-size: 20px; }
+    .sheet-copy { margin-top: 10px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .sheet-fact { margin-top: 14px; padding: 11px 12px; border-left: 2px solid var(--proof); color: var(--muted); background: var(--proof-wash); font: 550 12px/1.5 var(--font-mono); }
+    .sheet-actions { display: grid; grid-template-columns: .75fr 1.25fr; gap: 8px; margin-top: 15px; }
+    .sheet-button { min-height: 46px; padding: 0 12px; border: 1px solid var(--outline); border-radius: 10px; color: var(--ink); background: var(--canvas); font-size: 13px; font-weight: 800; }
+    .sheet-button.primary { border-color: var(--proof); color: var(--on-proof); background: var(--proof); }
+    .sheet-button.danger { border-color: rgba(255,170,162,.42); color: var(--caution); background: var(--caution-wash); }
+    .sheet-list { margin-top: 13px; border-top: 1px solid var(--outline-soft); }
+    .sheet-row { width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0; border: 0; border-bottom: 1px solid var(--outline-soft); color: var(--ink); background: transparent; font-size: 13px; text-align: left; }
+    .sheet-row small { color: var(--muted); font: 550 12px/1.2 var(--font-mono); }
+    .sheet-row.danger { color: var(--caution); }
+
+    .auth-choices { display: grid; gap: 9px; margin-top: 16px; }
+    .auth-choice {
+      width: 100%;
+      min-height: 68px;
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 12px;
+      border: 1px solid var(--outline-soft);
+      border-radius: 10px;
+      color: var(--ink);
+      background: var(--canvas);
+      text-align: left;
+    }
+    .auth-choice.primary { border-color: rgba(116, 199, 223, 0.44); background: var(--proof-wash); }
+    .auth-choice-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 9px; color: var(--proof); background: var(--surface-raised); }
+    .auth-choice strong { display: block; font-size: 14px; }
+    .auth-choice small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .auth-choice-arrow { color: var(--muted); font-size: 18px; }
+    .auth-not-now { width: 100%; min-height: 44px; margin-top: 8px; border: 0; color: var(--muted); background: transparent; font-size: 13px; font-weight: 750; }
+    .wallet-status { display: flex; align-items: center; gap: 8px; margin-top: 15px; color: var(--gain); font-size: 12px; font-weight: 750; }
+    .wallet-status.issue { color: var(--caution); }
+    .selectable-address { margin-top: 12px; padding: 11px; border: 1px solid var(--outline-soft); border-radius: 9px; color: var(--muted); background: var(--canvas); font: 600 12px/1.5 var(--font-mono); overflow-wrap: anywhere; user-select: text; }
+    .sheet-inline-alert { margin-top: 12px; padding: 10px 11px; border-left: 2px solid var(--caution); color: var(--caution); background: var(--caution-wash); font-size: 12px; line-height: 1.45; }
+
+    .reconcile-list, .risk-table { margin-top: 14px; border-top: 1px solid var(--outline-soft); }
+    .reconcile-row, .risk-row { min-height: 43px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--outline-soft); font-size: 12px; }
+    .reconcile-row span, .risk-row span { color: var(--muted); }
+    .reconcile-row strong, .risk-row strong { font: 700 12px/1 var(--font-mono); text-align: right; }
+    .concept-banner { margin-top: 16px; padding: 11px 12px; border: 1px solid rgba(216,184,124,.4); border-radius: 9px; color: var(--private); background: var(--private-wash); font-size: 12px; line-height: 1.45; }
+    .planned-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+    .planned-actions button { min-height: 44px; border: 1px solid var(--outline-soft); border-radius: 9px; color: #82908b; background: #17201e; font-size: 12px; font-weight: 750; opacity: .72; }
+    .position-history { margin-top: 18px; }
+    .position-history h3 { font-size: 14px; }
+
+    .receive-address { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center; gap: 13px; margin-top: 14px; }
+    .qr-mark { width: 76px; height: 76px; padding: 7px; border-radius: 10px; color: var(--canvas); background: var(--ink); }
+    .address-copy { min-width: 0; }
+    .address-copy span { color: var(--muted); font-size: 12px; }
+    .address-copy strong { display: block; margin-top: 7px; overflow-wrap: anywhere; font: 650 12px/1.45 var(--font-mono); }
+
+    .value.is-private { color: transparent !important; text-shadow: 0 0 9px rgba(242,245,241,.7); user-select: none; }
+    .toast { position: absolute; left: 50%; bottom: 88px; z-index: 55; width: calc(100% - 36px); transform: translateX(-50%); padding: 12px 14px; border: 1px solid var(--outline); border-radius: 10px; color: var(--ink); background: var(--surface-raised); box-shadow: 0 12px 28px rgba(0,0,0,.32); font-size: 13px; line-height: 1.4; text-align: center; }
+
+    /* Personal Market Ledger — modern mobile-native visual pass */
+    body { letter-spacing: -0.01em; }
+    .prototype-stage { background: #080d0c; }
+    .phone { background: var(--canvas); border-color: #030706; box-shadow: 0 28px 80px rgba(0, 0, 0, .38); }
+    .status-bar { background: var(--canvas); }
+
+    .app-header {
+      min-height: 64px;
+      padding: 8px 18px;
+      background: rgba(12, 18, 17, .96);
+    }
+    .brand { gap: 9px; }
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 11px;
+      color: var(--proof);
+      background: var(--proof-wash);
+      transform: none;
+    }
+    .brand-mark span { transform: none; }
+    .wordmark { font-size: 20px; letter-spacing: -.025em; }
+    .account-chip {
+      max-width: 144px;
+      min-height: 44px;
+      gap: 7px;
+      padding: 0 5px 0 9px;
+      border-color: transparent;
+      border-radius: 12px;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .account-chip.signed-out,
+    .account-chip.unverified,
+    .account-chip.wallet-setup { border-color: transparent; background: var(--proof-wash); }
+    .account-chip.issue,
+    .account-chip.expired { border-color: transparent; background: var(--caution-wash); }
+    .account-chip.ready { padding-right: 0; color: var(--ink); background: transparent; }
+    .account-chevron { font-size: 13px; }
+
+    .portfolio-shell {
+      border-top: 0;
+      border-bottom-color: var(--outline-soft);
+      background: rgba(12, 18, 17, .96);
+    }
+    .portfolio-titlebar { min-height: 57px; padding: 5px 18px 4px; }
+    .portfolio-titlebar h1 { font: 750 26px/1.05 var(--font-sans); letter-spacing: -.045em; }
+    .portfolio-titlebar p { margin-top: 4px; font-size: 11px; letter-spacing: 0; }
+    .privacy-button { border-radius: 14px; }
+    .view-tabs { padding: 0 18px; gap: 26px; grid-template-columns: repeat(3, max-content); }
+    .view-tab { min-height: 43px; padding: 0; font-size: 13px; font-weight: 650; }
+    .view-tab[aria-selected="true"]::after { right: 0; left: 0; height: 3px; }
+
+    .pane { padding: 0 18px 34px; }
+    .pane.active { animation-duration: 190ms; }
+    .hero-copy {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      margin-top: 18px;
+      padding: 16px;
+      border: 0;
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    .private-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      color: var(--proof);
+      background: var(--proof-wash);
+    }
+    .hero-copy-body { min-width: 0; }
+    .hero-copy h2 { margin: 0; font: 700 16px/1.2 var(--font-sans); letter-spacing: -.025em; }
+    .hero-copy p { margin-top: 5px; font-size: 12px; line-height: 1.4; }
+    .hero-copy .primary-button {
+      width: auto;
+      min-width: 94px;
+      min-height: 44px;
+      margin: 0;
+      padding: 0 13px;
+      border: 0;
+      border-radius: 13px;
+      font-size: 13px;
+    }
+
+    .section { padding-top: 24px; }
+    .section-heading { min-height: 32px; margin: 0 0 9px; align-items: center; }
+    .section-heading h2 { font: 700 17px/1.15 var(--font-sans); letter-spacing: -.025em; }
+    .section-heading .label,
+    .text-button { font: 650 12px/1.2 var(--font-sans); }
+    .text-button { color: var(--proof); }
+
+    .equity-block { padding: 25px 0 21px; border-bottom: 0; }
+    .equity-top { align-items: flex-end; }
+    .equity-label { font-size: 13px; }
+    .equity-value { margin-top: 8px; font-size: 37px; font-weight: 650; letter-spacing: -.065em; }
+    .equity-change { padding-bottom: 2px; font-size: 12px; }
+    .equity-change small { margin-bottom: 6px; }
+    .equity-caption, .metric-rail { display: none; }
+    .equity-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .equity-meta-actions { display: flex; align-items: center; gap: 12px; }
+    .equity-meta .privacy-button { width: 32px; height: 32px; }
+    .equity-info { min-height: 32px; padding: 0; border: 0; color: var(--proof); background: transparent; font-size: 11px; font-weight: 650; }
+    .exposure-rail { margin-top: 20px; }
+    .exposure-track { height: 8px; display: flex; gap: 3px; overflow: hidden; border-radius: 99px; background: rgba(241,245,242,.06); }
+    .exposure-track span { display: block; transform-origin: left; animation: rail-in 420ms cubic-bezier(.2,.75,.25,1) both; }
+    .exposure-owned { width: 74.6%; border-radius: 99px 4px 4px 99px; background: var(--proof); }
+    .exposure-perps { width: 8.4%; background: var(--gain); animation-delay: 70ms !important; }
+    .exposure-cash { width: 17%; border-radius: 4px 99px 99px 4px; background: rgba(241,245,242,.36); animation-delay: 120ms !important; }
+    @keyframes rail-in { from { opacity: 0; transform: scaleX(.2); } to { opacity: 1; transform: scaleX(1); } }
+    .exposure-legend { display: grid; grid-template-columns: 1.45fr 1fr .8fr; gap: 10px; margin-top: 11px; }
+    .exposure-legend > div { min-width: 0; display: grid; grid-template-columns: 7px minmax(0, 1fr); column-gap: 6px; }
+    .rail-key { width: 7px; height: 7px; margin-top: 3px; border-radius: 50%; }
+    .rail-key.owned { background: var(--proof); }
+    .rail-key.perps { background: var(--gain); }
+    .rail-key.cash { background: rgba(241,245,242,.4); }
+    .exposure-legend small { overflow: hidden; color: var(--muted); font-size: 10px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+    .exposure-legend strong { grid-column: 2; margin-top: 4px; font: 600 11px/1.2 var(--font-mono); letter-spacing: -.025em; }
+    .exposure-branch { display: flex; justify-content: flex-end; margin-top: 10px; color: var(--muted); }
+    .exposure-branch p { display: flex; gap: 6px; font-size: 10px; }
+    .exposure-branch strong { color: var(--gain); font: 650 10px/1 var(--font-sans); }
+    .quick-actions { display: flex; margin-top: 17px; }
+    .quiet-button { border: 0; border-radius: 13px; background: var(--surface); }
+    .quiet-button.primary { min-width: 114px; color: var(--proof); border: 0; background: var(--proof-wash); }
+    .quiet-button.primary:not(:disabled)::before { content: "↓"; }
+
+    .attention-row {
+      min-height: 68px;
+      border: 0;
+      border-radius: 15px;
+      background: var(--caution-wash);
+    }
+    .attention-copy strong { font-size: 13px; }
+    .wallet-issue-strip {
+      width: calc(100% - 36px);
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: 8px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 11px;
+      margin: 12px 18px 0;
+      padding: 10px 12px;
+      border: 0;
+      border-radius: 14px;
+      color: var(--ink);
+      background: var(--caution-wash);
+      text-align: left;
+    }
+    .wallet-issue-strip > i { width: 8px; height: 8px; border-radius: 50%; background: var(--caution); }
+    .wallet-issue-strip strong { display: block; font-size: 12px; font-style: normal; }
+    .wallet-issue-strip small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .wallet-issue-strip > span:last-child { color: var(--muted); font-size: 18px; }
+
+    .register { border-top: 0; }
+    .register-row { min-height: 66px; padding: 10px 0; }
+    .company-logo { border: 0; border-radius: 13px; }
+    .register-copy strong { font-size: 14px; font-weight: 650; }
+    .register-copy span { margin-top: 4px; font-size: 11px; }
+    .register-value strong { font-weight: 600; }
+    .local-note { margin-top: 14px; }
+
+    .order-row {
+      min-height: 74px;
+      padding: 13px 14px;
+      border: 0;
+      border-radius: 15px;
+      background: var(--surface);
+    }
+    .order-row strong { font: 650 14px/1.2 var(--font-sans); }
+    .order-row span { font-family: var(--font-sans); }
+    .order-row span span { font: 550 11px/1.35 var(--font-sans); }
+    .status-tag { min-height: 25px; padding: 0 9px; font-size: 10px !important; text-transform: none; }
+
+    .position-card {
+      position: relative;
+      padding: 16px;
+      border: 0;
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: inset 0 0 0 1px rgba(105,205,234,.08);
+    }
+    .position-title { align-items: center; }
+    .position-identity strong { font-size: 14px; }
+    .position-identity span { margin-top: 4px; font: 600 10px/1.25 var(--font-sans); letter-spacing: .025em; }
+    .open-tag { padding: 5px 7px; border-radius: 7px; background: var(--gain-wash); font: 700 10px/1 var(--font-sans); letter-spacing: 0; text-transform: none; }
+    .position-pnl { margin-top: 15px; }
+    .position-pnl strong { font-size: 20px; font-weight: 650; }
+    .position-grid { margin-top: 14px; padding-top: 12px; }
+    .risk-line { margin-top: 13px; padding-top: 11px; }
+    .position-button { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; border: 0; opacity: 0; }
+    .position-card:has(.position-button:focus-visible) { outline: 3px solid rgba(105,205,234,.42); outline-offset: 2px; }
+    .pane[data-pane="signed-overview"] .position-grid { display: none; }
+    .pane[data-pane="signed-overview"] .risk-line { margin-bottom: 0; }
+
+    .exposure-summary { padding: 23px 0 18px; }
+    .exposure-summary h2 { font: 750 22px/1.1 var(--font-sans); letter-spacing: -.035em; }
+    .exposure-numbers strong { font-size: 14px; }
+
+    .search-field { border: 0; border-radius: 14px; background: var(--surface); }
+    .filter-strip { border-bottom: 0; }
+    .filter-chip { border-color: transparent; background: rgba(241,245,242,.055); }
+    .filter-chip[aria-pressed="true"] { color: var(--proof); border-color: transparent; background: var(--proof-wash); }
+    .activity-tools { border-bottom-color: var(--outline-soft); }
+    .date-label { font: 700 12px/1 var(--font-sans); letter-spacing: 0; text-transform: none; }
+    .activity-list { border-top: 0; }
+    .activity-icon { border-radius: 12px; }
+    .activity-copy strong { font-weight: 650; }
+    .activity-copy span { margin-top: 4px; font: 500 11px/1.25 var(--font-sans); }
+    .activity-value span { margin-top: 5px; font: 650 10px/1 var(--font-sans); text-transform: none; }
+    .load-more { border: 0; border-radius: 14px; background: var(--surface); }
+    .sample-note { border-top: 0; opacity: .82; }
+
+    .utility-list { border-top-color: var(--outline-soft); }
+    .utility-row { font-size: 13px; }
+
+    .bottom-nav {
+      min-height: 76px;
+      padding-top: 9px;
+      border-top-color: var(--outline-soft);
+      background: rgba(21, 30, 28, .96);
+      backdrop-filter: blur(18px);
+    }
+    .nav-item { font-size: 11px; font-weight: 650; }
+    .nav-item.active::before { display: none; }
+    .nav-item.active svg { filter: drop-shadow(0 0 8px rgba(105,205,234,.28)); }
+
+    .sheet-backdrop { padding: 0; background: rgba(3, 7, 6, .76); }
+    .bottom-sheet {
+      max-height: 86%;
+      border: 0;
+      border-radius: 26px 26px 0 0;
+      background: var(--surface);
+      box-shadow: 0 -18px 52px rgba(0,0,0,.35);
+      transform: translateY(24px);
+    }
+    .sheet-handle { margin-top: 10px; background: rgba(241,245,242,.22); }
+    .sheet-content { padding: 14px 20px 24px; }
+    .sheet-header { align-items: center; }
+    .sheet-header h2 { font: 750 23px/1.15 var(--font-sans); letter-spacing: -.035em; }
+    .sheet-close { border: 0; border-radius: 14px; background: rgba(241,245,242,.055); }
+    .sheet-copy { margin-top: 9px; }
+    .sheet-fact { margin-top: 15px; padding: 12px 13px; border: 0; border-radius: 13px; background: rgba(241,245,242,.045); font: 500 12px/1.5 var(--font-sans); }
+    .sheet-actions { margin-top: 16px; }
+    .sheet-button { min-height: 50px; border-color: transparent; border-radius: 14px; background: rgba(241,245,242,.055); }
+    .sheet-button.primary { border-color: transparent; }
+    .sheet-list { margin-top: 16px; border-top: 0; }
+    .sheet-row { min-height: 56px; border-bottom-color: var(--outline-soft); }
+    .sheet-row small { font: 500 11px/1.2 var(--font-sans); }
+
+    .auth-choices { gap: 10px; }
+    .auth-choice { min-height: 76px; border: 0; border-radius: 16px; background: rgba(241,245,242,.045); }
+    .auth-choice.primary { border: 0; background: var(--proof-wash); }
+    .auth-choice-icon { border-radius: 12px; }
+    .auth-choice strong { font-weight: 700; }
+    .auth-choice small { font-size: 11px; }
+    .selectable-address { border: 0; border-radius: 13px; background: rgba(241,245,242,.045); }
+
+    .wallet-identity {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      margin-top: 17px;
+      padding: 14px;
+      border-radius: 17px;
+      background: rgba(241,245,242,.045);
+    }
+    .wallet-identity-mark { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px; color: var(--proof); background: var(--proof-wash); font: 700 16px/1 var(--font-serif); }
+    .wallet-identity-copy { min-width: 0; }
+    .wallet-identity-copy small, .wallet-identity-copy span { display: block; color: var(--muted); font-size: 11px; }
+    .wallet-identity-copy strong { display: block; margin: 3px 0; font-size: 14px; }
+    .wallet-ready { display: flex; align-items: center; gap: 5px; color: var(--gain); font-size: 11px; font-weight: 700; }
+    .wallet-ready::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--gain); }
+    .wallet-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; }
+    .wallet-action { min-width: 0; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 7px 10px; border: 0; border-radius: 14px; color: var(--muted); background: rgba(241,245,242,.045); font-size: 11px; font-weight: 650; }
+    .wallet-action svg { color: var(--proof); }
+    .wallet-action:disabled { cursor: not-allowed; opacity: .44; }
+    .wallet-sync-banner { margin-top: 16px; padding: 14px; border-radius: 15px; color: var(--caution); background: var(--caution-wash); font-size: 12px; line-height: 1.45; }
+    .wallet-sync-banner strong { display: block; margin-bottom: 4px; color: var(--ink); font-size: 13px; }
+
+    .reconcile-list, .risk-table { border-top: 0; }
+    .concept-banner { border: 0; border-radius: 13px; }
+    .toast { border: 0; border-radius: 14px; }
+
+    /* Signed-in account states: one wallet, two distinct ways to put capital to work. */
+    .account-state { padding: 31px 0 6px; }
+    .account-state-kicker {
+      color: var(--proof);
+      font: 700 10px/1 var(--font-mono);
+      letter-spacing: .075em;
+      text-transform: uppercase;
+    }
+    .account-state h2 { max-width: 330px; margin-top: 10px; font: 760 27px/1.08 var(--font-sans); letter-spacing: -.052em; }
+    .account-state > p { max-width: 345px; margin-top: 9px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .capital-map { margin-top: 25px; }
+    .capital-origin {
+      min-height: 66px;
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 17px;
+    }
+    .capital-origin-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; color: var(--proof); background: var(--proof-wash); }
+    .capital-origin-copy small, .capital-origin-copy span { display: block; color: var(--muted); font-size: 10px; line-height: 1.25; }
+    .capital-origin-copy strong { display: block; margin: 3px 0; font-size: 14px; font-weight: 720; }
+    .capital-status { display: inline-flex; align-items: center; gap: 6px; color: var(--gain); font: 650 10px/1 var(--font-mono); }
+    .capital-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(121,213,163,.09); }
+    .capital-routes { margin-left: 20px; border-left: 1px solid var(--outline); }
+    .capital-route {
+      position: relative;
+      min-height: 78px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 0 13px 28px;
+      border-bottom: 1px solid var(--outline-soft);
+    }
+    .capital-route:first-child { border-top: 1px solid var(--outline-soft); }
+    .capital-route::before { content: ""; position: absolute; top: 50%; left: 0; width: 17px; border-top: 1px solid var(--outline); }
+    .capital-route::after { content: ""; position: absolute; top: calc(50% - 4px); left: 14px; width: 8px; height: 8px; border: 2px solid var(--canvas); border-radius: 50%; background: var(--proof); }
+    .capital-route.perps::after { background: var(--gain); }
+    .capital-route-copy { min-width: 0; }
+    .capital-route-copy small { display: block; color: var(--proof); font: 700 9px/1 var(--font-mono); letter-spacing: .08em; }
+    .capital-route.perps .capital-route-copy small { color: var(--gain); }
+    .capital-route-copy strong { display: block; margin-top: 5px; overflow: hidden; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .capital-route-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .route-action { min-width: 82px; min-height: 42px; padding: 0 11px; border: 1px solid var(--outline); border-radius: 11px; color: var(--ink); background: transparent; font-size: 11px; font-weight: 750; }
+    .route-action.primary { color: var(--on-proof); border-color: var(--proof); background: var(--proof); }
+    .route-status { min-width: 74px; color: var(--gain); font: 700 10px/1 var(--font-mono); text-align: right; }
+    .state-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 18px; }
+    .state-action {
+      min-height: 48px;
+      padding: 0 13px;
+      border: 1px solid var(--outline-soft);
+      border-radius: 13px;
+      color: var(--ink);
+      background: var(--surface);
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .state-action.primary { color: var(--on-proof); border-color: var(--proof); background: var(--proof); }
+    .state-action.full { grid-column: 1 / -1; }
+    .account-state .state-note { max-width: 330px; margin-top: 14px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+    .compact-equity { padding: 25px 0 18px; }
+    .compact-equity .equity-value { font-size: 34px; }
+    .compact-equity .equity-change { padding-bottom: 0; }
+    .compact-equity .exposure-track { margin-top: 19px; }
+    .compact-equity .exposure-owned { width: 100%; border-radius: 99px; }
+    .compact-equity .exposure-legend { grid-template-columns: 1fr; }
+    .compact-equity .exposure-legend > div { grid-template-columns: 7px minmax(0, 1fr) auto; }
+    .compact-equity .exposure-legend strong { grid-column: 3; grid-row: 1; margin: 0; }
+    .phoenix-prompt { margin-top: 24px; padding: 19px 0 2px; border-top: 1px solid var(--outline-soft); border-radius: 0; background: transparent; }
+    .phoenix-prompt-label { color: var(--gain); font: 700 10px/1 var(--font-mono); letter-spacing: .07em; text-transform: uppercase; }
+    .phoenix-prompt h3 { margin-top: 9px; font-size: 16px; letter-spacing: -.025em; }
+    .phoenix-prompt p { margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .phoenix-prompt .state-action { width: 100%; margin-top: 14px; color: var(--proof); border-color: transparent; background: var(--proof-wash); }
+    .clean-empty { padding: 39px 0 14px; text-align: left; }
+    .empty-kicker { color: var(--proof); font: 700 10px/1 var(--font-mono); letter-spacing: .075em; text-transform: uppercase; }
+    .clean-empty h2 { max-width: 310px; margin-top: 11px; font-size: 23px; line-height: 1.12; letter-spacing: -.045em; }
+    .clean-empty p { max-width: 330px; margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .clean-empty .state-actions { max-width: 340px; margin-right: 0; margin-left: 0; }
+    .phoenix-ready-line { min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; padding: 0 14px; border-radius: 15px; background: var(--gain-wash); }
+    .phoenix-ready-line span { color: var(--muted); font-size: 11px; }
+    .phoenix-ready-line strong { color: var(--gain); font-size: 12px; }
+    .registration-summary { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 12px; margin-top: 17px; padding: 14px; border-radius: 16px; background: rgba(241,245,242,.045); }
+    .registration-mark { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; color: var(--gain); background: var(--gain-wash); font: 750 13px/1 var(--font-mono); }
+    .registration-copy small { display: block; color: var(--gain); font: 700 9px/1 var(--font-mono); letter-spacing: .07em; }
+    .registration-copy strong { display: block; margin-top: 5px; font-size: 13px; }
+    .registration-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .registration-status { color: var(--muted); font: 650 10px/1 var(--font-mono); }
+
+    @media (max-width: 760px) { .prototype-switcher { display: none; } }
+    @media (max-width: 600px) {
+      .prototype-stage { display: block; padding: 0; background: var(--canvas); }
+      .phone { width: 100%; height: 100dvh; min-height: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .status-bar { height: calc(34px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); }
+      .bottom-nav { padding-bottom: calc(13px + env(safe-area-inset-bottom)); }
+      .sheet-backdrop { padding-bottom: 0; }
+      .sheet-content { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main class="prototype-stage">
+    <aside class="prototype-switcher" aria-label="Prototype account state">
+      <span>Session</span>
+      <div class="switcher-buttons">
+        <button type="button" data-state-switch="signed-out" aria-pressed="false">Signed out</button>
+        <button type="button" data-state-switch="ready" aria-pressed="true">Signed in</button>
+      </div>
+      <span>Signed-in data</span>
+      <div class="switcher-buttons">
+        <button type="button" data-portfolio-switch="new" aria-pressed="true">New wallet</button>
+        <button type="button" data-portfolio-switch="spot" aria-pressed="false">Spot only</button>
+        <button type="button" data-portfolio-switch="phoenix" aria-pressed="false">Phoenix only</button>
+        <button type="button" data-portfolio-switch="full" aria-pressed="false">Full account</button>
+      </div>
+    </aside>
+
+    <section class="phone" aria-label="Warren Portfolio prototype">
+      <div class="dynamic-island" aria-hidden="true"></div>
+      <div class="status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span class="status-icons">
+          <svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1 8.5h1.5V6.8H1v1.7Zm3.1 0h1.5V4.9H4.1v3.6Zm3.1 0h1.5V2.8H7.2v5.7Zm3.1 0h1.5V1h-1.5v7.5Z" fill="currentColor"/></svg>
+          <svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1 3.7a8.1 8.1 0 0 1 11 0M3 5.7a5.1 5.1 0 0 1 7 0M5.2 7.7a2 2 0 0 1 2.7 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="6.55" cy="9" r=".8" fill="currentColor"/></svg>
+          <svg width="18" height="10" viewBox="0 0 18 10" fill="none"><rect x=".6" y=".6" width="14.4" height="8.8" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M16 3.2h1.2v3.6H16" stroke="currentColor" stroke-width="1.2"/><rect x="2" y="2" width="11" height="6" rx="1" fill="currentColor"/></svg>
+        </span>
+      </div>
+
+      <header class="app-header">
+        <button class="brand" type="button" data-scroll-top aria-label="Scroll Portfolio to top">
+          <span class="brand-mark"><span>W</span></span><span class="wordmark">Warren</span>
+        </button>
+        <button class="account-chip signed-out" id="account-chip" type="button" aria-label="Sign in to Warren" aria-haspopup="dialog" aria-controls="account-sheet" aria-expanded="false">
+          <span class="wallet-glyph" id="account-glyph" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="6" width="17" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M16.5 13.5h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+          <span class="account-spinner" id="account-spinner" aria-hidden="true" hidden></span>
+          <span class="account-dot" id="account-dot" aria-hidden="true" hidden></span>
+          <span class="account-chip-label" id="account-chip-label">Sign in</span>
+          <span class="account-chevron" id="account-chevron" aria-hidden="true" hidden>⌄</span>
+        </button>
+      </header>
+
+      <div class="portfolio-shell">
+        <div class="view-tabs" role="tablist" aria-label="Portfolio views">
+          <button class="view-tab" type="button" role="tab" data-view-tab="overview" aria-selected="true">Overview</button>
+          <button class="view-tab" type="button" role="tab" data-view-tab="positions" aria-selected="false">Positions<span class="signed-out-lock signed-out-only" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg></span></button>
+          <button class="view-tab" type="button" role="tab" data-view-tab="activity" aria-selected="false">Activity<span class="signed-out-lock signed-out-only" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg></span></button>
+        </div>
+      </div>
+
+      <button class="wallet-issue-strip" id="wallet-issue-strip" type="button" data-open-sheet="wallet-issue" hidden>
+        <i aria-hidden="true"></i><span><strong>Wallet data hasn’t refreshed</strong><small>Last updated 9:34 AM · Portfolio may be stale</small></span><span aria-hidden="true">›</span>
+      </button>
+
+      <div class="screen-scroll" id="portfolio-scroll">
+        <section class="pane active" data-pane="signed-out-overview" aria-label="Signed-out Portfolio overview">
+          <div class="hero-copy">
+            <span class="private-mark" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="10" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" stroke="currentColor" stroke-width="1.8"/></svg></span>
+            <div class="hero-copy-body"><h2>Your portfolio stays private.</h2>
+            <p>Keep exploring. Sign in when you want your holdings, positions, and activity here.</p></div>
+            <button class="primary-button" id="signed-out-primary" type="button" data-open-sheet="sign-in"><span id="signed-out-primary-label">Sign in</span><span id="signed-out-primary-arrow" aria-hidden="true">→</span></button>
+          </div>
+
+          <section class="section" aria-labelledby="saved-heading">
+            <div class="section-heading"><h2 id="saved-heading">Saved on this device</h2><span class="label">3 companies</span></div>
+            <div class="register">
+              <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>NVDA · NVDAx</span></span><span class="register-value"><strong>$183.61</strong><span>+2.84%</span></span></button>
+              <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>AAPL · AAPLx</span></span><span class="register-value"><strong>$238.47</strong><span>+0.62%</span></span></button>
+              <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>TSLA · TSLAx</span></span><span class="register-value"><strong>$426.08</strong><span class="negative">−1.14%</span></span></button>
+            </div>
+            <p class="local-note">Saved companies are device-local. They are not holdings and are not synced to an account.</p>
+          </section>
+
+          <nav class="utility-list" aria-label="Portfolio information">
+            <button class="utility-row" type="button" data-toast="Warren prototype · version 2"><span>About Warren</span><span>›</span></button>
+          </nav>
+          <p class="sample-note">Prototype only. Prices use controlled sample data. No wallet or transaction is created here.</p>
+        </section>
+
+        <section class="pane" data-pane="signed-overview" aria-label="Signed-in Portfolio overview">
+          <div data-portfolio-when="new">
+            <section class="account-state" aria-labelledby="new-wallet-heading">
+              <span class="account-state-kicker">Your capital</span>
+              <h2 id="new-wallet-heading">Choose your first move.</h2>
+              <p>Your Warren wallet is active. Owned stocks and Phoenix perpetuals stay separate, so you always know where your money is.</p>
+              <div class="capital-map" aria-label="Warren account setup">
+                <div class="capital-origin">
+                  <span class="capital-origin-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="6" width="17" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M16.5 13.5h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+                  <span class="capital-origin-copy"><small>ORIGIN</small><strong>Warren wallet</strong><span>8xK2…mP4q · No funds yet</span></span>
+                  <span class="capital-status">Active</span>
+                </div>
+                <div class="capital-routes">
+                  <div class="capital-route">
+                    <span class="capital-route-copy"><small>OWN</small><strong>Tokenized stocks</strong><span>No holdings</span></span>
+                    <button class="route-action primary" type="button" data-open-sheet="account">Deposit</button>
+                  </div>
+                  <div class="capital-route perps">
+                    <span class="capital-route-copy"><small>TRADE</small><strong>Stock perpetuals</strong><span>Phoenix not created</span></span>
+                    <button class="route-action" type="button" data-open-sheet="phoenix-setup">Create</button>
+                  </div>
+                </div>
+              </div>
+              <p class="state-note">Deposit shows your wallet address. Phoenix setup is a separate, one-time Solana transaction that never opens a trade.</p>
+            </section>
+          </div>
+
+          <div data-portfolio-when="spot" hidden>
+            <section class="equity-block compact-equity" aria-labelledby="spot-equity-heading">
+              <div class="equity-top">
+                <div><span class="equity-label" id="spot-equity-heading">Net account equity</span><div class="equity-value value">$1,011.08</div></div>
+                <div class="equity-change value"><small>Today</small>+$24.11 · 2.44%</div>
+              </div>
+              <div class="exposure-rail" aria-label="All account equity is held in owned stocks">
+                <div class="exposure-track" aria-hidden="true"><span class="exposure-owned"></span></div>
+                <div class="exposure-legend"><div><span class="rail-key owned"></span><small>Owned stocks</small><strong class="value">$1,011.08</strong></div></div>
+              </div>
+              <div class="quick-actions"><button class="quiet-button primary" type="button" data-open-sheet="account" data-wallet-action>Deposit</button></div>
+            </section>
+
+            <section class="section" aria-labelledby="spot-holdings-heading">
+              <div class="section-heading"><h2 id="spot-holdings-heading">Holdings</h2><span class="label">3 assets</span></div>
+              <div class="register">
+                <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>OWN · 2.3704 NVDAx</span></span><span class="register-value"><strong class="value">$435.24</strong><span>+3.18%</span></span></button>
+                <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>OWN · 1.4260 AAPLx</span></span><span class="register-value"><strong class="value">$340.06</strong><span>+0.71%</span></span></button>
+                <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>OWN · 0.5534 TSLAx</span></span><span class="register-value"><strong class="value">$235.78</strong><span class="negative">−0.84%</span></span></button>
+              </div>
+            </section>
+
+            <section class="phoenix-prompt" aria-labelledby="spot-phoenix-heading">
+              <span class="phoenix-prompt-label">Perpetuals</span>
+              <h3 id="spot-phoenix-heading">Phoenix is not set up yet.</h3>
+              <p>Create a trading account inside Warren when you want to trade stock perpetuals. Your owned tokens stay separate.</p>
+              <button class="state-action" type="button" data-open-sheet="phoenix-setup">Create Phoenix account</button>
+            </section>
+          </div>
+
+          <div data-portfolio-when="phoenix" hidden>
+            <section class="account-state" aria-labelledby="phoenix-ready-heading">
+              <span class="account-state-kicker">Your capital</span>
+              <h2 id="phoenix-ready-heading">Phoenix is set up.</h2>
+              <p>Your perpetual account is ready. The Warren wallet does not hold any supported assets yet.</p>
+              <div class="capital-map" aria-label="Warren account setup">
+                <div class="capital-origin">
+                  <span class="capital-origin-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="6" width="17" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M16.5 13.5h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+                  <span class="capital-origin-copy"><small>ORIGIN</small><strong>Warren wallet</strong><span>8xK2…mP4q · No funds yet</span></span>
+                  <span class="capital-status">Active</span>
+                </div>
+                <div class="capital-routes">
+                  <div class="capital-route">
+                    <span class="capital-route-copy"><small>OWN</small><strong>Tokenized stocks</strong><span>No holdings</span></span>
+                    <button class="route-action primary" type="button" data-open-sheet="account">Deposit</button>
+                  </div>
+                  <div class="capital-route perps">
+                    <span class="capital-route-copy"><small>TRADE</small><strong>Stock perpetuals</strong><span>No open positions</span></span>
+                    <span class="route-status">Ready</span>
+                  </div>
+                </div>
+              </div>
+              <p class="state-note">Deposit supported assets into the Warren wallet before funding a trade.</p>
+            </section>
+          </div>
+
+          <div data-portfolio-when="full" hidden>
+          <section class="equity-block">
+            <div class="equity-top">
+              <div><span class="equity-label">Net account equity</span><div class="equity-value value">$1,355.39</div></div>
+              <div class="equity-change value"><small>Today</small>+$34.81 · 2.64%</div>
+            </div>
+            <div class="equity-meta"><span id="equity-updated">Updated moments ago</span><div class="equity-meta-actions"><button class="equity-info" type="button" data-open-sheet="equity" aria-label="See how account equity is calculated">How it adds up</button><button class="privacy-button" id="privacy-toggle" type="button" aria-label="Hide portfolio values" aria-pressed="false">
+                <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.8 12s3.3-5.5 9.2-5.5 9.2 5.5 9.2 5.5-3.3 5.5-9.2 5.5S2.8 12 2.8 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.7" stroke="currentColor" stroke-width="1.8"/></svg>
+                <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" hidden><path d="m4 4 16 16M10.6 6.7c.5-.1.9-.2 1.4-.2 5.9 0 9.2 5.5 9.2 5.5a14 14 0 0 1-2.2 2.8M6.7 7.7A14.4 14.4 0 0 0 2.8 12s3.3 5.5 9.2 5.5c1 0 1.9-.2 2.7-.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button></div></div>
+            <div class="exposure-rail" aria-label="Account equity: 74.6 percent owned stocks, 8.4 percent perps equity, and 17 percent cash">
+              <div class="exposure-track" aria-hidden="true"><span class="exposure-owned"></span><span class="exposure-perps"></span><span class="exposure-cash"></span></div>
+              <div class="exposure-legend">
+                <div><span class="rail-key owned"></span><small>Owned stocks</small><strong class="value">$1,011.08</strong></div>
+                <div><span class="rail-key perps"></span><small>Perps equity</small><strong class="value">$113.22</strong></div>
+                <div><span class="rail-key cash"></span><small>Cash</small><strong class="value">$231.09</strong></div>
+              </div>
+              <div class="exposure-branch"><p><strong>Gross perp exposure</strong><span class="value">$300.00</span></p></div>
+            </div>
+            <div class="quick-actions"><button class="quiet-button primary" type="button" data-open-sheet="account" data-wallet-action>Deposit</button></div>
+          </section>
+
+          <section class="section" aria-labelledby="attention-heading">
+            <div class="section-heading"><h2 id="attention-heading">Needs attention</h2><span class="label">1 unresolved</span></div>
+            <button class="attention-row" type="button" data-event="Apple purchase" data-event-detail="Transaction submitted, but its final state has not reconciled yet. Do not resubmit while Warren checks the chain.">
+              <span class="attention-dot"></span><span class="attention-copy"><strong>Apple purchase status unknown</strong><span>Submitted 7 min ago · Do not resubmit</span></span><span class="arrow">›</span>
+            </button>
+          </section>
+
+          <section class="section" aria-labelledby="overview-position-heading">
+            <div class="section-heading"><h2 id="overview-position-heading">Open positions</h2><button class="text-button" type="button" data-view-link="positions">See all</button></div>
+            <article class="position-card">
+              <div class="position-title"><div class="position-identity"><span class="company-logo nvda">NV</span><div><strong>NVIDIA</strong><span>NVDA-PERP · LONG · 3× ISOLATED</span></div></div><span class="open-tag">Open</span></div>
+              <div class="position-pnl"><strong class="value">+$6.67 · 6.67%</strong><span class="value">$300.00<br>exposure</span></div>
+              <div class="position-grid"><div class="position-fact"><span>Entry</span><strong>$185.50</strong></div><div class="position-fact"><span>Mark</span><strong>$189.72</strong></div><div class="position-fact"><span>Collateral</span><strong>$100.00</strong></div></div>
+              <p class="risk-line"><strong>Liquidation $125.20 · 34% away</strong><br>Funding: You pay 0.0062% · next in 42 min</p>
+              <button class="position-button" type="button" data-position>View position</button>
+            </article>
+          </section>
+
+          <section class="section" aria-labelledby="overview-orders-heading">
+            <div class="section-heading"><h2 id="overview-orders-heading">Open orders</h2><button class="text-button" type="button" data-view-link="positions">See all</button></div>
+            <button class="order-row" type="button" data-order><span><strong>Buy Tesla perpetual</strong><span>Limit · 1.5× isolated · $398.00</span></span><span class="status-tag">Placed</span></button>
+          </section>
+
+          <section class="section" aria-labelledby="overview-holdings-heading">
+            <div class="section-heading"><h2 id="overview-holdings-heading">Holdings</h2><button class="text-button" type="button" data-view-link="positions">See all</button></div>
+            <div class="register">
+              <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>OWN · 2.3704 NVDAx</span></span><span class="register-value"><strong class="value">$435.24</strong><span>+3.18%</span></span></button>
+              <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>OWN · 1.4260 AAPLx</span></span><span class="register-value"><strong class="value">$340.06</strong><span>+0.71%</span></span></button>
+              <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>OWN · 0.5534 TSLAx</span></span><span class="register-value"><strong class="value">$235.78</strong><span class="negative">−0.84%</span></span></button>
+            </div>
+          </section>
+
+          <p class="sample-note">Sample account. Perpetual values are venue-backed concepts; the current release supports opening only, not position management.</p>
+          </div>
+        </section>
+
+        <section class="pane" data-pane="signed-positions" aria-label="Current Portfolio positions and holdings">
+          <div data-portfolio-when="new">
+            <section class="clean-empty" aria-labelledby="new-positions-heading">
+              <span class="empty-kicker">Positions</span>
+              <h2 id="new-positions-heading">No positions or holdings yet.</h2>
+              <p>Deposit into your wallet to buy tokenized stocks, or create Phoenix when you are ready to trade perpetuals.</p>
+              <div class="state-actions">
+                <button class="state-action primary" type="button" data-open-sheet="account">Deposit</button>
+                <button class="state-action" type="button" data-open-sheet="phoenix-setup">Create Phoenix account</button>
+              </div>
+            </section>
+          </div>
+
+          <div data-portfolio-when="spot" hidden>
+            <section class="section" aria-labelledby="spot-position-holdings-heading">
+              <div class="section-heading"><h2 id="spot-position-holdings-heading">Holdings</h2><span class="label">3 assets</span></div>
+              <div class="register">
+                <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>SPOT · 2.3704 NVDAx</span></span><span class="register-value"><strong class="value">$435.24</strong><span>+3.18%</span></span></button>
+                <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>SPOT · 1.4260 AAPLx</span></span><span class="register-value"><strong class="value">$340.06</strong><span>+0.71%</span></span></button>
+                <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>SPOT · 0.5534 TSLAx</span></span><span class="register-value"><strong class="value">$235.78</strong><span class="negative">−0.84%</span></span></button>
+              </div>
+            </section>
+            <section class="phoenix-prompt" aria-labelledby="spot-position-phoenix-heading">
+              <span class="phoenix-prompt-label">Perpetuals</span>
+              <h3 id="spot-position-phoenix-heading">No Phoenix account yet.</h3>
+              <p>Your holdings are here. Create Phoenix separately only when you want perpetual positions and orders.</p>
+              <button class="state-action" type="button" data-open-sheet="phoenix-setup">Create Phoenix account</button>
+            </section>
+          </div>
+
+          <div data-portfolio-when="phoenix" hidden>
+            <section class="clean-empty" aria-labelledby="phoenix-empty-positions-heading">
+              <span class="empty-kicker">Phoenix ready</span>
+              <h2 id="phoenix-empty-positions-heading">No open positions.</h2>
+              <p>Your Phoenix account is ready. Positions and orders will appear here after your first perpetual trade.</p>
+              <div class="phoenix-ready-line"><span>Phoenix trading account</span><strong>Ready</strong></div>
+              <div class="state-actions"><button class="state-action primary full" type="button" data-open-sheet="account">Deposit</button></div>
+            </section>
+          </div>
+
+          <div data-portfolio-when="full" hidden>
+          <div class="exposure-summary">
+            <h2>Current exposure</h2><p>Perpetual risk and owned assets stay distinct, even when they belong to the same company.</p>
+            <div class="exposure-numbers"><div><span>Unrealized PnL</span><strong class="value">+$6.67</strong></div><div><span>Gross exposure</span><strong class="value">$300.00</strong></div></div>
+          </div>
+
+          <section class="section" aria-labelledby="orders-heading">
+            <div class="section-heading"><h2 id="orders-heading">Open orders</h2><span class="label">1 order · not a position</span></div>
+            <button class="order-row" type="button" data-order><span><strong>Buy Tesla perpetual</strong><span>TSLA-PERP · Limit $398.00 · 1.5× isolated</span></span><span class="status-tag">Placed</span></button>
+          </section>
+
+          <section class="section" aria-labelledby="positions-heading">
+            <div class="section-heading"><h2 id="positions-heading">Open positions</h2><span class="label">1 perpetual</span></div>
+            <article class="position-card">
+              <div class="position-title"><div class="position-identity"><span class="company-logo nvda">NV</span><div><strong>NVIDIA</strong><span>NVDA-PERP · LONG · 3× ISOLATED</span></div></div><span class="open-tag">Open</span></div>
+              <div class="position-pnl"><strong class="value">+$6.67 · 6.67%</strong><span class="value">$300.00<br>exposure</span></div>
+              <div class="position-grid"><div class="position-fact"><span>Entry</span><strong>$185.50</strong></div><div class="position-fact"><span>Mark</span><strong>$189.72</strong></div><div class="position-fact"><span>Collateral</span><strong>$100.00</strong></div></div>
+              <p class="risk-line"><strong>Liquidation $125.20 · 34% away</strong><br>Funding: You pay 0.0062% · next in 42 min</p>
+              <button class="position-button" type="button" data-position>View position</button>
+            </article>
+          </section>
+
+          <section class="section" aria-labelledby="all-holdings-heading">
+            <div class="section-heading"><h2 id="all-holdings-heading">Holdings</h2><span class="label">3 priced · 1 unpriced</span></div>
+            <div class="register">
+              <button class="register-row" type="button" data-company="NVIDIA"><span class="company-logo nvda">NV</span><span class="register-copy"><strong>NVIDIA</strong><span>SPOT · 2.3704 NVDAx</span></span><span class="register-value"><strong class="value">$435.24</strong><span>+3.18%</span></span></button>
+              <button class="register-row" type="button" data-company="Apple"><span class="company-logo apple">A</span><span class="register-copy"><strong>Apple</strong><span>SPOT · 1.4260 AAPLx</span></span><span class="register-value"><strong class="value">$340.06</strong><span>+0.71%</span></span></button>
+              <button class="register-row" type="button" data-company="Tesla"><span class="company-logo tesla">T</span><span class="register-copy"><strong>Tesla</strong><span>SPOT · 0.5534 TSLAx</span></span><span class="register-value"><strong class="value">$235.78</strong><span class="negative">−0.84%</span></span></button>
+              <button class="register-row" type="button" data-company="Anthropic"><span class="company-logo anthropic">AI</span><span class="register-copy"><strong>Anthropic</strong><span>PRESTOCK · 12.00 units</span></span><span class="register-value"><strong>Unpriced</strong><span class="private">Indicative only</span></span></button>
+            </div>
+          </section>
+          <p class="sample-note">Unpriced private-market exposure stays outside net account equity until Warren has a sufficiently reliable valuation.</p>
+          </div>
+        </section>
+
+        <section class="pane" data-pane="signed-activity" aria-label="Portfolio activity">
+          <div data-portfolio-when="new phoenix">
+            <section class="clean-empty" aria-labelledby="empty-activity-heading">
+              <span class="empty-kicker">Activity</span>
+              <h2 id="empty-activity-heading">No activity yet.</h2>
+              <p>Trades, transfers, Phoenix orders, and funding events will appear here after your first action.</p>
+            </section>
+          </div>
+
+          <div data-portfolio-when="spot" hidden>
+            <section class="activity-groups" aria-labelledby="spot-activity-heading">
+              <h2 class="sr-only" id="spot-activity-heading">Recent activity</h2>
+              <div class="date-label">Today</div>
+              <div class="activity-list">
+                <button class="activity-row" type="button" data-event="Bought NVIDIA" data-event-detail="Confirmed · 2.3704 NVDAx · Transaction 4vJ…A91"><span class="activity-icon">NV</span><span class="activity-copy"><strong>Bought NVIDIA</strong><span>NVDAx · 8:46 AM</span></span><span class="activity-value"><strong class="value">$430.00</strong><span>Confirmed</span></span></button>
+              </div>
+              <div class="date-label">Yesterday</div>
+              <div class="activity-list">
+                <button class="activity-row" type="button" data-event="USDC received" data-event-detail="Confirmed · 650 USDC · Wallet 8xK2…mP4q"><span class="activity-icon transfer">↓</span><span class="activity-copy"><strong>USDC received</strong><span>Solana · 6:14 PM</span></span><span class="activity-value"><strong class="value">+$650.00</strong><span>Confirmed</span></span></button>
+              </div>
+            </section>
+          </div>
+
+          <div data-portfolio-when="full" hidden>
+          <label class="search-field">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <input id="activity-search" type="search" placeholder="Search company, ticker, or transaction" autocomplete="off">
+          </label>
+          <div class="filter-strip" aria-label="Activity filters">
+            <button class="filter-chip" type="button" data-filter="all" aria-pressed="true">All</button>
+            <button class="filter-chip" type="button" data-filter="trades" aria-pressed="false">Trades</button>
+            <button class="filter-chip" type="button" data-filter="perps" aria-pressed="false">Perpetuals</button>
+            <button class="filter-chip" type="button" data-filter="transfers" aria-pressed="false">Transfers</button>
+            <button class="filter-chip" type="button" data-filter="funding" aria-pressed="false">Funding</button>
+          </div>
+          <div class="activity-tools"><button type="button" data-open-sheet="activity-filters">All Warren wallets ▾</button><button type="button" data-open-sheet="activity-filters">Filters 0</button></div>
+
+          <button class="attention-strip" type="button" data-event="Apple purchase" data-event-detail="Submitted but not reconciled. This stays in chronological history below while its unresolved state is surfaced here.">
+            <strong>1 item needs attention</strong><span>Apple purchase status unknown · Do not resubmit ›</span>
+          </button>
+
+          <div class="activity-groups" id="activity-groups">
+            <section data-activity-group>
+              <div class="date-label">Today</div>
+              <div class="activity-list">
+                <button class="activity-row" type="button" data-kind="perps trades" data-search="nvidia nvda nvda-perp open long phoenix" data-event="Opened NVIDIA long" data-event-detail="Confirmed · NVDA-PERP · Phoenix · 3× isolated · Execution 7Kp…31Q"><span class="activity-icon perp">↗</span><span class="activity-copy"><strong>Opened NVIDIA long</strong><span>NVDA-PERP · 9:32 AM</span></span><span class="activity-value"><strong class="value">$300.00</strong><span>Confirmed</span></span></button>
+                <button class="activity-row" type="button" data-kind="trades" data-search="nvidia nvda nvdax buy 4vj" data-event="Bought NVIDIA" data-event-detail="Confirmed · 2.3704 NVDAx · Transaction 4vJ…A91"><span class="activity-icon">NV</span><span class="activity-copy"><strong>Bought NVIDIA</strong><span>NVDAx · 8:46 AM</span></span><span class="activity-value"><strong class="value">$430.00</strong><span>Confirmed</span></span></button>
+                <button class="activity-row" type="button" data-kind="funding perps" data-search="nvidia nvda perp funding paid phoenix" data-event="Funding paid" data-event-detail="Confirmed · NVDA-PERP · Phoenix · Funding period ending 8:00 AM"><span class="activity-icon perp">ƒ</span><span class="activity-copy"><strong>Funding paid</strong><span>NVDA-PERP · 8:00 AM</span></span><span class="activity-value"><strong class="value">−$0.03</strong><span>Confirmed</span></span></button>
+                <button class="activity-row" type="button" data-kind="trades" data-search="apple aapl aaplx buy unknown transaction" data-event="Apple purchase" data-event-detail="Submitted · final state unknown · Transaction 9mB…4Fd. Do not resubmit."><span class="activity-icon">A</span><span class="activity-copy"><strong>Apple purchase</strong><span>AAPLx · 7:54 AM</span></span><span class="activity-value"><strong class="value">$200.00</strong><span class="pending">Unknown</span></span></button>
+              </div>
+            </section>
+            <section data-activity-group>
+              <div class="date-label">Yesterday</div>
+              <div class="activity-list">
+                <button class="activity-row" type="button" data-kind="transfers" data-search="usdc received solana wallet" data-event="USDC received" data-event-detail="Confirmed · 650 USDC · Wallet 8xK2…mP4q"><span class="activity-icon transfer">↓</span><span class="activity-copy"><strong>USDC received</strong><span>Solana · 6:14 PM</span></span><span class="activity-value"><strong class="value">+$650.00</strong><span>Confirmed</span></span></button>
+                <button class="activity-row" type="button" data-kind="trades" data-search="tesla tsla tslax buy" data-event="Bought Tesla" data-event-detail="Confirmed · 0.5534 TSLAx received"><span class="activity-icon">T</span><span class="activity-copy"><strong>Bought Tesla</strong><span>TSLAx · 2:22 PM</span></span><span class="activity-value"><strong class="value">$236.10</strong><span>Confirmed</span></span></button>
+                <button class="activity-row" type="button" data-kind="perps trades" data-search="tesla tsla perp order limit placed" data-event="Tesla limit order placed" data-event-detail="Open order · TSLA-PERP · Buy limit $398.00 · 1.5× isolated"><span class="activity-icon perp">≡</span><span class="activity-copy"><strong>Tesla limit order placed</strong><span>TSLA-PERP · 11:08 AM</span></span><span class="activity-value"><strong class="value">$150.00</strong><span class="pending">Placed</span></span></button>
+                <button class="activity-row" type="button" data-kind="transfers" data-search="usdc sent solana transfer" data-event="USDC sent" data-event-detail="Confirmed · 75 USDC sent from Warren wallet"><span class="activity-icon transfer">↑</span><span class="activity-copy"><strong>USDC sent</strong><span>Solana · 9:16 AM</span></span><span class="activity-value"><strong class="value">−$75.00</strong><span>Confirmed</span></span></button>
+              </div>
+            </section>
+            <section data-activity-group>
+              <div class="date-label">September 19</div>
+              <div class="activity-list">
+                <button class="activity-row" type="button" data-kind="trades" data-search="apple aapl aaplx sell" data-event="Sold Apple" data-event-detail="Confirmed · 0.2500 AAPLx sold"><span class="activity-icon">A</span><span class="activity-copy"><strong>Sold Apple</strong><span>AAPLx · 5:42 PM</span></span><span class="activity-value"><strong class="value">+$59.10</strong><span>Confirmed</span></span></button>
+                <button class="activity-row" type="button" data-kind="funding perps" data-search="nvidia nvda perp funding received" data-event="Funding received" data-event-detail="Confirmed · NVDA-PERP · Previous funding period"><span class="activity-icon perp">ƒ</span><span class="activity-copy"><strong>Funding received</strong><span>NVDA-PERP · 4:00 PM</span></span><span class="activity-value"><strong class="value">+$0.01</strong><span>Confirmed</span></span></button>
+                <button class="activity-row" type="button" data-kind="trades" data-search="anthropic prestock commitment failed" data-event="Anthropic commitment failed" data-event-detail="Failed before settlement. No financial change occurred."><span class="activity-icon transfer">AI</span><span class="activity-copy"><strong>Anthropic commitment</strong><span>PreStock · 1:35 PM</span></span><span class="activity-value"><strong class="value">$120.00</strong><span class="failed">Failed</span></span></button>
+                <button class="activity-row" type="button" data-kind="transfers" data-search="sol received network fee" data-event="SOL received" data-event-detail="Confirmed · 0.035 SOL received for network fees"><span class="activity-icon transfer">◎</span><span class="activity-copy"><strong>SOL received</strong><span>Network fee balance · 10:18 AM</span></span><span class="activity-value"><strong class="value">+0.035</strong><span>Confirmed</span></span></button>
+              </div>
+            </section>
+          </div>
+          <div class="empty-results" id="empty-results" hidden>No Warren activity matches this search and filter.</div>
+          <button class="load-more" type="button" data-toast="Older activity would load with the next cursor. The mobile app will virtualize this list.">Load earlier activity</button>
+          <p class="sample-note">Only Warren-recognized trades, transfers, funding, and position events appear here. Raw wallet history remains available through the explorer.</p>
+          </div>
+        </section>
+      </div>
+
+      <nav class="bottom-nav" aria-label="Primary navigation">
+        <button class="nav-item" type="button" data-nav="Home"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 10.5 12 3.7l8.5 6.8v8.3a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5v-8.3Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 20.3v-5.6h6v5.6" stroke="currentColor" stroke-width="1.8"/></svg>Home</button>
+        <button class="nav-item" type="button" data-nav="Markets"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4.5v15h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="m7 15 4-4 3 2 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Markets</button>
+        <button class="nav-item active" type="button" aria-current="page" data-scroll-top><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Portfolio</button>
+      </nav>
+
+      <div class="sheet-backdrop" id="sheet-backdrop" aria-hidden="true">
+        <section class="bottom-sheet" id="account-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+          <div class="sheet-handle" aria-hidden="true"></div>
+          <div class="sheet-content">
+            <div class="sheet-header"><h2 id="sheet-title" tabindex="-1">Account</h2><button class="sheet-close" id="sheet-close" type="button" aria-label="Close">×</button></div>
+            <p class="sheet-copy" id="sheet-copy"></p>
+            <div id="sheet-extra"></div>
+            <div class="sheet-fact" id="sheet-fact"></div>
+            <div class="sheet-inline-alert" id="sheet-alert" role="alert" hidden></div>
+            <div class="sheet-actions" id="sheet-actions"><button class="sheet-button" id="sheet-secondary" type="button">Cancel</button><button class="sheet-button primary" id="sheet-primary" type="button">Continue</button></div>
+          </div>
+        </section>
+      </div>
+      <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+      <span class="sr-only" id="privacy-status" aria-live="polite"></span>
+      <span class="sr-only" id="session-alert" role="alert"></span>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+      const scroll = $('#portfolio-scroll');
+      const accountChip = $('#account-chip');
+      const accountChipLabel = $('#account-chip-label');
+      const accountGlyph = $('#account-glyph');
+      const accountSpinner = $('#account-spinner');
+      const accountDot = $('#account-dot');
+      const accountChevron = $('#account-chevron');
+      const signedOutPrimary = $('#signed-out-primary');
+      const signedOutPrimaryLabel = $('#signed-out-primary-label');
+      const signedOutPrimaryArrow = $('#signed-out-primary-arrow');
+      const privacyToggle = $('#privacy-toggle');
+      const sheetBackdrop = $('#sheet-backdrop');
+      const sheetTitle = $('#sheet-title');
+      const sheetCopy = $('#sheet-copy');
+      const sheetExtra = $('#sheet-extra');
+      const sheetFact = $('#sheet-fact');
+      const sheetAlert = $('#sheet-alert');
+      const sheetActions = $('#sheet-actions');
+      const sheetPrimary = $('#sheet-primary');
+      const sheetSecondary = $('#sheet-secondary');
+      const toast = $('#toast');
+      const sessionAlert = $('#session-alert');
+      const walletAddress = '8xK2Wq7nV4DtB9sA6yF1cR5hJ3uL7eM2pZ6mP4q';
+      let accountState = 'ready';
+      let portfolioState = 'new';
+      let currentView = 'overview';
+      let returnView = 'overview';
+      let valuesPrivate = false;
+      let activeFilter = 'all';
+      let toastTimer;
+      let lastSheetTrigger = null;
+      let accountReturnAction = null;
+
+      const content = {
+        receive: { title: 'Deposit to wallet', copy: 'Send only supported Solana assets to this address. Assets sent on another network may not be recoverable.', fact: 'A deposit does not approve a trade. Confirm the asset and network before sending.', primary: 'Copy address', action: 'copy', extra: 'receive' },
+        'sign-out': { title: 'Sign out of Warren?', copy: 'Your private session will be removed from this phone. Device-local saved companies remain.', fact: 'Signing out does not move funds, delete the wallet, or cancel a submitted transaction.', primary: 'Sign out', action: 'sign-out', danger: true }
+      };
+
+      function showToast(message) {
+        clearTimeout(toastTimer);
+        toast.textContent = message;
+        toast.hidden = false;
+        toastTimer = setTimeout(() => { toast.hidden = true; }, 2800);
+      }
+
+      function hasPrivateSession() { return accountState === 'ready' || accountState === 'issue'; }
+
+      function paneName() { return hasPrivateSession() ? `signed-${currentView}` : 'signed-out-overview'; }
+
+      function renderState({ announce = true } = {}) {
+        const privateSession = hasPrivateSession();
+        if (accountState !== 'expired') sessionAlert.textContent = '';
+        if (!privateSession) currentView = 'overview';
+        $$('[data-pane]').forEach(pane => pane.classList.toggle('active', pane.dataset.pane === paneName()));
+        $$('[data-state-switch]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.stateSwitch === accountState)));
+        $$('[data-portfolio-switch]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.portfolioSwitch === portfolioState)));
+        $$('[data-portfolio-when]').forEach(element => {
+          const states = element.dataset.portfolioWhen.split(/\s+/);
+          element.hidden = !privateSession || !states.includes(portfolioState);
+        });
+        $$('[data-view-tab]').forEach(button => button.setAttribute('aria-selected', String(button.dataset.viewTab === currentView)));
+        $$('.signed-only').forEach(item => { item.hidden = !privateSession; });
+        $$('.signed-out-only').forEach(item => { item.hidden = privateSession; });
+        accountChip.className = `account-chip ${accountState}`;
+        accountChip.disabled = accountState === 'checking';
+        accountChip.setAttribute('aria-busy', String(accountState === 'checking'));
+        accountGlyph.hidden = accountState === 'checking';
+        accountSpinner.hidden = accountState !== 'checking';
+        accountDot.hidden = true;
+        accountChevron.hidden = accountState === 'signed-out' || accountState === 'checking';
+        if (accountState === 'ready') {
+          accountChipLabel.textContent = '8xK2…mP4q';
+          accountChip.setAttribute('aria-label', 'Open account and wallet for Solana address ending mP4q');
+        } else if (accountState === 'issue') {
+          accountChipLabel.textContent = 'Wallet issue';
+          accountChip.setAttribute('aria-label', 'Warren wallet unavailable. Open details');
+        } else if (accountState === 'unverified') {
+          accountChipLabel.textContent = 'Finish setup';
+          accountChip.setAttribute('aria-label', 'Verify your account to use wallet features');
+        } else if (accountState === 'wallet-setup') {
+          accountChipLabel.textContent = 'Finish setup';
+          accountChip.setAttribute('aria-label', 'Set up your Warren wallet');
+        } else if (accountState === 'expired') {
+          accountChipLabel.textContent = 'Sign in again';
+          accountChip.setAttribute('aria-label', 'Session expired. Sign in to Warren again');
+          sessionAlert.textContent = 'Your Warren session expired. Private portfolio data is hidden. Sign in again to continue.';
+        } else if (accountState === 'checking') {
+          accountChipLabel.textContent = 'Checking…';
+          accountChip.setAttribute('aria-label', 'Checking account status');
+        } else {
+          accountChipLabel.textContent = 'Sign in';
+          accountChip.setAttribute('aria-label', 'Sign in to Warren');
+        }
+        $('#wallet-issue-strip').hidden = accountState !== 'issue';
+        $('#equity-updated').textContent = accountState === 'issue' ? 'Last updated 9:34 AM' : 'Updated moments ago';
+        signedOutPrimary.disabled = accountState === 'checking';
+        signedOutPrimary.setAttribute('aria-busy', String(accountState === 'checking'));
+        signedOutPrimaryLabel.textContent = accountState === 'checking' ? 'Restoring…' : accountState === 'unverified' ? 'Confirm wallet' : accountState === 'wallet-setup' ? 'Finish setup' : accountState === 'expired' ? 'Sign in again' : 'Sign in';
+        signedOutPrimary.dataset.openSheet = accountState === 'unverified' ? 'verify-account' : accountState === 'wallet-setup' ? 'wallet-setup' : 'sign-in';
+        signedOutPrimaryArrow.hidden = accountState === 'checking';
+        $$('[data-wallet-action]').forEach(button => {
+          button.hidden = accountState === 'issue';
+          button.disabled = accountState === 'issue';
+          button.textContent = 'Deposit';
+        });
+        privacyToggle.hidden = !privateSession || portfolioState !== 'full';
+        scroll.scrollTo({ top: 0, behavior: announce ? 'smooth' : 'auto' });
+        closeSheet();
+        if (announce) {
+          const message = accountState === 'ready' ? `${portfolioState} account · ${currentView}.` : accountState === 'issue' ? 'Wallet issue preview. Your signed-in Portfolio remains visible.' : accountState === 'unverified' ? 'Account verification required.' : accountState === 'wallet-setup' ? 'Wallet setup required.' : accountState === 'expired' ? 'Session expired. Private portfolio data hidden.' : accountState === 'checking' ? 'Checking account status.' : 'Signed-out Portfolio preview.';
+          showToast(message);
+        }
+      }
+
+      function selectView(view, { announce = false } = {}) {
+        if (!hasPrivateSession() && view !== 'overview') {
+          returnView = view;
+          openSheet('sign-in');
+          return;
+        }
+        currentView = view;
+        returnView = view;
+        renderState({ announce });
+      }
+
+      function receiveMarkup() {
+        return `<div class="receive-address"><svg class="qr-mark" viewBox="0 0 72 72" aria-label="Sample wallet QR code"><rect width="72" height="72" fill="currentColor"/><g fill="#f2f5f1"><rect x="5" y="5" width="20" height="20"/><rect x="9" y="9" width="12" height="12" fill="#131918"/><rect x="47" y="5" width="20" height="20"/><rect x="51" y="9" width="12" height="12" fill="#131918"/><rect x="5" y="47" width="20" height="20"/><rect x="9" y="51" width="12" height="12" fill="#131918"/><rect x="31" y="7" width="6" height="6"/><rect x="37" y="13" width="6" height="12"/><rect x="29" y="29" width="8" height="8"/><rect x="41" y="29" width="7" height="7"/><rect x="51" y="31" width="6" height="12"/><rect x="61" y="29" width="6" height="8"/><rect x="29" y="41" width="6" height="12"/><rect x="37" y="39" width="8" height="7"/><rect x="47" y="47" width="8" height="8"/><rect x="57" y="45" width="10" height="6"/><rect x="39" y="57" width="7" height="10"/><rect x="51" y="59" width="6" height="8"/><rect x="61" y="55" width="6" height="12"/></g></svg><div class="address-copy"><span>Solana wallet address</span><strong>${walletAddress}</strong></div></div>`;
+      }
+
+      function accountMarkup() {
+        return `<div class="wallet-identity"><span class="wallet-identity-mark" aria-hidden="true">W</span><span class="wallet-identity-copy"><small>Active wallet</small><strong>Warren wallet</strong><span>Embedded · Solana</span></span><span class="wallet-ready">Ready</span></div><div class="selectable-address" aria-label="Full Solana wallet address">${walletAddress}</div><div class="wallet-actions"><button class="wallet-action" type="button" data-sheet-action="copy" aria-label="Copy Solana wallet address ending mP4q"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.8"/></svg>Copy address</button><button class="wallet-action" type="button" data-sheet-action="receive"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v12m0 0 4-4m-4 4-4-4M5 20h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Show QR</button></div><div class="sheet-list"><button class="sheet-row" type="button" data-sheet-action="security"><span>Security & recovery</span><small>Email sign-in</small></button><button class="sheet-row danger" type="button" data-sheet-action="sign-out"><span>Sign out</span><small>Ends Warren session</small></button></div>`;
+      }
+
+      function signInMarkup() {
+        return `<div class="auth-choices"><button class="auth-choice primary" type="button" data-sheet-action="auth-email"><span class="auth-choice-icon" aria-hidden="true">@</span><span><strong>Continue with email</strong><small>Create or restore your account and Warren wallet.</small></span><span class="auth-choice-arrow" aria-hidden="true">›</span></button><button class="auth-choice" type="button" data-sheet-action="auth-wallet"><span class="auth-choice-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="6" width="17" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M16.5 13.5h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span><strong>Use an existing wallet</strong><small>Connect a Solana wallet, then confirm control with a message.</small></span><span class="auth-choice-arrow" aria-hidden="true">›</span></button></div><button class="auth-not-now" type="button" data-sheet-action="close">Not now</button>`;
+      }
+
+      function walletIssueMarkup() {
+        return `<div class="wallet-sync-banner"><strong>Wallet data hasn’t refreshed</strong>Last updated 9:34 AM. Your account remains signed in and the portfolio below shows the last known state.</div><div class="selectable-address" aria-label="Last known Solana wallet address">${walletAddress}</div><div class="sheet-list"><button class="sheet-row" type="button" data-sheet-action="copy" aria-label="Copy last known Solana wallet address ending mP4q"><span>Copy address</span><small>Last known wallet</small></button><button class="sheet-row" type="button" data-sheet-action="security"><span>Security & account access</span><small>Available</small></button><button class="sheet-row danger" type="button" data-sheet-action="sign-out"><span>Sign out</span><small>Ends Warren session</small></button></div>`;
+      }
+
+      function equityMarkup() {
+        return `<div class="reconcile-list"><div class="reconcile-row"><span>Priced token holdings</span><strong>$1,011.08</strong></div><div class="reconcile-row"><span>Available USDC + SOL</span><strong>$231.09</strong></div><div class="reconcile-row"><span>NVDA position equity</span><strong>$106.67</strong></div><div class="reconcile-row"><span>Phoenix available collateral</span><strong>$6.55</strong></div><div class="reconcile-row"><span>Liabilities</span><strong>$0.00</strong></div><div class="reconcile-row"><span>Net account equity</span><strong>$1,355.39</strong></div></div>`;
+      }
+
+      function activityFiltersMarkup() {
+        return `<div class="sheet-list"><button class="sheet-row" type="button"><span>Wallet</span><small>All Warren wallets</small></button><button class="sheet-row" type="button"><span>Status</span><small>Any status</small></button><button class="sheet-row" type="button"><span>Action</span><small>Any action</small></button><button class="sheet-row" type="button"><span>Date</span><small>All time</small></button></div>`;
+      }
+
+      function positionMarkup() {
+        return `<div class="risk-table"><div class="risk-row"><span>Status</span><strong>Open</strong></div><div class="risk-row"><span>Unrealized PnL</span><strong style="color:var(--gain)">+$6.67 · 6.67%</strong></div><div class="risk-row"><span>Entry / mark</span><strong>$185.50 / $189.72</strong></div><div class="risk-row"><span>Exposure</span><strong>$300.00</strong></div><div class="risk-row"><span>Collateral</span><strong>$100.00</strong></div><div class="risk-row"><span>Leverage</span><strong>3× isolated</strong></div><div class="risk-row"><span>Liquidation</span><strong>$125.20 · 34% away</strong></div><div class="risk-row"><span>Funding</span><strong>You pay 0.0062% · 42m</strong></div><div class="risk-row"><span>Venue update</span><strong>8 sec ago</strong></div></div><div class="concept-banner"><strong>Future position management · Concept only</strong><br>Add collateral, reduce, close, and risk orders are not available in the current release.</div><div class="planned-actions"><button type="button" disabled>Add collateral</button><button type="button" disabled>Reduce position</button><button type="button" disabled>Close position</button><button type="button" disabled>TP / SL</button></div><div class="position-history"><h3>Position activity</h3><div class="sheet-list"><button class="sheet-row" type="button" data-sheet-action="activity"><span>Position opened</span><small>Confirmed · 9:32 AM</small></button><button class="sheet-row" type="button" data-sheet-action="activity"><span>Funding paid</span><small>−$0.03 · 8:00 AM</small></button></div></div>`;
+      }
+
+      function openSheet(kind, override, trigger = document.activeElement) {
+        lastSheetTrigger = trigger instanceof HTMLElement ? trigger : accountChip;
+        sheetActions.hidden = false;
+        sheetPrimary.classList.remove('danger');
+        sheetSecondary.dataset.action = 'close';
+        sheetAlert.hidden = true;
+        sheetAlert.textContent = '';
+        if (kind === 'sign-in') {
+          sheetTitle.textContent = 'Sign in to Warren';
+          sheetCopy.textContent = 'Restore your portfolio or create an account. Signing in never approves a trade or moves funds.';
+          sheetExtra.innerHTML = signInMarkup();
+          sheetFact.textContent = 'Secure wallet infrastructure by Privy. Companies saved on this device remain available.';
+          sheetActions.hidden = true;
+        } else if (kind === 'auth-email') {
+          sheetTitle.textContent = 'Continue with email';
+          sheetCopy.textContent = 'Warren will send a code to create or restore your private account and embedded Solana wallet.';
+          sheetExtra.innerHTML = '';
+          sheetFact.textContent = 'This prototype stops before contacting Privy. No wallet or transaction will be created.';
+          sheetPrimary.textContent = 'Continue';
+          sheetPrimary.dataset.action = 'preview-wallet-setup';
+          sheetSecondary.textContent = 'Choose another method';
+          sheetSecondary.dataset.action = 'choose-method';
+          sheetSecondary.hidden = false;
+        } else if (kind === 'auth-wallet') {
+          sheetTitle.textContent = 'Use an existing wallet';
+          sheetCopy.textContent = 'Connect a compatible wallet, then sign a message to confirm control of the address.';
+          sheetExtra.innerHTML = '';
+          sheetFact.textContent = 'The signature is not a transaction and has no network fee. This wallet becomes the active wallet for balances and approvals.';
+          sheetPrimary.textContent = 'Connect wallet';
+          sheetPrimary.dataset.action = 'preview-unverified';
+          sheetSecondary.textContent = 'Choose another method';
+          sheetSecondary.dataset.action = 'choose-method';
+          sheetSecondary.hidden = false;
+        } else if (kind === 'account') {
+          sheetTitle.textContent = 'Warren wallet';
+          sheetCopy.textContent = 'Copy this Solana address or show its QR code to deposit supported assets.';
+          sheetExtra.innerHTML = accountMarkup();
+          sheetFact.textContent = 'Signed in with email · Wallet infrastructure by Privy';
+          sheetActions.hidden = true;
+        } else if (kind === 'phoenix-setup') {
+          sheetTitle.textContent = 'Create Phoenix account';
+          sheetCopy.textContent = 'Set up the trading account Warren uses for stock perpetuals without leaving the app.';
+          sheetExtra.innerHTML = '<div class="registration-summary"><span class="registration-mark" aria-hidden="true">P</span><span class="registration-copy"><small>ONE-TIME SETUP</small><strong>Phoenix trading</strong><span>One Solana transaction</span></span><span class="registration-status">Not created</span></div>';
+          sheetFact.textContent = 'Warren will prepare the Phoenix registration transaction for review. This does not deposit collateral, place an order, or open a position.';
+          sheetPrimary.textContent = 'Review transaction';
+          sheetPrimary.dataset.action = 'preview-phoenix-registration';
+          sheetSecondary.textContent = 'Not now';
+          sheetSecondary.hidden = false;
+        } else if (kind === 'wallet-issue') {
+          sheetTitle.textContent = 'Wallet unavailable';
+          sheetCopy.textContent = 'Only wallet-dependent actions are temporarily unavailable.';
+          sheetExtra.innerHTML = walletIssueMarkup();
+          sheetFact.textContent = 'Last successful wallet update · 9:34 AM';
+          sheetPrimary.textContent = 'Try again';
+          sheetPrimary.dataset.action = 'retry-wallet';
+          sheetSecondary.textContent = 'Close';
+          sheetSecondary.hidden = false;
+        } else if (kind === 'verify-account') {
+          sheetTitle.textContent = 'Confirm wallet control';
+          sheetCopy.textContent = 'The wallet provider is connected, but Warren still needs a signed message to confirm control of the address.';
+          sheetExtra.innerHTML = '';
+          sheetFact.textContent = 'This signature is not a transaction and has no network fee.';
+          sheetPrimary.textContent = 'Confirm message';
+          sheetPrimary.dataset.action = 'preview-ready';
+          sheetSecondary.textContent = 'Not now';
+          sheetSecondary.hidden = false;
+        } else if (kind === 'wallet-setup') {
+          sheetTitle.textContent = 'Set up Warren wallet';
+          sheetCopy.textContent = 'Your account is verified. Warren is ready to create or restore the embedded Solana wallet used for balances and approvals.';
+          sheetExtra.innerHTML = '';
+          sheetFact.textContent = 'This prototype does not contact Privy or create a real wallet.';
+          sheetPrimary.textContent = 'Create Warren wallet';
+          sheetPrimary.dataset.action = 'preview-ready';
+          sheetSecondary.textContent = 'Not now';
+          sheetSecondary.hidden = false;
+        } else if (kind === 'session-expired') {
+          sheetTitle.textContent = 'Session expired';
+          sheetCopy.textContent = 'Private portfolio data is hidden until you sign in again. Warren will return you to the view you were using.';
+          sheetExtra.innerHTML = '';
+          sheetFact.textContent = 'Session expiry does not move funds or cancel submitted transactions.';
+          sheetPrimary.textContent = 'Sign in again';
+          sheetPrimary.dataset.action = 'reauth';
+          sheetSecondary.textContent = 'Not now';
+          sheetSecondary.hidden = false;
+        } else if (kind === 'equity') {
+          sheetTitle.textContent = 'How equity adds up';
+          sheetCopy.textContent = 'Perpetual notional is exposure, not portfolio value. Isolated collateral is counted once through venue equity.';
+          sheetExtra.innerHTML = equityMarkup();
+          sheetFact.textContent = 'Anthropic PreStock exposure is unpriced and excluded from this total.';
+          sheetPrimary.textContent = 'Done';
+          sheetPrimary.dataset.action = 'close';
+          sheetSecondary.hidden = true;
+        } else if (kind === 'position') {
+          sheetTitle.textContent = 'NVIDIA long';
+          sheetCopy.textContent = 'NVDA-PERP · Phoenix · Position nv-042 · Long · 3× isolated';
+          sheetExtra.innerHTML = positionMarkup();
+          sheetFact.textContent = 'Risk values must come from the venue. Warren will never estimate liquidation in the client.';
+          sheetPrimary.textContent = 'Done';
+          sheetPrimary.dataset.action = 'close';
+          sheetSecondary.hidden = true;
+        } else if (kind === 'activity-filters') {
+          sheetTitle.textContent = 'Activity filters';
+          sheetCopy.textContent = 'Narrow hundreds of Warren-recognized events without changing the canonical chronological ledger.';
+          sheetExtra.innerHTML = activityFiltersMarkup();
+          sheetFact.textContent = 'Search also matches company, ticker, instrument, and transaction reference.';
+          sheetPrimary.textContent = 'Done';
+          sheetPrimary.dataset.action = 'close';
+          sheetSecondary.hidden = true;
+        } else {
+          const item = override || content[kind];
+          if (!item) return;
+          sheetTitle.textContent = item.title;
+          sheetCopy.textContent = item.copy;
+          sheetExtra.innerHTML = item.extra === 'receive' ? receiveMarkup() : '';
+          sheetFact.textContent = item.fact;
+          sheetPrimary.textContent = item.primary || 'Close';
+          sheetPrimary.dataset.action = item.action || 'close';
+          sheetPrimary.classList.toggle('danger', Boolean(item.danger));
+          sheetSecondary.textContent = item.secondary || 'Cancel';
+          sheetSecondary.hidden = false;
+        }
+        sheetBackdrop.classList.add('open');
+        sheetBackdrop.setAttribute('aria-hidden', 'false');
+        accountChip.setAttribute('aria-expanded', 'true');
+        $$('.phone > :not(#sheet-backdrop):not(#toast):not(#privacy-status):not(#session-alert)').forEach(element => { element.inert = true; });
+        setTimeout(() => sheetTitle.focus(), 10);
+      }
+
+      function closeSheet({ restoreFocus = true } = {}) {
+        const wasOpen = sheetBackdrop.classList.contains('open');
+        sheetBackdrop.classList.remove('open');
+        sheetBackdrop.setAttribute('aria-hidden', 'true');
+        accountChip.setAttribute('aria-expanded', 'false');
+        $$('.phone > :not(#sheet-backdrop):not(#toast):not(#privacy-status):not(#session-alert)').forEach(element => { element.inert = false; });
+        if (wasOpen && restoreFocus) setTimeout(() => lastSheetTrigger?.focus(), 10);
+      }
+
+      async function copyAddress() {
+        sheetAlert.textContent = '';
+        sheetAlert.hidden = true;
+        try {
+          await navigator.clipboard.writeText(walletAddress);
+          sheetAlert.hidden = true;
+          showToast('Solana wallet address copied.');
+        } catch (error) {
+          sheetAlert.textContent = 'Couldn’t copy. Select the full address above or try again.';
+          sheetAlert.hidden = false;
+        }
+      }
+
+      function openAccountChild(kind, override, returnAction) {
+        accountReturnAction = returnAction;
+        openSheet(kind, override, accountChip);
+        sheetSecondary.textContent = 'Back';
+        sheetSecondary.dataset.action = 'back-account';
+        sheetSecondary.hidden = false;
+      }
+
+      function returnToAccount() {
+        const action = accountReturnAction;
+        openSheet('account', undefined, accountChip);
+        setTimeout(() => {
+          const row = action ? $(`[data-sheet-action="${action}"]`, sheetExtra) : null;
+          (row || sheetTitle).focus();
+        }, 20);
+      }
+
+      function filterActivity() {
+        const query = $('#activity-search').value.trim().toLowerCase();
+        let visible = 0;
+        $$('.activity-row[data-kind]').forEach(row => {
+          const matchesKind = activeFilter === 'all' || row.dataset.kind.split(' ').includes(activeFilter);
+          const matchesQuery = !query || row.dataset.search.includes(query);
+          row.classList.toggle('filtered', !(matchesKind && matchesQuery));
+          if (matchesKind && matchesQuery) visible += 1;
+        });
+        $$('[data-activity-group]').forEach(group => { group.hidden = !$('.activity-row:not(.filtered)', group); });
+        $('#empty-results').hidden = visible !== 0;
+      }
+
+      $$('[data-state-switch]').forEach(button => button.addEventListener('click', () => {
+        const nextState = button.dataset.stateSwitch;
+        if (nextState === 'expired' && hasPrivateSession()) returnView = currentView;
+        accountState = nextState;
+        currentView = nextState === 'ready' || nextState === 'issue' ? returnView : 'overview';
+        renderState();
+      }));
+      $$('[data-portfolio-switch]').forEach(button => button.addEventListener('click', () => {
+        portfolioState = button.dataset.portfolioSwitch;
+        accountState = 'ready';
+        currentView = returnView;
+        renderState();
+      }));
+      $$('[data-view-tab]').forEach(button => button.addEventListener('click', () => selectView(button.dataset.viewTab)));
+      $$('[data-view-link]').forEach(button => button.addEventListener('click', () => selectView(button.dataset.viewLink)));
+      $$('[data-open-sheet]').forEach(button => button.addEventListener('click', () => openSheet(button.dataset.openSheet, undefined, button)));
+      $$('[data-scroll-top]').forEach(button => button.addEventListener('click', () => scroll.scrollTo({ top: 0, behavior: 'smooth' })));
+      $$('[data-nav]').forEach(button => button.addEventListener('click', () => showToast(`${button.dataset.nav} is outside this Portfolio mock.`)));
+      $$('[data-toast]').forEach(button => button.addEventListener('click', () => showToast(button.dataset.toast)));
+      $$('[data-company]').forEach(button => button.addEventListener('click', () => showToast(`${button.dataset.company} would open Market Details.`)));
+      $$('[data-position]').forEach(button => button.addEventListener('click', () => openSheet('position', undefined, button)));
+      $$('[data-order]').forEach(button => button.addEventListener('click', () => openSheet('order', { title: 'Tesla limit order', copy: 'Placed · TSLA-PERP · Buy at $398.00 · 1.5× isolated · $150 collateral', fact: 'A placed order is not an open position and does not change position count or equity until it fills.', primary: 'Done', action: 'close' }, button)));
+      $$('[data-event]').forEach(button => button.addEventListener('click', () => openSheet('event', { title: button.dataset.event, copy: button.dataset.eventDetail, fact: 'Production activity includes status progression, fees, wallet, venue, and a Solana explorer link.', primary: 'Done', action: 'close' }, button)));
+
+      accountChip.addEventListener('click', () => {
+        if (accountState === 'ready') openSheet('account', undefined, accountChip);
+        else if (accountState === 'issue') openSheet('wallet-issue', undefined, accountChip);
+        else if (accountState === 'unverified') openSheet('verify-account', undefined, accountChip);
+        else if (accountState === 'wallet-setup') openSheet('wallet-setup', undefined, accountChip);
+        else if (accountState === 'expired') openSheet('session-expired', undefined, accountChip);
+        else if (accountState === 'signed-out') openSheet('sign-in', undefined, accountChip);
+      });
+      $('#sheet-close').addEventListener('click', closeSheet);
+      sheetSecondary.addEventListener('click', () => {
+        if (sheetSecondary.dataset.action === 'choose-method') openSheet('sign-in', undefined, accountChip);
+        else if (sheetSecondary.dataset.action === 'back-account') returnToAccount();
+        else closeSheet();
+      });
+      sheetBackdrop.addEventListener('click', event => { if (event.target === sheetBackdrop) closeSheet(); });
+      sheetPrimary.addEventListener('click', () => {
+        const action = sheetPrimary.dataset.action;
+        if (action === 'preview-unverified') {
+          accountState = 'unverified';
+          renderState();
+        }
+        else if (action === 'preview-wallet-setup') {
+          accountState = 'wallet-setup';
+          renderState();
+        }
+        else if (action === 'preview-ready') {
+          closeSheet({ restoreFocus: false });
+          accountState = 'checking';
+          renderState();
+          setTimeout(() => { accountState = 'ready'; currentView = returnView; renderState(); accountChip.focus(); }, 750);
+        }
+        else if (action === 'retry-wallet') {
+          closeSheet({ restoreFocus: false });
+          accountState = 'checking';
+          renderState();
+          setTimeout(() => { accountState = 'ready'; currentView = returnView; renderState(); accountChip.focus(); }, 750);
+        }
+        else if (action === 'preview-phoenix-registration') {
+          closeSheet();
+          showToast('Phoenix registration would open for transaction review.');
+        }
+        else if (action === 'reauth') openSheet('sign-in', undefined, accountChip);
+        else if (action === 'back-account') returnToAccount();
+        else if (action === 'sign-out') { accountState = 'signed-out'; currentView = 'overview'; renderState(); }
+        else if (action === 'copy') void copyAddress();
+        else closeSheet();
+      });
+
+      sheetExtra.addEventListener('click', event => {
+        const action = event.target.closest('[data-sheet-action]')?.dataset.sheetAction;
+        if (action === 'copy') void copyAddress();
+        else if (action === 'close') closeSheet();
+        else if (action === 'auth-email') openSheet('auth-email', undefined, accountChip);
+        else if (action === 'auth-wallet') openSheet('auth-wallet', undefined, accountChip);
+        else if (action === 'sign-out') openAccountChild('sign-out', undefined, 'sign-out');
+        else if (action === 'receive') openAccountChild('receive', undefined, 'receive');
+        else if (action === 'security') openAccountChild('security', { title: 'Security & recovery', copy: 'Your email is verified. Sensitive wallet actions should require fresh authentication.', fact: 'Never reveal a seed phrase or private key. Warren support will not ask for either.', primary: 'Back to account', action: 'back-account' }, 'security');
+        else if (action === 'activity') { closeSheet(); selectView('activity'); }
+      });
+
+      privacyToggle.addEventListener('click', () => {
+        valuesPrivate = !valuesPrivate;
+        $$('.value').forEach(value => {
+          value.classList.toggle('is-private', valuesPrivate);
+          value.setAttribute('aria-hidden', String(valuesPrivate));
+        });
+        privacyToggle.setAttribute('aria-pressed', String(valuesPrivate));
+        privacyToggle.setAttribute('aria-label', valuesPrivate ? 'Show portfolio values' : 'Hide portfolio values');
+        $('.eye-open', privacyToggle).hidden = valuesPrivate;
+        $('.eye-closed', privacyToggle).hidden = !valuesPrivate;
+        $('#privacy-status').textContent = valuesPrivate ? 'Balance hidden.' : 'Balance visible.';
+      });
+
+      $$('.filter-chip').forEach(button => button.addEventListener('click', () => {
+        activeFilter = button.dataset.filter;
+        $$('.filter-chip').forEach(chip => chip.setAttribute('aria-pressed', String(chip === button)));
+        filterActivity();
+      }));
+      $('#activity-search').addEventListener('input', filterActivity);
+
+      document.addEventListener('keydown', event => {
+        if (!sheetBackdrop.classList.contains('open')) return;
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeSheet();
+          return;
+        }
+        if (event.key !== 'Tab') return;
+        const focusable = $$('button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])', sheetBackdrop).filter(element => !element.hidden && !element.closest('[hidden]') && !element.closest('[inert]'));
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (!focusable.includes(document.activeElement)) { event.preventDefault(); (event.shiftKey ? last : first).focus(); }
+        else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      });
+
+      const params = new URLSearchParams(location.search);
+      const requestedState = params.get('state');
+      const requestedPortfolio = params.get('portfolio');
+      accountState = requestedState === 'signed' ? 'ready' : ['signed-out', 'checking', 'unverified', 'wallet-setup', 'ready', 'issue', 'expired'].includes(requestedState) ? requestedState : 'ready';
+      portfolioState = ['new', 'spot', 'phoenix', 'full'].includes(requestedPortfolio) ? requestedPortfolio : 'new';
+      returnView = ['overview', 'positions', 'activity'].includes(params.get('view')) ? params.get('view') : 'overview';
+      currentView = hasPrivateSession() ? returnView : 'overview';
+      renderState({ announce: false });
+      if (params.get('sheet') === 'signin' && accountState === 'signed-out') requestAnimationFrame(() => openSheet('sign-in', undefined, accountChip));
+      if (params.get('sheet') === 'verify' && accountState === 'unverified') requestAnimationFrame(() => openSheet('verify-account', undefined, accountChip));
+      if (params.get('sheet') === 'setup' && accountState === 'wallet-setup') requestAnimationFrame(() => openSheet('wallet-setup', undefined, accountChip));
+      if (params.get('sheet') === 'expired' && accountState === 'expired') requestAnimationFrame(() => openSheet('session-expired', undefined, accountChip));
+      if (params.get('sheet') === 'account' && accountState === 'ready') requestAnimationFrame(() => openSheet('account', undefined, accountChip));
+      if (params.get('sheet') === 'issue' && accountState === 'issue') requestAnimationFrame(() => openSheet('wallet-issue', undefined, accountChip));
+      if (params.get('sheet') === 'position' && hasPrivateSession()) requestAnimationFrame(() => openSheet('position'));
+      if (params.get('sheet') === 'filters' && hasPrivateSession()) requestAnimationFrame(() => openSheet('activity-filters'));
+    })();
+  </script>
+</body>
+</html>

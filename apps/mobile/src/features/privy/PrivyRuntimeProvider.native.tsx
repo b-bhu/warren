@@ -32,10 +32,8 @@ export function PrivyRuntimeProvider({ children }: PropsWithChildren) {
         clientId={publicConfig.clientId}
         config={{
           embedded: {
-            // A first social sign-in provisions both default trading wallets.
-            // Privy keeps this idempotent for returning users.
+            // Warren is Solana-only. Privy keeps this idempotent for returning users.
             solana: { createOnLogin: 'all-users' },
-            ethereum: { createOnLogin: 'all-users' },
           },
         }}>
         {children}

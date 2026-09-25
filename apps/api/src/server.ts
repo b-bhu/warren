@@ -9,6 +9,7 @@ import {
   challengeRequestSchema, createAttemptSchema, idempotencyKeySchema, proofSchema, refreshSchema, serializeEip4361V1,
   serializeSiwsV1, signatureRequestSchema, type ErrorCode, type WalletFamily,
 } from '@warren/auth-contract';
+import type { ExecutionErrorCode } from '@warren/execution-contract';
 import { DeterministicTestWalletAdapter } from '@warren/test-wallet-provider';
 import type { ProviderAdapter } from '@warren/provider-contract';
 import { openDatabase, type Sqlite } from './db.js';
@@ -18,13 +19,49 @@ import { HomeService, HomeServiceFault } from './home/service.js';
 import { FixtureCatalogSource, FixtureSupplementSource, TokensCatalogSource, TokensNewsSource } from './home/sources.js';
 import { registerMarketsRoutes } from './markets/routes.js';
 import { MarketsService, MarketsServiceFault } from './markets/service.js';
+import { TokensMarketDetailsSource } from './markets/details-sources.js';
 import { FixtureSpotSource, PhoenixPerpetualSource, PreStocksSource, TesseraSource, TokensSpotSource } from './markets/sources.js';
+import { registerExecutionRoutes } from './execution/routes.js';
+import { ExecutionService, ExecutionServiceFault } from './execution/service.js';
+import {
+  DisabledExecutionIdentityVerifier,
+  JupiterExecutionSource,
+  PhoenixExecutionSource,
+  PrivyExecutionIdentityVerifier,
+  SolanaRpcGateway,
+} from './execution/sources.js';
+import type { ExecutionIdentityVerifier, ExecutionServiceContract } from './execution/types.js';
+import { SqliteExecutionIntentStore } from './execution/store.js';
+import { registerPortfolioRoutes } from './portfolio/routes.js';
+import { PortfolioService, PortfolioServiceFault, type PortfolioErrorCode } from './portfolio/service.js';
+import { SqlitePortfolioSnapshotStore } from './portfolio/snapshots.js';
+import { HeliusPortfolioSource, PhoenixPortfolioSource, UnavailableWalletPortfolioSource } from './portfolio/sources.js';
+import { PhoenixRegistrationService } from './portfolio/registration-service.js';
+import { PhoenixRegistrationSource } from './portfolio/registration-source.js';
+import { SqlitePhoenixRegistrationIntentStore } from './portfolio/registration-store.js';
+import { KaminoMarketCatalog } from './lending/market.js';
+import { registerLendingRoutes } from './lending/routes.js';
+import { KaminoSdkAdapter } from './lending/kamino-sdk.js';
+import { LendingService, LendingServiceFault } from './lending/service.js';
+import { SqliteLendingActionStore } from './lending/store.js';
 
 type Row = Record<string, unknown>;
-type AppOptions = { config?: Config; db?: Sqlite; provider?: ProviderAdapter; homeService?: HomeService; marketsService?: MarketsService };
+type AppOptions = {
+  config?: Config;
+  db?: Sqlite;
+  provider?: ProviderAdapter;
+  homeService?: HomeService;
+  marketsService?: MarketsService;
+  executionService?: ExecutionServiceContract;
+  executionIdentityVerifier?: ExecutionIdentityVerifier;
+  portfolioService?: PortfolioService;
+  phoenixRegistrationService?: PhoenixRegistrationService;
+  kaminoMarketCatalog?: KaminoMarketCatalog;
+  lendingService?: LendingService;
+};
 type Completion = { profileId: string; accessToken?: string; refreshToken?: string; accessExpiresAt?: string; alreadyCompleted?: boolean };
 class ApiFault extends Error {
-  constructor(readonly code: ErrorCode | 'CATALOG_UNAVAILABLE' | 'REGISTRY_UNAVAILABLE', readonly status: number, message: string, readonly retryable = false, readonly attemptId?: string, readonly details?: { retryAfterSeconds?: number }) { super(message); }
+  constructor(readonly code: ErrorCode | ExecutionErrorCode | PortfolioErrorCode | 'CATALOG_UNAVAILABLE' | 'REGISTRY_UNAVAILABLE', readonly status: number, message: string, readonly retryable = false, readonly attemptId?: string, readonly details?: { retryAfterSeconds?: number }, readonly executionId?: string) { super(message); }
 }
 const now = () => new Date().toISOString();
 const expiry = (seconds: number) => new Date(Date.now() + seconds * 1000).toISOString();
@@ -74,6 +111,13 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
     cacheTtlMs: config.HOME_CATALOG_CACHE_SECONDS * 1000,
     staleTtlMs: config.HOME_CATALOG_STALE_SECONDS * 1000,
   });
+  const marketDetailsSource = config.TOKENS_API_KEY
+    ? new TokensMarketDetailsSource({
+      apiKey: config.TOKENS_API_KEY,
+      baseUrl: config.TOKENS_API_BASE_URL,
+      timeoutMs: config.MARKETS_PROVIDER_TIMEOUT_MS,
+    })
+    : undefined;
   const marketsService = options.marketsService ?? new MarketsService({
     sources: [
       config.TOKENS_API_KEY
@@ -83,10 +127,79 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
       new TesseraSource(),
       new PhoenixPerpetualSource({ baseUrl: config.PHOENIX_API_BASE_URL, timeoutMs: config.MARKETS_PROVIDER_TIMEOUT_MS }),
     ],
+    historySource: marketDetailsSource,
+    newsSource: marketDetailsSource,
     cacheTtlMs: config.MARKETS_REGISTRY_CACHE_SECONDS * 1000,
     staleTtlMs: config.MARKETS_REGISTRY_STALE_SECONDS * 1000,
   });
-  const app = Fastify({ logger: config.NODE_ENV === 'test' ? false : { level: 'info', redact: ['req.headers.authorization', 'req.headers.x-attempt-capability', 'req.headers.idempotency-key'] }, genReqId: id });
+  const executionIdentityVerifier = options.executionIdentityVerifier ?? (
+    config.PRIVY_APP_ID && config.PRIVY_APP_SECRET
+      ? new PrivyExecutionIdentityVerifier(config.PRIVY_APP_ID, config.PRIVY_APP_SECRET)
+      : new DisabledExecutionIdentityVerifier()
+  );
+  const executionStore = new SqliteExecutionIntentStore(db);
+  const executionService = options.executionService ?? new ExecutionService({
+    markets: marketsService,
+    spot: new JupiterExecutionSource({
+      baseUrl: config.JUPITER_API_BASE_URL,
+      apiKey: config.JUPITER_API_KEY,
+      timeoutMs: config.EXECUTION_PROVIDER_TIMEOUT_MS,
+    }),
+    perpetual: new PhoenixExecutionSource({
+      baseUrl: config.PHOENIX_API_BASE_URL,
+      timeoutMs: config.EXECUTION_PROVIDER_TIMEOUT_MS,
+    }),
+    solana: new SolanaRpcGateway(config.HELIUS_RPC_URL ?? config.SOLANA_RPC_URL),
+    store: executionStore,
+    intentTtlMs: config.EXECUTION_INTENT_TTL_SECONDS * 1000,
+  });
+  const portfolioService = options.portfolioService ?? new PortfolioService({
+    markets: marketsService,
+    wallet: config.HELIUS_RPC_URL
+      ? new HeliusPortfolioSource({ rpcUrl: config.HELIUS_RPC_URL, timeoutMs: config.EXECUTION_PROVIDER_TIMEOUT_MS })
+      : new UnavailableWalletPortfolioSource(),
+    phoenix: new PhoenixPortfolioSource({
+      baseUrl: config.PHOENIX_API_BASE_URL,
+      timeoutMs: config.EXECUTION_PROVIDER_TIMEOUT_MS,
+    }),
+    executions: executionStore,
+    snapshots: new SqlitePortfolioSnapshotStore(db),
+    phoenixRegistrationMode: config.PHOENIX_REFERRAL_CODE ? 'referral' : 'non_referral',
+  });
+  const phoenixRegistrationService = options.phoenixRegistrationService ?? new PhoenixRegistrationService({
+    provider: new PhoenixRegistrationSource({
+      baseUrl: config.PHOENIX_API_BASE_URL,
+      rpcUrl: config.HELIUS_RPC_URL ?? config.SOLANA_RPC_URL,
+      timeoutMs: config.EXECUTION_PROVIDER_TIMEOUT_MS,
+    }),
+    solana: new SolanaRpcGateway(config.HELIUS_RPC_URL ?? config.SOLANA_RPC_URL),
+    store: new SqlitePhoenixRegistrationIntentStore(db),
+    ...(config.PHOENIX_REFERRAL_CODE ? { referralCode: config.PHOENIX_REFERRAL_CODE } : {}),
+    reviewTtlMs: config.EXECUTION_INTENT_TTL_SECONDS * 1000,
+  });
+  const kaminoMarketCatalog = options.kaminoMarketCatalog ?? new KaminoMarketCatalog({
+    baseUrl: config.KAMINO_API_BASE_URL,
+    timeoutMs: config.KAMINO_MARKET_TIMEOUT_MS,
+    enabled: config.KAMINO_LENDING_ENABLED === 'true',
+    newRiskEnabled: config.KAMINO_LENDING_NEW_RISK_ENABLED === 'true',
+    recoveryEnabled: config.KAMINO_LENDING_REPAY_ENABLED === 'true' || config.KAMINO_LENDING_WITHDRAW_ENABLED === 'true',
+  });
+  const lendingSdk = new KaminoSdkAdapter({ rpcUrl: config.HELIUS_RPC_URL ?? config.SOLANA_RPC_URL, timeoutMs: config.EXECUTION_PROVIDER_TIMEOUT_MS });
+  const lendingService = options.lendingService ?? new LendingService({
+    catalog: kaminoMarketCatalog,
+    sdk: lendingSdk,
+    store: new SqliteLendingActionStore(db),
+    flags: {
+      catalogEnabled: config.KAMINO_LENDING_ENABLED === 'true',
+      newRiskEnabled: config.KAMINO_LENDING_NEW_RISK_ENABLED === 'true',
+      repayEnabled: config.KAMINO_LENDING_REPAY_ENABLED === 'true',
+      withdrawEnabled: config.KAMINO_LENDING_WITHDRAW_ENABLED === 'true',
+      borrowHeadroomBps: config.KAMINO_BORROW_HEADROOM_BPS,
+    },
+    send: lendingSdk.send.bind(lendingSdk),
+    signatureState: lendingSdk.getSignatureState.bind(lendingSdk),
+  });
+  const app = Fastify({ logger: config.NODE_ENV === 'test' ? false : { level: 'info', redact: ['req.headers.authorization', 'req.headers.x-attempt-capability', 'req.headers.idempotency-key', 'req.body.signedTransaction', 'res.body.unsignedTransaction'] }, genReqId: id });
   const origins = config.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean);
   app.register(cors, { origin: origins });
   const buckets = new Map<string, { count: number; resetAt: number }>();
@@ -94,10 +207,12 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
     const path = request.url.split('?')[0];
     const sensitivePoll = request.method === 'GET' && /^\/v1\/auth\/attempts\/[^/]+\/(credentials|signature-requests\/[^/]+)$/.test(path);
     const publicMarketRead = request.method === 'GET'
-      && (path === '/v1/home' || path === '/v1/assets' || path === '/v1/markets' || path.startsWith('/v1/markets/'));
+      && (path === '/v1/home' || path === '/v1/assets' || path === '/v1/markets' || path.startsWith('/v1/markets/') || path === '/v1/execution/spot/assets' || path === '/v1/lending/kamino/xstocks');
+    const privatePortfolioRead = request.method === 'GET' && path.startsWith('/v1/portfolio/');
+    const privateLendingRead = request.method === 'GET' && path.startsWith('/v1/lending/kamino/xstocks/');
     const mutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method) && path.startsWith('/v1/');
-    if (!mutation && !sensitivePoll && !publicMarketRead) return;
-    const scope = publicMarketRead ? path
+    if (!mutation && !sensitivePoll && !publicMarketRead && !privatePortfolioRead && !privateLendingRead) return;
+    const scope = publicMarketRead || privatePortfolioRead || privateLendingRead ? path
       : /^\/v1\/auth\/attempts\/[^/]+\/signature-requests\/[^/]+$/.test(path) ? 'auth-poll'
       : /^\/v1\/auth\/attempts\/[^/]+\/credentials$/.test(path) ? 'auth-credentials'
         : path.replace(/\/v1\/auth\/attempts\/[^/]+/g, '/v1/auth/attempts/:attemptId');
@@ -128,11 +243,19 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
             : error.code === 'REGISTRY_UNAVAILABLE'
               ? new ApiFault('REGISTRY_UNAVAILABLE', 503, error.message, error.retryable)
               : new ApiFault('INTERNAL_ERROR', 500, 'Something went wrong. Please try again.', true)
+      : error instanceof ExecutionServiceFault
+        ? new ApiFault(error.code, error.status, error.message, error.retryable, undefined, undefined, error.executionId)
+      : error instanceof PortfolioServiceFault
+        ? error.code === 'CONTRACT_INVALID'
+          ? new ApiFault('INTERNAL_ERROR', 500, 'Something went wrong. Please try again.', true)
+          : new ApiFault(error.code, error.status, error.message, error.retryable)
+      : error instanceof LendingServiceFault
+        ? new ApiFault(error.code === 'LENDING_ACTION_PAUSED' ? 'EXECUTION_STATE_INVALID' : error.code === 'LENDING_NOT_FOUND' ? 'NOT_FOUND' : error.code === 'WALLET_MISMATCH' ? 'WALLET_MISMATCH' : error.code === 'LENDING_PROVIDER_UNAVAILABLE' ? 'PROVIDER_UNAVAILABLE' : 'INVALID_REQUEST', error.status, error.message, error.retryable)
       : error instanceof z.ZodError
       ? new ApiFault('INVALID_REQUEST', 400, 'The request could not be processed.')
       : new ApiFault('INTERNAL_ERROR', 500, 'Something went wrong. Please try again.', true);
     if (!(error instanceof ApiFault) && !(error instanceof z.ZodError)) request.log.error({ requestId: request.id, errorName: error instanceof Error ? error.name : 'unknown' }, 'Unhandled API error');
-    reply.status(fault.status).send({ error: { code: fault.code, message: fault.message, retryable: fault.retryable, requestId: request.id, ...(fault.attemptId ? { attemptId: fault.attemptId } : {}), ...(fault.details ? { details: fault.details } : {}) } });
+    reply.status(fault.status).send({ error: { code: fault.code, message: fault.message, retryable: fault.retryable, requestId: request.id, ...(fault.attemptId ? { attemptId: fault.attemptId } : {}), ...(fault.executionId ? { executionId: fault.executionId } : {}), ...(fault.details ? { details: fault.details } : {}) } });
   });
 
   const requireAccess = (request: FastifyRequest): Row => {
@@ -209,11 +332,17 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
       db.exec('COMMIT'); return { profileId, ...tokens };
     } catch (error) { try { db.exec('ROLLBACK'); } catch { /* committed terminal result */ } throw error; }
   };
-  const providerFault = (error: unknown): ApiFault => error instanceof ApiFault ? error : new ApiFault('PROVIDER_UNAVAILABLE', 502, 'Wallet signing is temporarily unavailable.', true);
+  const providerFault = (error: unknown): ApiFault => error instanceof ApiFault ? error : new ApiFault('PROVIDER_UNAVAILABLE', 502, 'Warren could not start wallet signing.', true);
 
   app.get('/v1/health', async () => ({ status: 'ok' }));
   registerHomeRoutes(app, homeService, config.HOME_HTTP_CACHE_SECONDS, config.HOME_HTTP_STALE_SECONDS);
   registerMarketsRoutes(app, marketsService, config.MARKETS_HTTP_CACHE_SECONDS, config.MARKETS_HTTP_STALE_SECONDS);
+  registerExecutionRoutes(app, executionService, executionIdentityVerifier, {
+    max: Math.min(config.RATE_LIMIT_MAX, 20),
+    windowMs: config.RATE_LIMIT_WINDOW_SECONDS * 1000,
+  });
+  registerPortfolioRoutes(app, portfolioService, executionIdentityVerifier, phoenixRegistrationService);
+  registerLendingRoutes(app, kaminoMarketCatalog, lendingService, executionIdentityVerifier);
   app.post('/v1/auth/attempts', async (request, reply) => {
     const body = createAttemptSchema.parse(request.body); let profileId: string | null = null, sessionFamilyId: string | null = null;
     let support; try { support = await provider.getSupport(); } catch (error) { throw providerFault(error); }
@@ -273,7 +402,7 @@ export function buildApp(options: AppOptions = {}): FastifyInstance {
     if (!row) throw new ApiFault('NOT_FOUND', 404, 'This signing request was not found.');
     if (row.state === 'complete') return { requestId, state: 'complete', ...openCompletion(String(row.completion_ciphertext)), alreadyCompleted: true };
     if (row.state === 'blocked') throw new ApiFault('ATTEMPT_STATE_INVALID', 409, 'This signing request can no longer be completed.', false, attemptId);
-    if (row.state === 'failed') throw new ApiFault('PROVIDER_UNAVAILABLE', 502, 'Wallet signing is temporarily unavailable.', true, attemptId);
+    if (row.state === 'failed') throw new ApiFault('PROVIDER_UNAVAILABLE', 502, 'Warren could not start wallet signing.', true, attemptId);
     let result; try { result = await provider.getMessageSignature({ requestId }); } catch (error) { throw providerFault(error); }
     if (result.state !== 'approved' || !result.signature) return { requestId, state: result.state };
     const challenge = db.prepare('SELECT protocol FROM sign_challenges WHERE id=?').get(row.challenge_id) as Row;

@@ -108,17 +108,7 @@
 
     .status-icons { display: flex; align-items: center; gap: 4px; }
 
-    .app-header {
-      flex: 0 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      min-height: 62px;
-      padding: 8px 18px 7px;
-      background: rgba(19, 25, 24, 0.96);
-      border-bottom: 1px solid var(--outline-soft);
-      z-index: 7;
-    }
+    .app-header { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; min-height: 64px; padding: 8px 18px; background: var(--canvas); border-bottom: 1px solid var(--outline-soft); z-index: 7; }
 
     .brand {
       display: inline-flex;
@@ -149,28 +139,9 @@
       letter-spacing: -0.035em;
     }
 
-    .guest-chip {
-      min-height: 34px;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 0 11px;
-      border: 1px solid var(--outline-soft);
-      border-radius: 999px;
-      background: var(--surface);
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-    }
+    .guest-chip { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; border: 0; border-radius: 12px; background: var(--proof-wash); color: var(--proof); font-size: 13px; font-weight: 700; cursor: pointer; }
 
-    .guest-chip::before {
-      content: "";
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--proof);
-    }
+    .guest-chip::before { display: none; }
 
     .screen-scroll {
       min-height: 0;
@@ -187,17 +158,9 @@
     .index-strip::-webkit-scrollbar,
     .news-row::-webkit-scrollbar { display: none; }
 
-    .home-content { padding: 16px 16px 24px; }
+    .home-content { padding: 18px 18px 28px; }
 
-    .market-status-strip {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin: 0 2px 12px;
-      color: var(--muted);
-      font: 500 9px/1.3 var(--font-mono);
-    }
+    .market-status-strip { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin: 0 0 16px; color: var(--muted); font-size: 12px; line-height: 1.4; }
 
     .market-status-strip strong {
       display: flex;
@@ -215,39 +178,13 @@
       background: var(--gain);
     }
 
-    .market-deck {
-      --market-grid-gap: 6px;
-      --market-grid-gutter: 8px;
-      position: relative;
-      overflow: hidden;
-      border: 1px solid var(--outline);
-      border-radius: var(--card-radius);
-      background: var(--surface);
-    }
+    .market-deck { --market-grid-gap: 10px; --market-grid-gutter: 0px; position: relative; background: transparent; }
 
-    .discovery-toolbar {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 144px;
-      align-items: center;
-      gap: 8px;
-      padding: 8px;
-      border-bottom: 1px solid var(--outline-soft);
-    }
+    .discovery-toolbar { display: block; margin-bottom: 18px; }
 
     .search-wrap { position: relative; min-width: 0; z-index: 6; }
 
-    .search-box {
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 10px;
-      border: 1px solid var(--outline-soft);
-      border-radius: var(--control-radius);
-      background: var(--surface);
-      color: var(--muted);
-      transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
-    }
+    .search-box { min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 1px solid var(--outline-soft); border-radius: 12px; background: var(--surface); color: var(--muted); }
 
     .search-box:focus-within {
       border-color: var(--proof);
@@ -255,29 +192,10 @@
       box-shadow: 0 0 0 3px rgba(116, 199, 223, 0.12);
     }
 
-    .search-box input {
-      min-width: 0;
-      flex: 1;
-      border: 0;
-      outline: 0;
-      color: var(--ink);
-      background: transparent;
-      font-size: 12px;
-      font-weight: 600;
-    }
+    .search-box input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 16px; font-weight: 500; }
 
     .search-box input::placeholder { color: var(--muted); font-weight: 500; }
-    .search-clear {
-      width: 27px;
-      height: 27px;
-      display: grid;
-      place-items: center;
-      border: 0;
-      border-radius: 8px;
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-    }
+    .search-clear { width: 44px; height: 44px; flex: 0 0 auto; display: grid; place-items: center; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 22px; cursor: pointer; }
 
     .search-results {
       position: absolute;
@@ -293,59 +211,24 @@
       box-shadow: 0 16px 30px rgba(0, 0, 0, 0.34);
     }
 
-    .search-result {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px;
-      border: 0;
-      border-radius: 9px;
-      background: transparent;
-      text-align: left;
-      cursor: pointer;
-    }
+    .search-result { width: 100%; min-height: 64px; display: flex; align-items: center; gap: 10px; padding: 10px; border: 0; border-radius: 9px; background: transparent; text-align: left; cursor: pointer; }
 
     .search-result:hover { background: var(--proof-wash); }
     .search-result-copy { flex: 1; min-width: 0; }
-    .search-result-copy strong { display: block; font-size: 11px; }
-    .search-result-copy span { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
-    .search-result-price { text-align: right; font: 600 9px/1.4 var(--font-mono); }
-    .search-empty { padding: 16px 8px; color: var(--muted); font-size: 11px; text-align: center; }
+    .search-result-copy strong { display: block; font-size: 14px; }
+    .search-result-copy span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .search-result-price { text-align: right; font: 600 12px/1.5 var(--font-mono); }
+    .search-empty { padding: 18px 10px; color: var(--muted); font-size: 14px; line-height: 1.5; }
 
-    .market-modes {
-      min-width: 144px;
-      height: 44px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      overflow: hidden;
-      border: 1px solid var(--outline-soft);
-      border-radius: var(--control-radius);
-    }
+    .market-modes { display: flex; gap: 24px; margin-top: 16px; border-bottom: 1px solid var(--outline-soft); }
 
-    .market-mode {
-      min-width: 0;
-      display: grid;
-      grid-template-rows: 15px auto;
-      align-content: center;
-      gap: 2px;
-      place-items: center;
-      padding: 0;
-      border: 0;
-      border-right: 1px solid var(--outline-soft);
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-    }
+    .market-mode { min-height: 44px; padding: 0 0 12px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); cursor: pointer; }
 
-    .market-mode span {
-      font: 700 7px/1 var(--font-sans);
-      letter-spacing: -0.01em;
-    }
+    .market-mode span { font: 650 14px/1.3 var(--font-sans); }
 
     .market-mode:last-child { border-right: 0; }
     .market-mode:hover { color: var(--ink); background: var(--proof-wash); }
-    .market-mode.active { color: var(--proof); background: var(--proof-wash); }
+    .market-mode.active { color: var(--ink); border-bottom-color: var(--proof); background: transparent; }
 
     .index-strip-wrap {
       position: relative;
@@ -363,71 +246,20 @@
       background: linear-gradient(90deg, transparent, var(--canvas));
     }
 
-    .index-strip {
-      display: flex;
-      gap: var(--market-grid-gap);
-      overflow-x: auto;
-      padding: 6px var(--market-grid-gutter);
-      scroll-padding-inline: var(--market-grid-gutter);
-      scrollbar-width: none;
-      overscroll-behavior-x: contain;
-      scroll-snap-type: x proximity;
-      background: var(--canvas);
-    }
+    .index-strip { display: flex; gap: 10px; overflow-x: auto; padding: 0 0 4px; scrollbar-width: none; overscroll-behavior-x: contain; scroll-snap-type: x proximity; }
 
-    .index-quote {
-      min-height: 46px;
-      flex: 0 0 calc((100% - 12px) / 3);
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-rows: auto auto;
-      align-content: center;
-      column-gap: 6px;
-      row-gap: 2px;
-      padding: 6px 8px;
-      border: 1px solid var(--outline-soft);
-      border-radius: var(--card-radius);
-      background: var(--surface);
-      scroll-snap-align: start;
-      white-space: nowrap;
-      font-family: var(--font-mono);
-    }
+    .index-quote { min-height: 78px; flex: 0 0 calc((100% - 20px) / 3); display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 8px 0 8px 10px; border: 0; border-left: 1px solid var(--outline-soft); background: transparent; scroll-snap-align: start; white-space: nowrap; }
 
-    .index-name {
-      grid-row: 1 / -1;
-      align-self: center;
-      overflow: hidden;
-      color: var(--muted);
-      font-size: 9px;
-      text-overflow: ellipsis;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .index-price { grid-column: 2; color: var(--ink); font-size: 10px; text-align: right; }
-    .index-change { grid-column: 2; color: var(--gain); font-size: 9px; font-style: normal; text-align: right; }
+    .index-name { color: var(--muted); font-size: 12px; line-height: 1.3; }
+    .index-price { color: var(--ink); font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
+    .index-change { color: var(--gain); font-size: 12px; font-style: normal; font-variant-numeric: tabular-nums; }
     .index-quote.negative .index-change { color: var(--caution); }
 
-    .market-board-heading {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 7px 10px 3px;
-      background: var(--canvas);
-    }
+    .market-board-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 18px 0 12px; }
 
-    .market-board-heading h2 {
-      font-size: 10px;
-      line-height: 1.2;
-      letter-spacing: -0.01em;
-    }
+    .market-board-heading h2 { font-size: 18px; line-height: 1.3; letter-spacing: -0.02em; }
 
-    .market-board-heading span {
-      color: var(--muted);
-      font: 600 8px/1.2 var(--font-mono);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
+    .market-board-heading span { color: var(--muted); font-size: 12px; line-height: 1.3; }
 
     .market-pages {
       display: flex;
@@ -436,35 +268,9 @@
       scrollbar-width: none;
     }
 
-    .market-page {
-      min-width: 100%;
-      min-height: 254px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      grid-template-rows: repeat(4, auto);
-      gap: var(--market-grid-gap);
-      padding: 6px var(--market-grid-gutter);
-      scroll-snap-align: start;
-      align-content: start;
-      background: var(--canvas);
-    }
+    .market-page { min-width: 100%; min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, auto); gap: 10px; padding: 2px 0; scroll-snap-align: start; align-content: start; }
 
-    .stock-card {
-      position: relative;
-      min-height: 56px;
-      display: flex;
-      align-items: stretch;
-      justify-content: space-between;
-      overflow: hidden;
-      gap: 6px;
-      padding: 6px 8px;
-      border: 1px solid var(--outline-soft);
-      border-radius: var(--card-radius);
-      background: var(--surface);
-      text-align: left;
-      cursor: pointer;
-      transition: background 120ms ease, border-color 120ms ease;
-    }
+    .stock-card { position: relative; min-height: 96px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; padding: 12px; border: 1px solid transparent; border-radius: 12px; background: var(--surface); text-align: left; cursor: pointer; }
 
     .stock-card:hover {
       background: var(--proof-wash);
@@ -472,63 +278,20 @@
     }
 
     .stock-card:active { background: var(--proof-wash); }
-    .stock-left,
-    .stock-right {
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .stock-left { align-items: flex-start; gap: 3px; }
-    .stock-right { flex: 0 0 auto; align-items: flex-end; gap: 4px; }
-    .stock-company {
-      display: block;
-      max-width: 58px;
-      overflow: hidden;
-      color: var(--ink);
-      font-size: 10px;
-      line-height: 1.2;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .card-ticker { color: var(--muted); font: 500 9px/1.2 var(--font-mono); }
-    .stock-change {
-      color: var(--gain);
-      font: 600 11px/1 var(--font-mono);
-      letter-spacing: -0.025em;
-    }
+    .stock-left { min-width: 0; display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 8px; }
+    .stock-right { min-width: 0; display: flex; flex-direction: row; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .stock-company { display: block; min-width: 0; color: var(--ink); font-size: 14px; line-height: 1.3; overflow-wrap: anywhere; }
+    .card-ticker { color: var(--muted); font: 500 12px/1.3 var(--font-mono); }
+    .stock-change { color: var(--gain); font: 650 16px/1.2 var(--font-mono); letter-spacing: -0.025em; }
 
-    .stock-change.earnings-date { color: var(--proof); font-size: 9px; letter-spacing: 0; }
+    .stock-change.earnings-date { color: var(--proof); font-size: 13px; letter-spacing: 0; }
 
     .stock-card.negative .stock-change { color: var(--caution); }
     .stock-card.negative .stock-change.earnings-date { color: var(--proof); }
 
-    .market-empty {
-      min-height: 242px;
-      grid-column: 1 / -1;
-      display: grid;
-      place-items: center;
-      padding: 32px;
-      color: var(--muted);
-      font-size: 10px;
-      line-height: 1.6;
-      text-align: center;
-    }
+    .market-empty { min-height: 220px; grid-column: 1 / -1; display: grid; place-items: center; padding: 28px; color: var(--muted); font-size: 14px; line-height: 1.6; text-align: center; }
 
-    .stock-logo {
-      width: 24px;
-      height: 24px;
-      flex: 0 0 auto;
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      border-radius: 7px;
-      color: var(--proof);
-      background: var(--proof-wash);
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-    }
+    .stock-logo { width: 28px; height: 28px; flex: 0 0 auto; display: grid; place-items: center; overflow: hidden; border-radius: 8px; color: var(--proof); background: var(--proof-wash); font-size: 11px; font-weight: 700; }
 
     .stock-logo.nvda { color: #b7df67; background: #26341e; }
     .stock-logo.apple { color: var(--ink); background: var(--disabled-surface); font-size: 13px; }
@@ -550,65 +313,20 @@
     .microsoft-logo i:nth-child(3) { background: #05a6f0; }
     .microsoft-logo i:nth-child(4) { background: #ffba08; }
 
-    .deck-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 10px 12px;
-      border-top: 1px solid var(--outline-soft);
-    }
+    .deck-footer { display: grid; justify-items: center; gap: 0; padding: 10px 0 0; }
 
-    .deck-footer span { color: var(--muted); font-size: 8px; }
-    .page-dots { display: flex; gap: 5px; }
-    .page-dot {
-      width: 5px;
-      height: 5px;
-      padding: 0;
-      border: 0;
-      border-radius: 999px;
-      background: var(--outline);
-      cursor: pointer;
-      transition: width 150ms ease, background 150ms ease;
-    }
-    .page-dot.active { width: 17px; background: var(--proof); }
+    .deck-footer span { color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .page-dots { display: flex; justify-content: center; gap: 0; }
+    .page-dot { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; cursor: pointer; }
+    .page-dot.active { background: transparent; }
     .page-dots:empty { display: none; }
 
-    .account-actions {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-      overflow: hidden;
-      margin: 12px 0 24px;
-      border: 1px solid var(--outline);
-      border-radius: var(--card-radius);
-      background: var(--surface);
-    }
+    .account-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 12px 0 28px; padding: 14px 0; border-top: 1px solid var(--outline-soft); border-bottom: 1px solid var(--outline-soft); }
 
-    .account-action {
-      min-height: 58px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 8px 6px;
-      border: 0;
-      border-right: 1px solid var(--outline-soft);
-      border-radius: 0;
-      background: transparent;
-      color: var(--ink);
-      font-size: 10px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: background 120ms ease;
-    }
+    .account-action { min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0 6px; color: var(--muted); font-size: 13px; font-weight: 600; }
 
     .account-action:last-child { border-right: 0; }
-    .account-action:hover { background: var(--proof-wash); }
     .account-action svg { color: var(--proof); }
-    .account-action.primary { color: var(--on-proof); background: var(--proof); }
-    .account-action.primary:hover { background: #91d3e6; }
-    .account-action.primary svg { color: var(--on-proof); }
 
     .section { margin-top: 24px; }
     .section-heading {
@@ -619,10 +337,7 @@
       margin: 0 2px 12px;
     }
 
-    .section-heading h2 {
-      font: 700 15px/1.2 var(--font-sans);
-      letter-spacing: -0.015em;
-    }
+    .section-heading h2 { font: 700 18px/1.3 var(--font-sans); letter-spacing: -0.02em; }
 
     .text-button {
       min-height: 30px;
@@ -635,89 +350,24 @@
       cursor: pointer;
     }
 
-    .news-row {
-      display: block;
-      overflow: hidden;
-      border-top: 1px solid var(--outline);
-      border-bottom: 1px solid var(--outline);
-    }
+    .news-row { display: flex; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; border-top: 1px solid var(--outline-soft); border-bottom: 1px solid var(--outline-soft); }
 
-    .news-card {
-      width: 100%;
-      min-height: 0;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px 16px;
-      padding: 14px 2px;
-      border: 0;
-      border-bottom: 1px solid var(--outline-soft);
-      border-radius: 0;
-      background: transparent;
-      text-align: left;
-      cursor: pointer;
-      transition: color 120ms ease;
-    }
+    .news-card { width: 100%; min-height: 116px; display: grid; grid-template-columns: 76px minmax(0,1fr); align-items: start; gap: 12px; padding: 16px 0; border: 0; border-bottom: 1px solid var(--outline-soft); border-radius: 0; background: transparent; text-align: left; cursor: pointer; }
 
     .news-card:last-child { border-bottom: 0; }
     .news-card:hover h3 { color: var(--proof); }
-    .news-kicker { display: flex; justify-content: space-between; gap: 10px; }
-    .news-kicker span {
-      color: var(--proof);
-      font: 600 8px/1.25 var(--font-mono);
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-    }
-    .news-kicker time { color: var(--muted); font-size: 8px; }
-    .news-card h3 {
-      max-width: 285px;
-      margin: 7px 0 0;
-      font-size: 12px;
-      line-height: 1.45;
-      letter-spacing: -0.01em;
-    }
+    .news-kicker { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+    .news-kicker span { color: var(--proof); font-size: 12px; line-height: 1.3; }
+    .news-kicker time { color: var(--muted); font-size: 12px; }
+    .news-card h3 { margin: 6px 0 8px; font-size: 14px; line-height: 1.45; letter-spacing: -0.01em; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
     .news-card p { display: none; }
-    .news-card footer {
-      display: flex;
-      align-items: flex-end;
-      grid-column: 2;
-      grid-row: 1;
-      gap: 4px;
-      margin: 0;
-      padding: 0;
-      border: 0;
-      color: var(--muted);
-      font-size: 8px;
-    }
-    .news-card footer strong { display: none; }
+    .news-card footer { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .news-card footer strong { display: block; font-weight: 500; }
 
-    .quick-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0;
-      overflow: hidden;
-      border: 1px solid var(--outline);
-      border-radius: var(--card-radius);
-      background: var(--surface);
-    }
-    .quick-card {
-      width: 100%;
-      min-height: 112px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 8px;
-      padding: 12px;
-      border: 0;
-      border-right: 1px solid var(--outline-soft);
-      border-radius: 0;
-      background: transparent;
-      text-align: left;
-      cursor: pointer;
-      transition: background 120ms ease;
-    }
+    .quick-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+    .quick-card { min-height: 88px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px 0; color: var(--muted); }
 
     .quick-card:last-child { border-right: 0; }
-    .quick-card:hover { background: var(--proof-wash); }
     .quick-icon {
       width: 24px;
       height: 24px;
@@ -727,28 +377,14 @@
     }
     .quick-card.future .quick-icon { color: var(--proof); background: transparent; }
     .quick-copy { min-width: 0; }
-    .quick-copy strong { display: block; font-size: 10px; line-height: 1.35; }
+    .quick-copy strong { display: block; font-size: 13px; line-height: 1.4; }
     .quick-copy span { display: none; }
     .quick-meta { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-top: auto; text-align: left; }
-    .quick-meta b {
-      display: inline-block;
-      padding: 0;
-      color: var(--muted);
-      background: transparent;
-      font: 600 7px/1.2 var(--font-mono);
-      text-transform: uppercase;
-    }
+    .quick-meta b { font-size: 12px; font-weight: 500; color: var(--muted); }
     .quick-card.future .quick-meta b { color: var(--muted); background: transparent; }
     .quick-meta i { color: var(--muted); font-style: normal; font-size: 14px; }
 
-    .disclosure {
-      margin: 20px 2px 4px;
-      padding-top: 15px;
-      border-top: 1px solid var(--outline-soft);
-      color: var(--muted);
-      font-size: 8px;
-      line-height: 1.6;
-    }
+    .disclosure { margin: 24px 0 4px; padding-top: 16px; border-top: 1px solid var(--outline-soft); color: var(--muted); font-size: 12px; line-height: 1.6; }
 
     .bottom-nav {
       position: relative;
@@ -763,21 +399,7 @@
       z-index: 9;
     }
 
-    .nav-item {
-      min-height: 48px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      border: 0;
-      border-radius: 10px;
-      background: transparent;
-      color: var(--muted);
-      font-size: 8px;
-      font-weight: 700;
-      cursor: pointer;
-    }
+    .nav-item { position: relative; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0; border: 0; background: transparent; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; }
     .nav-item.active { color: var(--proof); }
     .nav-item.active::after {
       content: "";
@@ -898,10 +520,10 @@
     .sheet-handle { width: 36px; height: 4px; margin: 0 auto 17px; border-radius: 99px; background: var(--outline-soft); }
     .sheet-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: var(--control-radius); color: var(--proof); background: var(--proof-wash); }
     .sheet h2 { margin-top: 15px; font: 700 23px/1.1 var(--font-serif); letter-spacing: -0.025em; }
-    .sheet p { margin-top: 9px; color: var(--muted); font-size: 10px; line-height: 1.65; }
-    .sheet-status { margin-top: 13px; padding: 10px; border-radius: 10px; background: var(--canvas); color: var(--muted); font: 500 8px/1.5 var(--font-mono); }
+    .sheet p { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .sheet-status { margin-top: 16px; padding: 12px; border-radius: 10px; background: var(--canvas); color: var(--muted); font-size: 12px; line-height: 1.5; }
     .sheet-actions { display: grid; gap: 8px; margin-top: 17px; }
-    .sheet-actions button { min-height: 44px; border-radius: 11px; font-size: 11px; font-weight: 800; cursor: pointer; }
+    .sheet-actions button { min-height: 48px; border-radius: 11px; font-size: 14px; font-weight: 700; cursor: pointer; }
     .sheet-primary { border: 0; color: var(--on-proof); background: var(--proof); }
     .sheet-secondary { border: 1px solid var(--outline-soft); background: var(--surface); }
 
@@ -921,6 +543,147 @@
       text-align: center;
       z-index: 30;
       animation: toast-in 180ms ease-out;
+    }
+
+    /* Home refinement, reconciled with the current app's discovery and news flows. */
+    .brand img { width: 126px; height: auto; display: block; }
+    .market-mode svg { display: none; }
+    .index-quote:first-child { border-left: 0; padding-left: 0; }
+    .movement-switcher { display: flex; gap: 6px; margin-bottom: 14px; }
+    .movement-button { min-height: 44px; padding: 0 14px; border: 1px solid var(--outline-soft); border-radius: 10px; color: var(--muted); background: transparent; font-size: 13px; font-weight: 650; cursor: pointer; }
+    .movement-button[aria-pressed="true"] { color: var(--proof); border-color: var(--proof); background: var(--proof-wash); }
+    .page-dot::after { content: ''; width: 6px; height: 6px; border-radius: 99px; background: var(--outline); }
+    .page-dot.active::after { width: 20px; background: var(--proof); }
+    .account-action small { font-size: 12px; font-weight: 500; }
+    .news-page { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+    .news-copy { min-width: 0; }
+    .news-artwork { width: 76px; height: 82px; display: grid; place-items: center; overflow: hidden; border-radius: 10px; background: var(--proof-wash); color: var(--proof); font: 700 22px var(--font-serif); }
+    .news-artwork img { width: 100%; height: 100%; object-fit: cover; }
+    .news-meta { color: var(--muted); font-size: 12px; }
+    .article-layer { position: absolute; inset: 0; z-index: 40; display: flex; align-items: flex-end; background: rgba(3,7,6,.76); }
+    .article-sheet { width: 100%; max-height: 90%; overflow-y: auto; padding: 16px 20px 24px; border: 1px solid var(--outline-soft); border-radius: 24px 24px 0 0; background: var(--surface); overscroll-behavior: contain; }
+    .article-hero { width: 100%; height: 160px; margin-bottom: 16px; font-size: 36px; }
+    .article-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .article-eyebrow { color: var(--proof); font-size: 12px; }
+    .article-date { margin-top: 5px; color: var(--muted); font-size: 12px; }
+    .article-close { width: 44px; height: 44px; flex-shrink: 0; border: 1px solid var(--outline); border-radius: 10px; background: transparent; font-size: 24px; cursor: pointer; }
+    .article-sheet h2 { margin: 18px 0; font: 700 25px/1.25 var(--font-serif); letter-spacing: -.02em; }
+    .article-source { border-block: 1px solid var(--outline-soft); padding: 14px 0; font-size: 14px; }
+    .article-source small { display: block; margin-bottom: 6px; color: var(--muted); font-size: 12px; }
+    .article-summary { margin-top: 18px; color: var(--muted); font-size: 14px; line-height: 1.65; }
+    .article-link { display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 12px; margin-top: 20px; border: 1px solid var(--outline); border-radius: 10px; color: var(--proof); text-decoration: none; font-size: 14px; }
+    /* Market instrument: a shared movement scale, a date-led agenda, and an independent news feed.
+       Reuses the current palette and fixture fields; no news/company association or new data. */
+    .app-header { min-height: 60px; border-bottom: 0; }
+    .guest-chip { border-radius: 999px; background: transparent; border: 1px solid var(--outline-soft); color: var(--ink); }
+    .home-content { padding: 12px 18px 24px; }
+    .home-intro { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .home-intro h1 { font-size: 27px; line-height: 1.2; font-weight: 600; letter-spacing: -.055em; }
+    .market-status-strip { margin: 0; font-size: 11px; }
+    .market-status-strip strong { font-weight: 500; }
+    .home-asof { display: flex; align-items: center; gap: 8px; margin: 9px 0 14px; color: var(--muted); font-size: 11px; }
+    .home-asof span { padding-left: 8px; border-left: 1px solid var(--outline); }
+    .discovery-toolbar { margin-bottom: 12px; }
+    .search-box { min-height: 48px; border-radius: 14px; background: transparent; }
+    .search-box input { font-size: 15px; }
+    .index-strip-wrap { padding: 10px 0; margin-bottom: 14px; border-block: 1px solid var(--outline-soft); }
+    .index-strip { gap: 16px; padding: 0; }
+    .index-quote { flex-basis: calc((100% - 32px) / 3); min-height: 58px; gap: 6px; padding: 0; border: 0; }
+    .index-name { font-size: 11px; }
+    .index-price { font-size: 16px; font-weight: 500; letter-spacing: -.04em; }
+    .index-change { font: 500 11px/1.3 var(--font-mono); }
+    .market-modes { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; margin: 0; padding: 4px; border: 1px solid var(--outline-soft); border-radius: 14px; }
+    .market-mode { min-height: 40px; padding: 0 8px; border: 0; border-radius: 10px; }
+    .market-mode span { font-size: 13px; font-weight: 500; }
+    .market-mode.active { color: var(--ink); background: var(--surface); box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+    .market-board-heading { padding: 18px 0 10px; }
+    .market-board-heading h2 { font-size: 23px; font-weight: 550; letter-spacing: -.045em; }
+    .market-board-heading > span { font: 500 10px/1.4 var(--font-mono); }
+    .movement-switcher { gap: 18px; margin: 0 0 8px; border-bottom: 1px solid var(--outline-soft); }
+    .movement-button { min-height: 44px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; font-size: 13px; font-weight: 500; }
+    .movement-button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--ink); background: transparent; }
+    .board-columns { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px 7px; color: var(--muted); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }
+    .market-pages { border-radius: 16px; background: var(--surface); }
+    .market-page { flex: 0 0 100%; min-width: 0; display: flex; flex-direction: column; gap: 0; padding: 0 12px; scroll-snap-stop: always; }
+    .stock-card { display: grid; grid-template-columns: 19px minmax(0,1fr) 90px; align-items: center; gap: 9px; min-height: 65px; padding: 11px 0; border: 0; border-bottom: 1px solid var(--outline-soft); border-radius: 0; background: transparent; transition: background 160ms ease; }
+    .stock-card:last-child { border-bottom: 0; }
+    .stock-card:hover { background: var(--proof-wash); }
+    .stock-card:focus-visible { outline-offset: -3px; border-radius: 10px; }
+    .stock-rank { color: var(--muted); font: 400 10px/1 var(--font-mono); }
+    .stock-left { min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 10px; }
+    .stock-left .stock-logo { width: 30px; height: 30px; flex: 0 0 30px; border-radius: 10px; }
+    .stock-copy { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .stock-company { font-size: 13px; font-weight: 550; line-height: 1.3; overflow-wrap: normal; }
+    .card-ticker { font: 400 10px/1.3 var(--font-mono); letter-spacing: .035em; }
+    .stock-right { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 7px; flex-wrap: nowrap; }
+    .stock-change { font: 500 16px/1.1 var(--font-mono); letter-spacing: -.06em; }
+    .movement-track { position: relative; display: block; width: 86px; height: 4px; background: rgba(184,196,191,.10); border-radius: 4px; }
+    .movement-track::after { content: ''; position: absolute; left: 50%; top: -2px; height: 8px; width: 1px; background: var(--outline); }
+    .movement-fill { position: absolute; top: 0; left: 50%; height: 100%; background: var(--gain); border-radius: 0 4px 4px 0; }
+    .negative .movement-fill { left: auto; right: 50%; background: var(--caution); border-radius: 4px 0 0 4px; }
+    .movement-caption { color: var(--muted); font-size: 10px; line-height: 1.5; padding: 10px 2px 0; }
+    .stock-card.saved-row { grid-template-columns: minmax(0,1fr) 90px; }
+    .stock-card.earnings-row { grid-template-columns: 40px minmax(0,1fr) 20px; gap: 14px; min-height: 76px; }
+    .earnings-calendar { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; width: 40px; height: 50px; border-radius: 9px; background: var(--canvas); }
+    .earnings-calendar span { color: var(--muted); text-transform: uppercase; font: 500 9px/1 var(--font-mono); letter-spacing: .06em; }
+    .earnings-calendar strong { color: var(--ink); font-size: 21px; font-weight: 500; line-height: 1; letter-spacing: -.05em; }
+    .row-chevron { color: var(--muted); font-size: 18px; }
+    .deck-footer { display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 8px 0 0; }
+    .deck-footer > span { font-size: 10px; }
+    .page-dot { position: relative; font: 500 11px/1 var(--font-mono); color: var(--muted); }
+    .page-dot::after { position: absolute; bottom: 5px; width: 0; height: 2px; }
+    .page-dot.active { color: var(--ink); }
+    .page-dot.active::after { width: 14px; background: var(--ink); }
+    .section { margin-top: 32px; }
+    .section-heading { margin: 0 0 14px; }
+    .section-heading h2 { font-size: 23px; font-weight: 550; letter-spacing: -.045em; }
+    .news-row { border: 0; }
+    .news-page { padding: 0 1px; }
+    .news-card { display: flex; min-height: 0; gap: 12px; padding: 16px 4px; }
+    .news-card h3 { font-size: 14px; line-height: 1.45; font-weight: 550; -webkit-line-clamp: 3; margin: 8px 0 10px; }
+    .news-kicker { justify-content: space-between; }
+    .news-kicker span, .news-kicker time, .news-card footer { font-size: 10px; }
+    .news-card footer strong { font-weight: 400; }
+    .news-lead { padding: 20px; margin-bottom: 3px; border: 1px solid var(--outline-soft); border-radius: 16px; background: var(--surface); }
+    .news-lead h3 { font-size: 23px; font-weight: 500; line-height: 1.22; letter-spacing: -.035em; margin: 14px 0 20px; -webkit-line-clamp: 4; }
+    .news-lead .news-kicker span { color: var(--proof); }
+    .news-copy { flex: 1; }
+    .news-artwork { flex: 0 0 58px; width: 58px; height: 64px; }
+    .article-hero { width: 100%; height: 160px; }
+    .news-lead:has(.news-artwork) { flex-direction: column; }
+    .news-lead .news-artwork { width: 100%; height: 140px; flex-basis: auto; }
+    #news-page-dots { justify-content: flex-end; }
+    .tools-section { padding-top: 24px; border-top: 1px solid var(--outline-soft); }
+    .tools-section .section-heading h2 { font-size: 16px; font-weight: 500; letter-spacing: -.025em; }
+    .later-label { color: var(--muted); font-size: 10px; }
+    .account-actions { margin: 0; padding: 0; border: 0; }
+    .account-action { align-items: flex-start; min-height: 74px; gap: 7px; padding: 8px 0; }
+    .account-action svg { color: var(--muted); }
+    .account-action small { display: none; }
+    .quick-grid { gap: 10px; }
+    .quick-card { min-height: 72px; padding: 0; }
+    .quick-card.future .quick-icon { color: var(--muted); }
+    .nav-item.active::after { display: none; }
+    .nav-item.active svg { box-sizing: content-box; padding: 5px 19px; margin-top: -5px; margin-bottom: -5px; border-radius: 999px; background: var(--proof-wash); }
+    @media (max-width: 359px) {
+      .home-content { padding-inline: 14px; }
+      .home-intro h1 { font-size: 25px; }
+      .market-status-strip { font-size: 10px; }
+      .index-strip { gap: 12px; }
+      .index-quote { flex-basis: calc((100% - 24px) / 3); }
+      .index-price { font-size: 14px; }
+      .market-board-heading h2 { font-size: 21px; }
+      .market-page { padding-inline: 10px; }
+      .stock-card { grid-template-columns: 16px minmax(0,1fr) 77px; gap: 7px; }
+      .stock-left { gap: 7px; }
+      .stock-left .stock-logo { width: 26px; height: 26px; flex-basis: 26px; font-size: 10px; }
+      .stock-company { font-size: 12px; }
+      .stock-change { font-size: 15px; }
+      .movement-track { width: 73px; }
+      .deck-footer { flex-wrap: wrap; }
+      .stock-card.earnings-row { gap: 10px; }
+      .news-lead { padding: 18px; }
+      .news-lead h3 { font-size: 21px; }
     }
 
     @keyframes toast-in {
@@ -956,19 +719,18 @@
 
       <header class="app-header">
         <button class="brand" type="button" data-scroll-home aria-label="Scroll to top of Home">
-          <span class="brand-mark"><span>W</span></span>
-          <span class="wordmark">Warren</span>
+          <img src="./apps/mobile/assets/brand/approved/brand/brand-dark.png" width="126" height="41" alt="Warren">
         </button>
-        <button class="guest-chip" type="button" data-sheet="guest">Guest</button>
+        <button class="guest-chip" type="button" data-sheet="guest" aria-label="Sign in to Warren">Sign in</button>
       </header>
 
       <div class="screen-scroll" id="home-scroll">
         <div class="home-content">
-          <h1 class="sr-only">Warren Home</h1>
-          <div class="market-status-strip">
-            <strong>US market open</strong>
-            <span>Updated 9:41 AM · Sample</span>
+          <div class="home-intro">
+            <h1>Market today</h1>
+            <div class="market-status-strip"><strong>US market open</strong></div>
           </div>
+          <p class="home-asof">Updated 9:41 AM <span>Sample data</span></p>
 
           <section class="market-deck" aria-label="Verified company market board">
             <div class="discovery-toolbar">
@@ -981,20 +743,7 @@
                 </div>
                 <div class="search-results" id="search-results" role="listbox" hidden></div>
               </div>
-              <div class="market-modes" role="group" aria-label="Market view">
-                <button class="market-mode active" type="button" data-market-mode="all" aria-label="Show all companies" aria-pressed="true" title="All companies">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="4" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="4" y="14" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="14" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.7"/></svg>
-                  <span>All</span>
-                </button>
-                <button class="market-mode" type="button" data-market-mode="watchlist" aria-label="Show watchlist" aria-pressed="false" title="Watchlist">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8L12 4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
-                  <span>Watchlist</span>
-                </button>
-                <button class="market-mode" type="button" data-market-mode="earnings" aria-label="Show upcoming earnings" aria-pressed="false" title="Upcoming earnings">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="6" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 3.5V8m8-4.5V8M4 10h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                  <span>Earnings</span>
-                </button>
-              </div>
+
             </div>
             <div class="index-strip-wrap">
               <div class="index-strip" aria-label="Market indices">
@@ -1005,91 +754,89 @@
                 <div class="index-quote negative"><span class="index-name">VIX</span><strong class="index-price">15.82</strong><em class="index-change">−1.24%</em></div>
               </div>
             </div>
+              <div class="market-modes" role="group" aria-label="Market view">
+                <button class="market-mode active" type="button" data-market-mode="all" aria-label="Show all companies" aria-pressed="true" title="All companies">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="4" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="4" y="14" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="14" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.7"/></svg>
+                  <span>All</span>
+                </button>
+                <button class="market-mode" type="button" data-market-mode="watchlist" aria-label="Show saved companies" aria-pressed="false" title="Watchlist">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8L12 4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                  <span>Saved</span>
+                </button>
+                <button class="market-mode" type="button" data-market-mode="earnings" aria-label="Show upcoming earnings" aria-pressed="false" title="Upcoming earnings">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="6" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 3.5V8m8-4.5V8M4 10h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                  <span>Earnings</span>
+                </button>
+              </div>
             <div class="market-board-heading">
-              <h2>Popular companies</h2>
-              <span>Today</span>
+              <h2 id="board-title">Market movers</h2>
+              <span id="board-period">1D change</span>
             </div>
+            <div class="movement-switcher" role="group" aria-label="Rank companies by daily movement" id="movement-switcher">
+              <button class="movement-button" type="button" data-movement="gainers" aria-pressed="true">Top gainers</button>
+              <button class="movement-button" type="button" data-movement="losers" aria-pressed="false">Top losers</button>
+            </div>
+            <div class="board-columns" aria-hidden="true"><span id="board-column-label">Company</span><span id="board-value-label">Daily move</span></div>
             <div class="market-pages" id="market-pages" aria-label="Stock market board"></div>
+            <p class="movement-caption" id="movement-caption"></p>
             <div class="deck-footer">
               <span id="market-result-label">24 sample companies · not executable quotes</span>
               <div class="page-dots" id="page-dots" aria-label="Ticker pages"></div>
             </div>
           </section>
 
-          <nav class="account-actions" aria-label="Account actions">
-            <button class="account-action" type="button" data-sheet="deposit">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19.5h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Deposit</span>
-            </button>
-            <button class="account-action" type="button" data-sheet="send">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 11 15-7-6.5 16-2.2-6.3L4 11Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m10.3 13.7 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-              <span>Send</span>
-            </button>
-            <button class="account-action primary" type="button" data-sheet="buy">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
-              <span>Buy stock</span>
-            </button>
-          </nav>
+
 
           <section class="section" aria-labelledby="news-title">
-            <div class="section-heading">
-              <h2 id="news-title">Top news</h2>
-              <button class="text-button" type="button" data-toast="The complete news feed will live in Markets.">See all</button>
-            </div>
-            <div class="news-row">
-              <article class="news-card" tabindex="0" role="button" data-news="Chipmakers lead a broad technology-sector advance">
-                <div>
-                  <div class="news-kicker"><span>Technology</span><time>18 min</time></div>
-                  <h3>Chipmakers lead a broad technology-sector advance</h3>
-                  <p>A concise look at the companies and market signals behind today’s move.</p>
-                </div>
-                <footer><strong>Warren market brief</strong><span>NVDA · MSFT →</span></footer>
-              </article>
-              <article class="news-card" tabindex="0" role="button" data-news="What today’s inflation update means for large-cap stocks">
-                <div>
-                  <div class="news-kicker"><span>Economy</span><time>42 min</time></div>
-                  <h3>What today’s inflation update means for large-cap stocks</h3>
-                  <p>The numbers, the market response, and what changed since the last reading.</p>
-                </div>
-                <footer><strong>Warren market brief</strong><span>Market →</span></footer>
-              </article>
-              <article class="news-card" tabindex="0" role="button" data-news="How stock access works outside the opening bell">
-                <div>
-                  <div class="news-kicker"><span>Market guide</span><time>2 hr</time></div>
-                  <h3>How stock access works outside the opening bell</h3>
-                  <p>Understand availability, price freshness, and the difference between a quote and a trade.</p>
-                </div>
-                <footer><strong>Learn with Warren</strong><span>4 min read →</span></footer>
-              </article>
-            </div>
+            <div class="section-heading"><h2 id="news-title">Top news</h2><span class="news-meta" id="news-page-label">1 / 4</span></div>
+            <div class="news-row" id="news-pages" aria-label="Top news pages"></div>
+            <div class="page-dots" id="news-page-dots" aria-label="News page selector"></div>
           </section>
 
-          <section class="section" aria-labelledby="quick-title">
+          <section class="section tools-section" aria-labelledby="account-title">
+            <div class="section-heading"><h2 id="account-title">Account actions</h2><span class="later-label">Coming later</span></div>
+          <div class="account-actions" aria-label="Account actions coming later">
+            <div class="account-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19.5h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Deposit</span>
+            <small>Later</small></div>
+            <div class="account-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 11 15-7-6.5 16-2.2-6.3L4 11Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m10.3 13.7 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <span>Send</span>
+            <small>Later</small></div>
+            <div class="account-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+              <span>Buy stock</span>
+            <small>Later</small></div>
+          </div>
+          </section>
+
+          <section class="section tools-section" aria-labelledby="quick-title">
             <div class="section-heading">
               <h2 id="quick-title">Quick actions</h2>
             </div>
             <div class="quick-grid">
-              <button class="quick-card future" type="button" data-sheet="premarket">
+              <div class="quick-card future">
                 <span class="quick-icon">
                   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </span>
                 <span class="quick-copy"><strong>Pre-market</strong><span>See instruments available outside regular hours.</span></span>
-                <span class="quick-meta"><b>Later</b><i>›</i></span>
-              </button>
-              <button class="quick-card future" type="button" data-sheet="long">
+                <span class="quick-meta"><b>Later</b></span>
+              </div>
+              <div class="quick-card future">
                 <span class="quick-icon">
                   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 17 5-5 3.2 3.2L19 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.5 8H19v4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </span>
                 <span class="quick-copy"><strong>Open long</strong><span>Directional exposure through an equity perpetual.</span></span>
-                <span class="quick-meta"><b>Later</b><i>›</i></span>
-              </button>
-              <button class="quick-card future" type="button" data-sheet="swap">
+                <span class="quick-meta"><b>Later</b></span>
+              </div>
+              <div class="quick-card future">
                 <span class="quick-icon">
                   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 8h13m0 0-3-3m3 3-3 3M19 16H6m0 0 3 3m-3-3 3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </span>
                 <span class="quick-copy"><strong>Swap</strong><span>Move between supported stock instruments in one review.</span></span>
-                <span class="quick-meta"><b>Later</b><i>›</i></span>
-              </button>
+                <span class="quick-meta"><b>Later</b></span>
+              </div>
             </div>
           </section>
 
@@ -1106,9 +853,9 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4.5v15h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="m7 15 4-4 3 2 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Markets
         </button>
-        <button class="nav-item" type="button" data-nav="profile">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 20c.5-3.8 2.7-5.7 6.5-5.7s6 1.9 6.5 5.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          Profile
+        <button class="nav-item" type="button" data-nav="portfolio">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="4.5" width="14" height="15" rx="1" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Portfolio
         </button>
       </nav>
 
@@ -1170,6 +917,17 @@
         </section>
       </div>
 
+      <div class="article-layer" id="article-layer" hidden>
+        <section class="article-sheet" role="dialog" aria-modal="true" aria-labelledby="article-title">
+          <div class="sheet-handle" aria-hidden="true"></div>
+          <div class="news-artwork article-hero" id="article-artwork" aria-hidden="true"></div>
+          <div class="article-top"><div><p class="article-eyebrow" id="article-category"></p><p class="article-date" id="article-date"></p></div><button class="article-close" id="article-close" type="button" aria-label="Close article preview">×</button></div>
+          <h2 id="article-title"></h2>
+          <div class="article-source"><small>Published by</small><strong id="article-source"></strong></div>
+          <p class="article-summary" id="article-summary"></p>
+          <a class="article-link" id="article-link" target="_blank" rel="noopener noreferrer" hidden></a>
+        </section>
+      </div>
       <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
     </section>
   </main>
@@ -1203,8 +961,24 @@
         { ticker: 'INTC', company: 'Intel', price: 32.00, change: 0.12, logo: 'generic', mark: 'IN', token: 'INTCx' }
       ];
 
+
+      const news = [
+        ['Chipmakers lead a broad technology-sector advance', 'Technology', 'Warren market brief', '18 min', 'A sample briefing on the companies and market signals behind the day’s technology-sector move.'],
+        ['What today’s inflation update means for large-cap stocks', 'Economy', 'Warren market brief', '42 min', 'A sample overview of inflation data, market expectations, and company performance.'],
+        ['How stock access works outside the opening bell', 'Market guide', 'Learn with Warren', '2 hr', 'Market hours, data freshness, and token trading availability are separate facts. This sample explains what to check.'],
+        ['Investors look ahead to the next earnings season', 'Earnings', 'Warren market brief', '3 hr', 'A sample roundup of upcoming company reports and the questions investors are following.'],
+        ['Cloud infrastructure remains a focus for technology spending', 'Technology', 'Warren market brief', '4 hr', 'An illustrative story about infrastructure investment and publicly listed technology companies.'],
+        ['Retail companies prepare their next quarterly updates', 'Companies', 'Warren market brief', '5 hr', 'A sample preview of retail earnings and the company information available to readers.'],
+        ['Energy shares move as traders reassess the demand outlook', 'Markets', 'Warren market brief', '6 hr', 'An illustrative sector update for testing the news layout, not a report of current events.'],
+        ['Understanding the difference between price and daily change', 'Market guide', 'Learn with Warren', '7 hr', 'A reference price is an observation. Its percentage change needs a defined comparison period and timestamp.'],
+        ['Payment networks feature in this week’s company watch', 'Companies', 'Warren market brief', '8 hr', 'A sample company-watch entry showing how a longer headline fits in the news list.'],
+        ['Why market indices can move in different directions', 'Market guide', 'Learn with Warren', '9 hr', 'Different index constituents and weighting methods can produce different daily moves.'],
+        ['Industrial companies return to the earnings spotlight', 'Earnings', 'Warren market brief', '10 hr', 'An illustrative preview supplied to demonstrate the fourth page of the news feed.'],
+        ['Reading market data when an update is delayed', 'Market guide', 'Learn with Warren', '12 hr', 'Check the timestamp and freshness label before using a reference price. A displayed value is not an executable quote.']
+      ].map(([headline, category, source, age, summary], index) => ({ id: String(index), headline, category, source, age, summary, imageUrl: null, url: null }));
+
       const sheetContent = {
-        guest: ['You’re browsing as a guest', 'Explore companies and inspect verified instruments without creating an account. Warren asks you to sign in only when an action requires it.', 'Guest mode · no wallet connected', 'Sign in'],
+        guest: ['Sign in to Warren', 'Restore your account and wallet, then return to what you were exploring.', 'HTML preview only · no account or wallet is created', 'Continue with email'],
         deposit: ['Deposit USDC', 'Connect your Warren profile to reveal the wallet address and deposit instructions. Depositing never approves a stock purchase.', 'Account required · no action has been submitted', 'Sign in to deposit'],
         send: ['Send an asset', 'Sign in to choose an asset, enter a destination, and review the exact network and amount before anything moves.', 'Account required · review comes before approval', 'Sign in to continue'],
         buy: ['Choose a company first', 'Search or tap a company in the market board to inspect the verified stock instrument before setting your USDC budget.', 'Milestone 1 · buy-only spot flow', 'Browse companies'],
@@ -1229,6 +1003,9 @@
       const watchButton = $('[data-watch]');
       let selectedStock = stocks[0];
       let marketMode = 'all';
+      let movementView = 'gainers';
+      let detailReturnFocus;
+      let overlayReturnFocus;
       let watchlist = new Set();
       let toastTimer;
 
@@ -1249,31 +1026,41 @@
         return `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
       }
 
-      function cardMarkup(stock) {
-        const secondaryValue = marketMode === 'earnings'
-          ? `<strong class="stock-change earnings-date">${stock.earnings}</strong>`
-          : `<strong class="stock-change">${formatChange(stock.change)}</strong>`;
-        return `<button class="stock-card ${stock.change < 0 ? 'negative' : ''}" type="button" data-stock="${stock.ticker}" aria-label="Open ${stock.company}, ${formatChange(stock.change)} today">
-          <span class="stock-left">${logoMarkup(stock)}<strong class="stock-company">${stock.company}</strong></span>
-          <span class="stock-right"><span class="card-ticker">${stock.ticker}</span>${secondaryValue}</span>
+      const movementScale = Math.max(1, Math.ceil(Math.max(...stocks.map(stock => Math.abs(stock.change)))));
+
+      function cardMarkup(stock, rank) {
+        const accessibleLabel = `Open ${stock.company}, ${stock.ticker}, ${marketMode === 'earnings' ? stock.earnings + ', 2026 earnings' : formatChange(stock.change) + ' today'}, sample data`;
+        if (marketMode === 'earnings') {
+          const [month, day] = stock.earnings.split(' ');
+          return `<button class="stock-card earnings-row" type="button" data-stock="${stock.ticker}" aria-label="${accessibleLabel}">
+            <span class="earnings-calendar" aria-hidden="true"><span>${month}</span><strong>${day}</strong></span>
+            <span class="stock-left">${logoMarkup(stock)}<span class="stock-copy"><strong class="stock-company">${stock.company}</strong><span class="card-ticker">${stock.ticker}</span></span></span>
+            <span class="row-chevron" aria-hidden="true">↗</span>
+          </button>`;
+        }
+        const width = Math.abs(stock.change) / movementScale * 50;
+        return `<button class="stock-card ${stock.change < 0 ? 'negative' : ''} ${marketMode === 'watchlist' ? 'saved-row' : ''}" type="button" data-stock="${stock.ticker}" aria-label="${accessibleLabel}">
+          ${marketMode === 'all' ? `<span class="stock-rank" aria-hidden="true">${String(rank).padStart(2, '0')}</span>` : ''}
+          <span class="stock-left">${logoMarkup(stock)}<span class="stock-copy"><strong class="stock-company">${stock.company}</strong><span class="card-ticker">${stock.ticker}</span></span></span>
+          <span class="stock-right"><strong class="stock-change">${formatChange(stock.change)}</strong><span class="movement-track" aria-hidden="true"><span class="movement-fill" style="width:${width}%"></span></span></span>
         </button>`;
       }
 
       function marketStocksForMode() {
         if (marketMode === 'watchlist') return stocks.filter(stock => watchlist.has(stock.ticker));
-        if (marketMode === 'earnings') return stocks.filter(stock => stock.earnings);
-        return stocks;
+        if (marketMode === 'earnings') return stocks.filter(stock => stock.earnings).sort((a, b) => new Date(`${a.earnings}, 2026`) - new Date(`${b.earnings}, 2026`));
+        return [...stocks].sort((a, b) => (movementView === 'gainers' ? b.change - a.change : a.change - b.change) || a.company.localeCompare(b.company));
       }
 
       function renderMarketBoard() {
         const visibleStocks = marketStocksForMode();
         const pages = [];
-        for (let index = 0; index < visibleStocks.length; index += 12) {
-          pages.push(visibleStocks.slice(index, index + 12));
+        for (let index = 0; index < visibleStocks.length; index += 6) {
+          pages.push(visibleStocks.slice(index, index + 6));
         }
 
         if (pages.length) {
-          marketPages.innerHTML = pages.map(pageStocks => `<div class="market-page">${pageStocks.map(cardMarkup).join('')}</div>`).join('');
+          marketPages.innerHTML = pages.map((pageStocks, pageIndex) => `<div class="market-page">${pageStocks.map((stock, index) => cardMarkup(stock, pageIndex * 6 + index + 1)).join('')}</div>`).join('');
         } else {
           const message = marketMode === 'watchlist'
             ? 'No saved companies yet. Open a company and tap the star to add it here.'
@@ -1283,20 +1070,33 @@
 
         marketPages.scrollLeft = 0;
         pageDots.innerHTML = pages.length > 1
-          ? pages.map((_, index) => `<button class="page-dot ${index === 0 ? 'active' : ''}" type="button" data-page="${index}" aria-label="Show ticker page ${index + 1}"></button>`).join('')
+          ? pages.map((_, index) => `<button class="page-dot ${index === 0 ? 'active' : ''}" type="button" data-page="${index}" aria-label="Show company page ${index + 1}" aria-pressed="${index === 0}">${index + 1}</button>`).join('')
           : '';
 
-        marketResultLabel.textContent = marketMode === 'watchlist'
-          ? `${visibleStocks.length} saved ${visibleStocks.length === 1 ? 'company' : 'companies'} · stored on this device`
-          : marketMode === 'earnings'
-            ? `${visibleStocks.length} upcoming earnings · sample dates`
-            : `${visibleStocks.length} sample companies · not executable quotes`;
+        marketPages.dataset.count = String(visibleStocks.length);
+        marketPages.dataset.mode = marketMode;
+        updateMarketPage();
 
+        $('#movement-switcher').hidden = marketMode !== 'all';
+        $('#board-title').textContent = marketMode === 'watchlist' ? 'Your saved companies' : marketMode === 'earnings' ? 'Earnings ahead' : 'Market movers';
+        $('#board-period').textContent = marketMode === 'earnings' ? '2026 · Sample' : '1D change';
+        $('#board-column-label').textContent = marketMode === 'earnings' ? 'Report date / Company' : 'Company';
+        $('#board-value-label').textContent = marketMode === 'earnings' ? '' : 'Daily move';
+        $('#movement-caption').hidden = marketMode === 'earnings' || !visibleStocks.length;
+        $('#movement-caption').textContent = `Sample daily change · shared ±${movementScale}% scale`;
+        $$('[data-movement]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.movement === movementView)));
         $$('[data-market-mode]').forEach(button => {
           const active = button.dataset.marketMode === marketMode;
           button.classList.toggle('active', active);
           button.setAttribute('aria-pressed', String(active));
         });
+      }
+
+      function updateMarketPage() {
+        const count = Number(marketPages.dataset.count || 0);
+        const page = Math.min(Math.max(0, Math.ceil(count / 6) - 1), Math.round(marketPages.scrollLeft / Math.max(marketPages.clientWidth, 1)));
+        marketResultLabel.textContent = count ? `${page * 6 + 1}–${Math.min((page + 1) * 6, count)} of ${count} ${marketMode === 'earnings' ? 'reports' : 'companies'}` : marketMode === 'earnings' ? '0 reports' : '0 companies';
+        $$('.page-dot', pageDots).forEach((dot, index) => { dot.classList.toggle('active', index === page); dot.setAttribute('aria-pressed', String(index === page)); });
       }
 
       function updateWatchButton() {
@@ -1315,6 +1115,7 @@
       }
 
       function openDetail(ticker) {
+        detailReturnFocus = document.activeElement;
         selectedStock = stocks.find(stock => stock.ticker === ticker) || stocks[0];
         $('#detail-logo').innerHTML = logoMarkup(selectedStock);
         $('#detail-name').textContent = selectedStock.company;
@@ -1327,6 +1128,10 @@
         updateWatchButton();
         detailScreen.classList.add('open');
         detailScreen.setAttribute('aria-hidden', 'false');
+        detailScreen.inert = false;
+        $('.app-header').inert = true;
+        $('#home-scroll').inert = true;
+        $('.bottom-nav').inert = true;
         $('.detail-body').scrollTop = 0;
         $('#detail-back').focus({ preventScroll: true });
       }
@@ -1334,11 +1139,17 @@
       function closeDetail() {
         detailScreen.classList.remove('open');
         detailScreen.setAttribute('aria-hidden', 'true');
+        detailScreen.inert = true;
+        $('.app-header').inert = false;
+        $('#home-scroll').inert = false;
+        $('.bottom-nav').inert = false;
+        if (detailReturnFocus?.isConnected) detailReturnFocus.focus({ preventScroll: true });
       }
 
       function renderSearch() {
         const query = searchInput.value.trim().toLowerCase();
         searchClear.hidden = query.length === 0;
+        if (!query) { closeSearch(); return; }
         searchInput.setAttribute('aria-expanded', 'true');
         const matches = stocks.filter(stock => `${stock.company} ${stock.ticker} ${stock.token}`.toLowerCase().includes(query));
         searchResults.hidden = false;
@@ -1353,7 +1164,10 @@
       }
 
       function openSheet(kind, overrideTitle) {
+        overlayReturnFocus = document.activeElement;
         const content = sheetContent[kind] || sheetContent.guest;
+        setOverlayInert(true, sheetBackdrop);
+        sheetBackdrop.inert = false;
         $('#sheet-title').textContent = overrideTitle || content[0];
         $('#sheet-copy').textContent = content[1];
         $('#sheet-status').textContent = content[2];
@@ -1367,6 +1181,9 @@
       function closeSheet() {
         sheetBackdrop.classList.remove('open');
         sheetBackdrop.setAttribute('aria-hidden', 'true');
+        sheetBackdrop.inert = true;
+        setOverlayInert(false);
+        overlayReturnFocus?.focus({ preventScroll: true });
       }
 
       document.addEventListener('click', event => {
@@ -1395,7 +1212,7 @@
             closeDetail();
             $('#home-scroll').scrollTo({ top: 0, behavior: 'smooth' });
           } else {
-            showToast(`${navButton.textContent.trim()} is outside this Home-screen mock.`);
+            window.location.href = navButton.dataset.nav === 'markets' ? './markets_mock.html' : './profile_mock.html?state=signed-out';
           }
           return;
         }
@@ -1406,6 +1223,7 @@
         }
       });
 
+      window.addEventListener('resize', () => { renderMarketBoard(); newsPages.scrollLeft = 0; updateNewsPage(); });
       searchInput.addEventListener('focus', renderSearch);
       searchInput.addEventListener('input', renderSearch);
       searchClear.addEventListener('click', event => {
@@ -1426,16 +1244,15 @@
         });
       });
 
+      $$('[data-movement]').forEach(button => button.addEventListener('click', () => { movementView = button.dataset.movement; renderMarketBoard(); }));
+
       pageDots.addEventListener('click', event => {
         const dot = event.target.closest('[data-page]');
         if (!dot) return;
         marketPages.scrollTo({ left: marketPages.clientWidth * Number(dot.dataset.page), behavior: 'smooth' });
       });
 
-      marketPages.addEventListener('scroll', () => {
-        const page = Math.round(marketPages.scrollLeft / Math.max(marketPages.clientWidth, 1));
-        $$('.page-dot', pageDots).forEach((dot, index) => dot.classList.toggle('active', index === page));
-      }, { passive: true });
+      marketPages.addEventListener('scroll', updateMarketPage, { passive: true });
 
       $('#detail-back').addEventListener('click', closeDetail);
       $('#detail-buy').addEventListener('click', () => openSheet('spot', `Buy ${selectedStock.ticker}`));
@@ -1456,16 +1273,69 @@
         showToast(`${button.textContent} sample chart selected.`);
       }));
 
-      $$('.news-card').forEach(card => {
-        const openArticle = () => openSheet('article', card.dataset.news);
-        card.addEventListener('click', openArticle);
-        card.addEventListener('keydown', event => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            openArticle();
-          }
-        });
+      const newsPages = $('#news-pages');
+      const newsDots = $('#news-page-dots');
+      const articleLayer = $('#article-layer');
+      const newsGroups = Array.from({ length: Math.ceil(news.length / 3) }, (_, i) => news.slice(i * 3, i * 3 + 3));
+      function escapeHtml(value) { return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
+      function artwork(article) { return article.imageUrl ? `<img src="${escapeHtml(article.imageUrl)}" alt="" loading="lazy">` : escapeHtml(article.source.slice(0, 2).toUpperCase()); }
+      newsPages.innerHTML = newsGroups.map(group => `<div class="news-page">${group.map((article, index) => `<button class="news-card ${index === 0 ? 'news-lead' : ''}" type="button" data-article="${article.id}" aria-label="${escapeHtml(article.headline)}, ${escapeHtml(article.source)}, ${article.age} ago">${article.imageUrl ? `<span class="news-artwork" aria-hidden="true">${artwork(article)}</span>` : ''}<span class="news-copy"><span class="news-kicker"><span>${article.category}</span><time>${article.age}</time></span><h3>${escapeHtml(article.headline)}</h3><footer><strong>${article.source}</strong><span aria-hidden="true">›</span></footer></span></button>`).join('')}</div>`).join('');
+      newsDots.innerHTML = newsGroups.map((_, i) => `<button class="page-dot ${i === 0 ? 'active' : ''}" type="button" data-news-page="${i}" aria-label="Show news page ${i + 1}" aria-pressed="${i === 0}">${i + 1}</button>`).join('');
+      function updateNewsPage() {
+        const page = Math.round(newsPages.scrollLeft / Math.max(newsPages.clientWidth, 1));
+        $('#news-page-label').textContent = `${page + 1} / ${newsGroups.length}`;
+        $$('[data-news-page]').forEach((dot, index) => { dot.classList.toggle('active', index === page); dot.setAttribute('aria-pressed', String(index === page)); });
+      }
+      newsPages.addEventListener('scroll', updateNewsPage, { passive: true });
+      newsDots.addEventListener('click', event => { const dot = event.target.closest('[data-news-page]'); if (dot) newsPages.scrollTo({ left: newsPages.clientWidth * Number(dot.dataset.newsPage), behavior: 'smooth' }); });
+      function setOverlayInert(active, layer) {
+        $$('.phone > *').forEach(element => { if (element !== layer && element.id !== 'toast') element.inert = active; });
+        if (!active) {
+          detailScreen.inert = !detailScreen.classList.contains('open');
+          sheetBackdrop.inert = !sheetBackdrop.classList.contains('open');
+          articleLayer.inert = articleLayer.hidden;
+          if (detailScreen.classList.contains('open')) { $('.app-header').inert = true; $('#home-scroll').inert = true; $('.bottom-nav').inert = true; }
+        }
+      }
+      function closeArticle() {
+        articleLayer.hidden = true;
+        setOverlayInert(false);
+        overlayReturnFocus?.focus({ preventScroll: true });
+      }
+      newsPages.addEventListener('click', event => {
+        const card = event.target.closest('[data-article]');
+        if (!card) return;
+        const article = news.find(item => item.id === card.dataset.article);
+        overlayReturnFocus = card;
+        $('#article-artwork').hidden = !article.imageUrl;
+        $('#article-artwork').innerHTML = artwork(article);
+        $('#article-category').textContent = article.category;
+        $('#article-date').textContent = `${article.age} ago · Sample story`;
+        $('#article-title').textContent = article.headline;
+        $('#article-source').textContent = article.source;
+        $('#article-summary').textContent = article.summary || `This preview contains the headline and publishing details supplied by ${article.source}.`;
+        const sourceLink = $('#article-link');
+        sourceLink.hidden = !article.url;
+        if (article.url) { sourceLink.href = article.url; sourceLink.textContent = `Read at ${article.source} ↗`; } else sourceLink.removeAttribute('href');
+        articleLayer.hidden = false;
+        articleLayer.inert = false;
+        setOverlayInert(true, articleLayer);
+        $('.article-sheet').scrollTop = 0;
+        $('#article-close').focus({ preventScroll: true });
       });
+      $('#article-close').addEventListener('click', closeArticle);
+      articleLayer.addEventListener('click', event => { if (event.target === articleLayer) closeArticle(); });
+      document.addEventListener('keydown', event => {
+        const layer = !articleLayer.hidden ? articleLayer : sheetBackdrop.classList.contains('open') ? sheetBackdrop : null;
+        if (!layer || event.key !== 'Tab') return;
+        const controls = $$('button:not([disabled]), a[href]', layer).filter(element => !element.hidden);
+        const first = controls[0], last = controls.at(-1);
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      });
+      detailScreen.inert = true;
+      sheetBackdrop.inert = true;
+      articleLayer.inert = true;
 
       $('#sheet-close').addEventListener('click', closeSheet);
       sheetBackdrop.addEventListener('click', event => {
@@ -1485,7 +1355,8 @@
 
       document.addEventListener('keydown', event => {
         if (event.key !== 'Escape') return;
-        if (sheetBackdrop.classList.contains('open')) closeSheet();
+        if (!articleLayer.hidden) closeArticle();
+        else if (sheetBackdrop.classList.contains('open')) closeSheet();
         else if (!searchResults.hidden) closeSearch();
         else if (detailScreen.classList.contains('open')) closeDetail();
       });

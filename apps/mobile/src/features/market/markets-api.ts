@@ -1,16 +1,26 @@
 import {
+  marketCompanyNewsResponseSchema,
   marketCompanyResponseSchema,
+  marketHistoryResponseSchema,
   marketSearchResponseSchema,
   marketsApiErrorSchema,
   marketsResponseSchema,
+  type MarketCompanyNewsResponse,
   type MarketCompanyResponse,
+  type MarketHistoryRange,
+  type MarketHistoryResponse,
   type MarketProduct,
   type MarketSearchResponse,
   type MarketSort,
   type MarketsResponse,
 } from '@warren/markets-contract';
 
+import { configuredApiUrl } from '@/lib/api-config';
+
 const responseCache = new Map<string, { etag?: string; value: MarketsResponse }>();
+const companyCache = new Map<string, { etag?: string; value: MarketCompanyResponse }>();
+const historyCache = new Map<string, { etag?: string; value: MarketHistoryResponse }>();
+const newsCache = new Map<string, { etag?: string; value: MarketCompanyNewsResponse }>();
 
 export class MarketsRequestError extends Error {
   constructor(message: string, readonly status?: number) {
@@ -59,18 +69,55 @@ export async function searchMarkets(query: string, signal?: AbortSignal): Promis
 }
 
 export async function loadMarketCompany(assetId: string, signal?: AbortSignal): Promise<MarketCompanyResponse> {
-  const response = await request(`/v1/markets/companies/${encodeURIComponent(assetId)}`, {
-    headers: { accept: 'application/json' },
+  const path = `/v1/markets/companies/${encodeURIComponent(assetId)}`;
+  const cached = companyCache.get(path);
+  const response = await request(path, {
+    headers: conditionalHeaders(cached?.etag),
     signal,
   });
+  if (response.status === 304 && cached) return cached.value;
   const parsed = marketCompanyResponseSchema.safeParse(await readJson(response));
   if (!parsed.success) throw new MarketsRequestError('Warren returned an unexpected company-markets response.');
+  companyCache.set(path, { value: parsed.data, etag: response.headers.get('etag') ?? undefined });
   return parsed.data;
 }
 
+export async function loadMarketHistory(
+  input: { assetId: string; instrumentId: string; range: MarketHistoryRange },
+  signal?: AbortSignal,
+): Promise<MarketHistoryResponse> {
+  const params = new URLSearchParams({ instrumentId: input.instrumentId, range: input.range });
+  const path = `/v1/markets/companies/${encodeURIComponent(input.assetId)}/history?${params.toString()}`;
+  const cached = historyCache.get(path);
+  const response = await request(path, { headers: conditionalHeaders(cached?.etag), signal });
+  if (response.status === 304 && cached) return cached.value;
+  const parsed = marketHistoryResponseSchema.safeParse(await readJson(response));
+  if (!parsed.success) throw new MarketsRequestError('Warren returned an unexpected market-history response.');
+  historyCache.set(path, { value: parsed.data, etag: response.headers.get('etag') ?? undefined });
+  return parsed.data;
+}
+
+export async function loadMarketCompanyNews(
+  assetId: string,
+  signal?: AbortSignal,
+): Promise<MarketCompanyNewsResponse> {
+  const path = `/v1/markets/companies/${encodeURIComponent(assetId)}/news`;
+  const cached = newsCache.get(path);
+  const response = await request(path, { headers: conditionalHeaders(cached?.etag), signal });
+  if (response.status === 304 && cached) return cached.value;
+  const parsed = marketCompanyNewsResponseSchema.safeParse(await readJson(response));
+  if (!parsed.success) throw new MarketsRequestError('Warren returned an unexpected company-news response.');
+  newsCache.set(path, { value: parsed.data, etag: response.headers.get('etag') ?? undefined });
+  return parsed.data;
+}
+
+function conditionalHeaders(etag?: string): Record<string, string> {
+  return { accept: 'application/json', ...(etag ? { 'if-none-match': etag } : {}) };
+}
+
 async function request(path: string, init: RequestInit): Promise<Response> {
-  const baseUrl = process.env.EXPO_PUBLIC_API_URL?.trim().replace(/\/$/, '');
-  if (!baseUrl) throw new MarketsRequestError('Add EXPO_PUBLIC_API_URL to load Markets.');
+  const baseUrl = configuredApiUrl();
+  if (!baseUrl) throw new MarketsRequestError('Markets are not configured in this build.');
 
   let response: Response;
   try {
@@ -82,7 +129,7 @@ async function request(path: string, init: RequestInit): Promise<Response> {
   if (!response.ok && response.status !== 304) {
     const parsed = marketsApiErrorSchema.safeParse(await readOptionalJson(response));
     throw new MarketsRequestError(
-      parsed.success ? parsed.data.error.message : 'Markets data is temporarily unavailable.',
+      parsed.success ? parsed.data.error.message : 'Warren could not refresh market data.',
       response.status,
     );
   }
