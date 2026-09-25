@@ -92,6 +92,7 @@ export function TradeScreen() {
   );
   const [stockAsset, setStockAsset] = useState<ExecutionAsset>();
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [productPickerVisible, setProductPickerVisible] = useState(false);
   const [orderType, setOrderType] = useState<'market' | 'limit'>(first(params.orderType) === 'limit' ? 'limit' : 'market');
   const [leverage, setLeverage] = useState(normalizeLeverage(first(params.leverage)));
   const [limitPrice, setLimitPrice] = useState(first(params.limitPrice) ?? '');
@@ -142,8 +143,17 @@ export function TradeScreen() {
     () => company?.instruments.filter(isAvailablePerpetual) ?? [],
     [company],
   );
-  const spotInstrument = chooseInstrument(spotInstruments, first(params.instrumentId));
-  const perpetualInstrument = chooseInstrument(perpetualInstruments, first(params.instrumentId));
+  const requestedInstrumentId = first(params.instrumentId);
+  const requestedInstrument = company?.instruments.find((instrument) => instrument.instrumentId === requestedInstrumentId);
+  const requestedProduct = first(params.product);
+  // Reject stale or mismatched entry links before choosing either trade product.
+  const invalidInstrumentLink = Boolean(requestedInstrumentId && company && (
+    !requestedInstrument
+    || (!isAvailableSpot(requestedInstrument) && !isAvailablePerpetual(requestedInstrument))
+    || ((requestedProduct === 'spot' || requestedProduct === 'perpetual') && requestedInstrument.productType !== requestedProduct)
+  ));
+  const spotInstrument = invalidInstrumentLink ? undefined : chooseInstrument(spotInstruments, requestedInstrumentId);
+  const perpetualInstrument = invalidInstrumentLink ? undefined : chooseInstrument(perpetualInstruments, requestedInstrumentId);
   const effectiveLeverage = perpetualInstrument
     ? Math.max(1, Math.min(Math.floor(perpetualInstrument.maxLeverage), leverage))
     : leverage;
@@ -191,7 +201,7 @@ export function TradeScreen() {
   }, []);
 
   const selectProduct = (next: Product) => {
-    if (next === product) return;
+    if (next === product || isReviewing || phase === 'signing') return;
     setProduct(next);
     resetReview();
   };
@@ -346,12 +356,13 @@ export function TradeScreen() {
   const configureDisabled = !activeInstrument
     || settlementLoading
     || (!settlementFailed && (!amountReady || !limitPriceReady || walletPreparing || walletUnsupported));
+  const reviewVisible = Boolean(review) && (phase === 'review' || phase === 'signing');
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.canvas }]}>
-      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+      <SafeAreaView aria-hidden={pickerVisible || productPickerVisible || reviewVisible} edges={['top', 'left', 'right']} style={styles.safeArea}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.keyboardFrame}>
-          <View style={[styles.header, { borderBottomColor: theme.outline }]}>
+          <View style={[styles.header, { borderBottomColor: `${theme.muted}33` }]}>
             <Pressable accessibilityLabel="Go back" accessibilityRole="button" hitSlop={10} onPress={goBack} style={styles.backButton}>
               <Text style={[styles.backGlyph, { color: theme.ink }]}>‹</Text>
             </Pressable>
@@ -361,9 +372,16 @@ export function TradeScreen() {
                 {activeInstrument ? `${activeInstrument.symbol} · ${formatMoney(activeInstrument.marketValue.amount)}` : 'No executable instrument'}
               </Text>
             </View>
-            <Text numberOfLines={1} style={[styles.headerStatus, { color: theme.muted }]}>
-              {phase === 'configure' ? (wallet.status === 'ready' ? shortAddress(wallet.address) : 'Sign in') : phaseLabel(phase)}
-            </Text>
+            <Pressable
+              accessibilityLabel="Choose trade product"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: (!canSpot && !canPerpetual) || isReviewing || phase === 'signing', expanded: productPickerVisible }}
+              disabled={(!canSpot && !canPerpetual) || isReviewing || phase === 'signing'}
+              onPress={() => setProductPickerVisible(true)}
+              style={[styles.headerProductSwitch, { backgroundColor: theme.surface, borderColor: theme.outline }]}>
+              <Text style={[styles.headerProductText, { color: theme.proof }]}>{product === 'perpetual' ? 'Perpetual' : 'Spot'}</Text>
+              <Text style={[styles.headerProductChevron, { color: theme.proof }]}>⌄</Text>
+            </Pressable>
           </View>
 
           <ScrollView
@@ -373,14 +391,7 @@ export function TradeScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             style={styles.scroll}>
-            {canSpot && canPerpetual ? (
-              <ProductTabs
-                selected={product}
-                onSelect={(value) => selectProduct(value as Product)}
-              />
-            ) : null}
-
-            {phase === 'configure' ? (
+            {phase === 'configure' || reviewVisible ? (
               <>
                 {product === 'spot' && spotInstrument ? (
                   <SpotTicket
@@ -412,13 +423,11 @@ export function TradeScreen() {
                     limitValidationMessage={limitPrice && limitPriceValidation.state !== 'valid' ? limitPriceValidation.message : undefined}
                   />
                 ) : null}
-                {!activeInstrument ? <Notice text="This company has no verified executable instrument right now." /> : null}
+                {!activeInstrument ? <Notice text={invalidInstrumentLink ? 'The instrument in this trade link is unavailable. Return to Markets to choose an available instrument.' : 'This company has no verified executable instrument right now.'} /> : null}
                 {product === 'spot' && settlementRestoreState === 'loading' ? <Notice text="Restoring your saved settlement asset…" /> : null}
                 {product === 'spot' && settlementRestoreState === 'failed' ? <Notice text="Your saved settlement asset could not be restored. Choose another asset before review." tone="caution" /> : null}
               </>
             ) : null}
-
-            {(phase === 'review' || phase === 'signing') && review ? <ReviewLedger review={review} /> : null}
 
             {phase === 'action-required' && actionRequired ? (
               <View style={[styles.stateCard, { backgroundColor: theme.surface, borderColor: theme.outline }]}>
@@ -444,7 +453,7 @@ export function TradeScreen() {
             </View>
           </ScrollView>
 
-          <View style={[styles.actionDock, { backgroundColor: theme.canvas, borderTopColor: theme.outline, paddingBottom: insets.bottom + 12 }]}>
+          <View style={[styles.actionDock, { backgroundColor: theme.canvas, borderTopColor: `${theme.muted}33`, paddingBottom: insets.bottom + 12 }]}>
             {phase === 'configure' ? (
               <PrimaryButton
                 disabled={configureDisabled}
@@ -453,16 +462,6 @@ export function TradeScreen() {
                 onPress={() => settlementFailed ? setPickerVisible(true) : void continueToReview()}
                 tone={cautionAction ? 'caution' : 'proof'}
               />
-            ) : null}
-            {phase === 'review' || phase === 'signing' ? (
-              <View style={styles.reviewActions}>
-                <Pressable disabled={phase === 'signing'} onPress={resetReview} style={[styles.editButton, { borderColor: theme.outline }]}>
-                  <Text style={[styles.editButtonText, { color: theme.ink }]}>Edit</Text>
-                </Pressable>
-                <View style={styles.approveButtonWrap}>
-                  <PrimaryButton label={review ? approveLabel(review) : 'Approve'} loading={phase === 'signing'} onPress={() => void approve()} tone={cautionAction ? 'caution' : 'proof'} />
-                </View>
-              </View>
             ) : null}
             {phase === 'action-required' ? <PrimaryButton label="Back to ticket" onPress={resetReview} /> : null}
             {phase === 'result' && result ? (
@@ -489,6 +488,27 @@ export function TradeScreen() {
         selectedMint={settlementAsset.mint}
         visible={pickerVisible}
       />
+      <ProductPicker
+        canPerpetual={canPerpetual}
+        canSpot={canSpot}
+        onClose={() => setProductPickerVisible(false)}
+        onSelect={(next) => {
+          setProductPickerVisible(false);
+          selectProduct(next);
+        }}
+        selected={product}
+        visible={productPickerVisible}
+      />
+      {review && (phase === 'review' || phase === 'signing') ? (
+        <ReviewSheet
+          companyName={company.company.companyName}
+          error={error}
+          onApprove={() => void approve()}
+          onClose={resetReview}
+          phase={phase}
+          review={review}
+        />
+      ) : null}
     </View>
   );
 }
@@ -524,9 +544,9 @@ function SpotTicket({
         selected={direction}
         onSelect={(value) => onDirection(value as 'buy' | 'sell')}
       />
-      <View style={[styles.amountStage, { borderBottomColor: theme.outline }]}>
+      <View style={styles.amountCard}>
         <View style={styles.amountHeader}>
-          <Text style={[styles.amountLabel, { color: theme.ink }]}>You send</Text>
+          <Text style={[styles.amountLabel, { color: theme.ink }]}>{direction === 'buy' ? 'You pay' : 'You sell'}</Text>
           <Text style={[styles.amountHint, { color: theme.muted }]}>Quote fetched at review</Text>
         </View>
         <View style={styles.amountEntry}>
@@ -535,10 +555,10 @@ function SpotTicket({
             autoCorrect={false}
             keyboardType="decimal-pad"
             onChangeText={onAmount}
-            placeholder="0"
+            placeholder="0.00"
             placeholderTextColor={theme.outline}
             selectionColor={theme.proof}
-            style={[styles.amountInput, { color: theme.ink }]}
+            style={[styles.amountInput, { borderBottomColor: theme.outline, color: theme.ink }]}
             value={amount}
           />
           <AssetUnit
@@ -549,23 +569,18 @@ function SpotTicket({
         {validationMessage ? <Text accessibilityLiveRegion="polite" style={[styles.fieldError, { color: theme.caution }]}>{validationMessage}</Text> : null}
       </View>
       <View style={styles.conversionSpine}>
-        <View style={[styles.spineLine, { backgroundColor: theme.outline }]} />
-        <Text style={[styles.spineText, { backgroundColor: theme.canvas, color: theme.proof }]}>{inputSymbol}  →  Jupiter  →  {outputSymbol}</Text>
+        <Text style={[styles.conversionArrow, { backgroundColor: theme.canvas, borderColor: theme.outline, color: theme.muted }]}>↓</Text>
       </View>
-      <View style={styles.receiveBlock}>
+      <View style={[styles.receiveCard, { backgroundColor: theme.surface, borderColor: theme.outline }]}>
         <Text style={[styles.receiveLabel, { color: theme.muted }]}>You receive</Text>
         <View style={styles.receiveValueRow}>
-          <Text style={[styles.receivePending, { color: theme.ink }]}>Calculated at review</Text>
+          <Text style={[styles.receivePending, { color: theme.ink }]}>Quote at confirmation</Text>
           <AssetUnit
             onPress={direction === 'sell' ? onOpenPicker : undefined}
             symbol={outputSymbol}
           />
         </View>
         <Text style={[styles.contextOnly, { color: theme.muted }]}>A fresh Jupiter quote will show the exact route, fees and minimum received before wallet approval.</Text>
-      </View>
-      <View style={[styles.executionSummary, { borderBottomColor: theme.outline, borderTopColor: theme.outline }]}>
-        <Text style={[styles.executionSummaryText, { color: theme.ink }]}>Best route</Text>
-        <Text style={[styles.executionSummaryMeta, { color: theme.muted }]}>Jupiter · Solana · shown at review</Text>
       </View>
     </View>
   );
@@ -602,6 +617,7 @@ function PerpetualTicket({
 }) {
   const theme = useTheme();
   const maxLeverage = Math.max(1, Math.floor(instrument.maxLeverage));
+  const exposure = validateBaseUnitAmount(amount, 6).state === 'valid' ? Number(amount) * leverage : null;
   const leverageOptions = [1, 2, 3, 5, maxLeverage]
     .filter((value, index, values) => value <= maxLeverage && values.indexOf(value) === index);
   if (!leverageOptions.includes(leverage)) {
@@ -616,9 +632,10 @@ function PerpetualTicket({
         selected={direction}
         onSelect={(value) => onDirection(value as 'long' | 'short')}
       />
-      <View style={[styles.amountStage, { borderBottomColor: theme.outline }]}>
+      <Text style={[styles.directionHelp, { color: theme.muted }]}>{direction === 'long' ? 'Long benefits when the price rises.' : 'Short benefits when the price falls.'}</Text>
+      <View style={styles.amountCard}>
         <View style={styles.amountHeader}>
-          <Text style={[styles.amountLabel, { color: theme.ink }]}>You provide</Text>
+          <Text style={[styles.amountLabel, { color: theme.ink }]}>Your collateral</Text>
           <Text style={[styles.amountHint, { color: theme.muted }]}>Isolated collateral</Text>
         </View>
         <View style={styles.amountEntry}>
@@ -627,34 +644,26 @@ function PerpetualTicket({
             autoCorrect={false}
             keyboardType="decimal-pad"
             onChangeText={onAmount}
-            placeholder="0"
+            placeholder="0.00"
             placeholderTextColor={theme.outline}
             selectionColor={theme.proof}
-            style={[styles.amountInput, { color: theme.ink }]}
+            style={[styles.amountInput, { borderBottomColor: theme.outline, color: theme.ink }]}
             value={amount}
           />
           <AssetUnit symbol="USDC" />
         </View>
         {amountValidationMessage ? <Text accessibilityLiveRegion="polite" style={[styles.fieldError, { color: theme.caution }]}>{amountValidationMessage}</Text> : null}
       </View>
-      <View style={styles.conversionSpine}>
-        <View style={[styles.spineLine, { backgroundColor: theme.outline }]} />
-        <Text style={[styles.spineText, { backgroundColor: theme.canvas, color: theme.proof }]}>{amount || '0'} USDC collateral  ×  {leverage}  →  exposure at review</Text>
-      </View>
-      <View style={[styles.perpConfig, { borderBottomColor: theme.outline, borderTopColor: theme.outline }]}>
+      <View style={styles.perpConfig}>
         <View style={styles.orderTypeGroup}>
-          <Text style={[styles.parameterLabel, { color: theme.muted }]}>Order</Text>
+          <Text style={[styles.parameterLabel, { color: theme.ink }]}>Order type</Text>
           <View style={styles.orderTypeOptions}>
             {(['market', 'limit'] as const).map((value) => (
-              <Pressable key={value} onPress={() => onOrderType(value)} style={[styles.orderTypeOption, { backgroundColor: orderType === value ? theme.proofWash : theme.surface, borderColor: orderType === value ? theme.proof : 'transparent' }]}>
+              <Pressable key={value} accessibilityRole="button" accessibilityState={{ selected: orderType === value }} onPress={() => onOrderType(value)} style={[styles.orderTypeOption, { backgroundColor: orderType === value ? theme.proofWash : theme.surface, borderColor: orderType === value ? theme.proof : `${theme.muted}33` }]}>
                 <Text style={[styles.orderTypeOptionText, { color: orderType === value ? theme.proof : theme.muted }]}>{title(value)}</Text>
               </Pressable>
             ))}
           </View>
-        </View>
-        <View style={styles.marginCopy}>
-          <Text style={[styles.parameterLabel, { color: theme.muted }]}>Margin</Text>
-          <Text style={[styles.marginValue, { color: theme.ink }]}>Isolated</Text>
         </View>
       </View>
       {orderType === 'limit' ? (
@@ -688,22 +697,20 @@ function PerpetualTicket({
           {leverageOptions.map((value) => {
             const active = leverage === value;
             return (
-              <Pressable key={value} accessibilityState={{ selected: active }} onPress={() => onLeverage(value)} style={[styles.leverageOption, { backgroundColor: active ? theme.proof : theme.surface }]}>
-                <Text style={[styles.leverageOptionText, { color: active ? theme.onProof : theme.muted }]}>{value}×</Text>
+              <Pressable key={value} accessibilityRole="button" accessibilityLabel={`${value} times leverage`} accessibilityState={{ selected: active }} onPress={() => onLeverage(value)} style={[styles.leverageOption, { backgroundColor: active ? theme.proofWash : theme.surface, borderColor: active ? theme.proof : `${theme.muted}33` }]}>
+                <Text style={[styles.leverageOptionText, { color: active ? theme.proof : theme.ink }]}>{value}×</Text>
               </Pressable>
             );
           })}
         </View>
       </View>
+      <Text style={[styles.exposureLine, { color: theme.proof }]}>{exposure !== null && Number.isFinite(exposure) ? `${formatMoney(exposure)} estimated position · ${leverage}× your collateral` : 'Enter collateral to see your position size'}</Text>
       <View style={[styles.riskLedger, { borderTopColor: theme.outline }]}>
-        <View style={[styles.riskFocus, { borderBottomColor: theme.outline }]}>
+        <View style={styles.riskFocus}>
           <Text style={[styles.riskFocusLabel, { color: theme.muted }]}>Estimated liquidation</Text>
-          <Text style={[styles.riskFocusValue, { color: theme.caution }]}>Calculated at review</Text>
-          <Text style={[styles.riskFocusMeta, { color: theme.muted }]}>Phoenix supplies the executable risk estimate.</Text>
+          <Text style={[styles.riskFocusValue, { color: theme.ink }]}>Shown at confirmation</Text>
+          <Text style={[styles.riskFocusMeta, { color: theme.muted }]}>Leverage increases gains and losses. You can lose your collateral.</Text>
         </View>
-        <RiskRow label="Position" value={`${instrument.symbol} · ${title(direction)}`} />
-        <RiskRow label="Entry" value={orderType === 'market' ? 'Market price at review' : `${limitPrice || '—'} USD limit`} />
-        <RiskRow label="Margin" value={`Isolated · ${leverage}×`} />
       </View>
     </View>
   );
@@ -711,6 +718,7 @@ function PerpetualTicket({
 
 function ReviewLedger({ review }: { review: Review }) {
   const theme = useTheme();
+  const spot = review.product === 'spot';
   const rows: [string, string][] = review.product === 'spot'
     ? [
       ['You send', formatToken(review.input.amount, review.input.decimals, review.input.symbol)],
@@ -735,27 +743,33 @@ function ReviewLedger({ review }: { review: Review }) {
       ['Last valid block', String(review.lastValidBlockHeight)],
     ];
   return (
-    <View style={[styles.reviewCard, { borderColor: theme.outline }]}>
-      <View style={styles.reviewHeading}>
-        <View>
-          <Text style={[styles.reviewEyebrow, { color: theme.proof }]}>EXECUTABLE REVIEW</Text>
-          <Text style={[styles.reviewTitle, { color: theme.ink }]}>{review.product === 'spot' ? 'Jupiter conversion' : 'Phoenix risk review'}</Text>
-        </View>
-        <Text style={[styles.reviewExpiry, { color: theme.muted }]}>Expires {formatTime(review.expiresAt)}</Text>
+    <View style={styles.reviewCard}>
+      <View style={styles.reviewHero}>
+        <Text style={[styles.reviewHeroLabel, { color: theme.muted }]}>{spot ? (review.direction === 'buy' ? 'You pay' : 'You sell') : `Position · ${review.leverage}×`}</Text>
+        <Text style={[styles.reviewHeroValue, { color: theme.ink }]}>{spot ? formatToken(review.input.amount, review.input.decimals, review.input.symbol) : formatMoney(review.notionalUsd)}</Text>
+        {!spot ? <Text style={[styles.reviewHeroMeta, { color: theme.muted }]}>{review.quantity} {review.marketSymbol} exposure</Text> : null}
       </View>
-      {review.product === 'perpetual' ? (
-        <View style={[styles.reviewRiskFocus, { backgroundColor: theme.cautionWash }]}>
-          <Text style={[styles.riskFocusLabel, { color: theme.muted }]}>Estimated liquidation</Text>
+      {spot ? (
+        <View style={[styles.reviewReceive, { backgroundColor: theme.surface, borderColor: theme.outline }]}>
+          <Text style={[styles.reviewReceiveLabel, { color: theme.muted }]}>You receive · estimated</Text>
+          <Text style={[styles.reviewReceiveValue, { color: theme.ink }]}>{formatToken(review.output.amount, review.output.decimals, review.output.symbol)}</Text>
+          <Text style={[styles.reviewReceiveMeta, { color: theme.muted }]}>Minimum {formatToken(review.minimumOutputAmount, review.output.decimals, review.output.symbol)}</Text>
+        </View>
+      ) : (
+        <View style={[styles.reviewRiskFocus, { backgroundColor: theme.cautionWash, borderColor: theme.caution }]}>
+          <Text style={[styles.riskFocusLabel, { color: theme.caution }]}>Estimated liquidation</Text>
           <Text style={[styles.reviewRiskValue, { color: theme.caution }]}>{formatMoney(review.estimatedLiquidationPriceUsd)}</Text>
           <Text style={[styles.riskFocusMeta, { color: theme.muted }]}>Based on the current Phoenix review. It can change before execution.</Text>
         </View>
-      ) : null}
-      {rows.map(([label, value]) => (
-        <View key={label} style={[styles.ledgerRow, { borderTopColor: theme.outline }]}>
-          <Text style={[styles.ledgerLabel, { color: theme.muted }]}>{label}</Text>
-          <Text numberOfLines={2} style={[styles.ledgerValue, { color: theme.ink }]}>{value}</Text>
-        </View>
-      ))}
+      )}
+      <View style={[styles.reviewLedger, { backgroundColor: theme.surface, borderColor: theme.outline }]}>
+        {rows.map(([label, value]) => (
+          <View key={label} style={[styles.ledgerRow, { borderBottomColor: theme.outline }]}>
+            <Text style={[styles.ledgerLabel, { color: theme.muted }]}>{label}</Text>
+            <Text style={[styles.ledgerValue, { color: theme.ink }]}>{value}</Text>
+          </View>
+        ))}
+      </View>
       <View style={[styles.signatureRail, { backgroundColor: theme.proofWash }]}>
         <Text style={[styles.signatureRailLabel, { color: theme.proof }]}>WALLET SIGNER</Text>
         <Text style={[styles.signatureRailValue, { color: theme.ink }]}>{shortAddress(review.walletAddress)}</Text>
@@ -837,8 +851,11 @@ function AssetPicker({ visible, onClose, onSelect, selectedMint, excludedMint, c
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalBackdrop}>
         <SafeAreaView edges={['bottom']} style={[styles.pickerSheet, { backgroundColor: theme.canvas, borderColor: theme.outline }]}>
           <View style={styles.pickerHeader}>
-            <View><Text style={[styles.pickerEyebrow, { color: theme.proof }]}>JUPITER ASSETS</Text><Text style={[styles.pickerTitle, { color: theme.ink }]}>Choose {context} asset</Text></View>
-            <Pressable accessibilityLabel="Close asset picker" onPress={onClose} style={[styles.closeButton, { borderColor: theme.outline }]}><Text style={[styles.closeGlyph, { color: theme.ink }]}>×</Text></Pressable>
+            <View style={styles.sheetTitleCopy}>
+              <Text style={[styles.pickerEyebrow, { color: theme.proof }]}>Jupiter assets</Text>
+              <Text style={[styles.pickerTitle, { color: theme.ink }]}>Choose {context} asset</Text>
+            </View>
+            <Pressable accessibilityLabel="Close asset picker" accessibilityRole="button" onPress={onClose} style={[styles.closeButton, { borderColor: theme.outline }]}><Text style={[styles.closeGlyph, { color: theme.ink }]}>×</Text></Pressable>
           </View>
           <TextInput
             autoCapitalize="none"
@@ -854,7 +871,7 @@ function AssetPicker({ visible, onClose, onSelect, selectedMint, excludedMint, c
           {error ? <Notice text={error} tone="caution" /> : null}
           <ScrollView automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'} keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'} keyboardShouldPersistTaps="handled" style={styles.assetList}>
             {items.map((asset) => (
-              <Pressable key={asset.mint} onPress={() => onSelect(asset)} style={[styles.assetRow, { borderBottomColor: theme.outline }]}>
+              <Pressable key={asset.mint} accessibilityRole="button" accessibilityLabel={`${asset.symbol}, ${asset.name}`} accessibilityState={{ selected: asset.mint === selectedMint }} onPress={() => onSelect(asset)} style={[styles.assetRow, { borderBottomColor: theme.outline }]}>
                 <AssetLogo asset={asset} />
                 <View style={styles.assetRowCopy}><Text style={[styles.assetName, { color: theme.ink }]}>{asset.name}</Text><Text style={[styles.assetMint, { color: theme.muted }]}>{shortAddress(asset.mint)}</Text></View>
                 <View style={styles.assetRowEnd}><Text style={[styles.assetSymbol, { color: theme.ink }]}>{asset.symbol}</Text><Text style={[styles.assetVerified, { color: asset.verified ? theme.proof : theme.muted }]}>{asset.mint === selectedMint ? 'Selected' : asset.verified ? 'Verified' : 'Jupiter asset'}</Text></View>
@@ -868,19 +885,99 @@ function AssetPicker({ visible, onClose, onSelect, selectedMint, excludedMint, c
   );
 }
 
-function ProductTabs({ selected, onSelect }: { selected: Product; onSelect: (id: Product) => void }) {
+function ProductPicker({ canPerpetual, canSpot, onClose, onSelect, selected, visible }: {
+  canPerpetual: boolean;
+  canSpot: boolean;
+  onClose: () => void;
+  onSelect: (product: Product) => void;
+  selected: Product;
+  visible: boolean;
+}) {
   const theme = useTheme();
   return (
-    <View style={[styles.productTabs, { borderBottomColor: theme.outline }]}>
-      {([{ id: 'spot', label: 'Spot' }, { id: 'perpetual', label: 'Perpetual' }] as const).map((item) => {
-        const active = item.id === selected;
-        return (
-          <Pressable key={item.id} accessibilityRole="tab" accessibilityState={{ selected: active }} onPress={() => onSelect(item.id)} style={[styles.productTab, active && { borderBottomColor: theme.proof }]}>
-            <Text style={[styles.productTabText, { color: active ? theme.ink : theme.muted }]}>{item.label}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
+    <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
+      <View style={styles.modalBackdrop}>
+        <SafeAreaView edges={['bottom']} style={[styles.productSheet, { backgroundColor: theme.canvas, borderColor: theme.outline }]}>
+          <View style={styles.sheetHandle} />
+          <View style={styles.pickerHeader}>
+            <View style={styles.sheetTitleCopy}>
+              <Text style={[styles.pickerEyebrow, { color: theme.proof }]}>Trade product</Text>
+              <Text style={[styles.pickerTitle, { color: theme.ink }]}>Choose a market</Text>
+            </View>
+            <Pressable accessibilityLabel="Close product picker" accessibilityRole="button" onPress={onClose} style={[styles.closeButton, { borderColor: theme.outline }]}>
+              <Text style={[styles.closeGlyph, { color: theme.ink }]}>×</Text>
+            </Pressable>
+          </View>
+          <View style={styles.productSheetOptions}>
+            {canSpot ? <ProductChoice active={selected === 'spot'} label="Spot" note="Buy or sell the verified stock token" onPress={() => onSelect('spot')} /> : null}
+            {canPerpetual ? <ProductChoice active={selected === 'perpetual'} label="Perpetual" note="Long or short with isolated collateral" onPress={() => onSelect('perpetual')} /> : null}
+          </View>
+        </SafeAreaView>
+      </View>
+    </Modal>
+  );
+}
+
+function ProductChoice({ active, label, note, onPress }: { active: boolean; label: string; note: string; onPress: () => void }) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      style={[styles.productChoice, { backgroundColor: active ? theme.proofWash : theme.surface, borderColor: active ? theme.proof : theme.outline }]}>
+      <View style={styles.productChoiceCopy}>
+        <Text style={[styles.productChoiceTitle, { color: theme.ink }]}>{label}</Text>
+        <Text style={[styles.productChoiceNote, { color: theme.muted }]}>{note}</Text>
+      </View>
+      <Text style={[styles.productChoiceMark, { color: active ? theme.proof : theme.muted }]}>{active ? '✓' : '›'}</Text>
+    </Pressable>
+  );
+}
+
+function ReviewSheet({ companyName, error, onApprove, onClose, phase, review }: {
+  companyName: string;
+  error?: string;
+  onApprove: () => void;
+  onClose: () => void;
+  phase: Phase;
+  review: Review;
+}) {
+  const theme = useTheme();
+  const caution = review.direction === 'sell' || review.direction === 'short';
+  const signing = phase === 'signing';
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1_000);
+    return () => clearInterval(timer);
+  }, []);
+  const secondsRemaining = Math.max(0, Math.ceil((new Date(review.expiresAt).getTime() - now) / 1_000));
+  const requestClose = signing ? () => undefined : onClose;
+  return (
+    <Modal animationType="slide" onRequestClose={requestClose} transparent visible={phase === 'review' || signing}>
+      <View style={styles.modalBackdrop}>
+        <SafeAreaView edges={['bottom']} style={[styles.reviewSheet, { backgroundColor: theme.canvas, borderColor: theme.outline }]}>
+          <View style={styles.sheetHandle} />
+          <View style={styles.reviewSheetHeader}>
+            <View style={styles.sheetTitleCopy}>
+              <Text style={[styles.pickerEyebrow, { color: theme.proof }]}>Review order</Text>
+              <Text style={[styles.reviewSheetTitle, { color: theme.ink }]}>{title(review.direction)} {companyName}</Text>
+            </View>
+            <Pressable accessibilityLabel="Edit trade" accessibilityRole="button" disabled={signing} onPress={onClose} style={[styles.editButton, { borderColor: theme.outline, opacity: signing ? 0.45 : 1 }]}>
+              <Text style={[styles.editButtonText, { color: theme.ink }]}>Edit</Text>
+            </Pressable>
+          </View>
+          <ScrollView contentContainerStyle={styles.reviewSheetContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <ReviewLedger review={review} />
+            {error ? <Notice text={error} tone="caution" /> : null}
+          </ScrollView>
+          <View style={[styles.reviewSheetFooter, { borderTopColor: `${theme.muted}33` }]}>
+            <Text style={[styles.reviewSheetHint, { color: secondsRemaining ? theme.muted : theme.caution }]}>{secondsRemaining ? `Quote expires in ${secondsRemaining}s · ${formatTime(review.expiresAt)}` : 'Quote expired. Edit the trade to get a fresh review.'}</Text>
+            <PrimaryButton label={signing ? 'Waiting for wallet…' : approveLabel(review)} loading={signing} onPress={onApprove} tone={caution ? 'caution' : 'proof'} />
+          </View>
+        </SafeAreaView>
+      </View>
+    </Modal>
   );
 }
 
@@ -897,8 +994,8 @@ function DirectionToggle({ items, selected, onSelect }: { items: { id: string; l
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             onPress={() => onSelect(item.id)}
-            style={[styles.directionOption, active && { backgroundColor: caution ? theme.caution : theme.proof }]}>
-            <Text style={[styles.directionOptionText, { color: active ? (caution ? theme.canvas : theme.onProof) : theme.muted }]}>{item.label}</Text>
+            style={[styles.directionOption, active && { backgroundColor: caution ? theme.cautionWash : theme.proofWash, borderColor: caution ? theme.caution : theme.proof }]}>
+            <Text style={[styles.directionOptionText, { color: active ? theme.ink : theme.muted }]}>{item.label}</Text>
           </Pressable>
         );
       })}
@@ -910,8 +1007,8 @@ function AssetUnit({ symbol, onPress }: { symbol: string; onPress?: () => void }
   const theme = useTheme();
   const content = <Text numberOfLines={1} style={[styles.assetUnitText, { color: onPress ? theme.ink : theme.muted }]}>{symbol}{onPress ? ' ⌄' : ''}</Text>;
   return onPress
-    ? <Pressable accessibilityLabel={`Choose asset, currently ${symbol}`} accessibilityRole="button" onPress={onPress} style={[styles.assetUnit, { backgroundColor: theme.surface }]}>{content}</Pressable>
-    : <View style={[styles.assetUnit, { backgroundColor: theme.surface }]}>{content}</View>;
+    ? <Pressable accessibilityLabel={`Choose asset, currently ${symbol}`} accessibilityRole="button" onPress={onPress} style={[styles.assetUnit, { backgroundColor: theme.surface, borderColor: `${theme.muted}33` }]}>{content}</Pressable>
+    : <View style={[styles.assetUnit, { backgroundColor: theme.surface, borderColor: `${theme.muted}33` }]}>{content}</View>;
 }
 
 function RiskRow({ label, value }: { label: string; value: string }) {
@@ -979,16 +1076,7 @@ function formatToken(value: string, decimals: number, symbol: string) {
 }
 
 function approveLabel(review: Review) {
-  if (review.product === 'spot') return `Approve ${review.direction}`;
-  return `Approve ${review.direction}`;
-}
-
-function phaseLabel(phase: Phase) {
-  if (phase === 'configure') return 'Configure · no transaction yet';
-  if (phase === 'review') return 'Review before wallet approval';
-  if (phase === 'signing') return 'Waiting for wallet approval';
-  if (phase === 'action-required') return 'Provider setup needed';
-  return 'Execution result';
+  return `Confirm ${review.direction}`;
 }
 
 function messageFor(error: unknown) {
@@ -1042,113 +1130,79 @@ function title(value: string) {
 }
 
 const styles = StyleSheet.create({
+  sheetTitleCopy: { flex: 1, minWidth: 0, paddingRight: 12 },
   screen: { flex: 1 },
-  safeArea: { flex: 1 },
+  safeArea: { alignSelf: 'center', flex: 1, maxWidth: 680, width: '100%' },
   keyboardFrame: { flex: 1 },
   scroll: { flex: 1 },
-  header: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', minHeight: 64, paddingHorizontal: Spacing.three },
+  header: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', minHeight: 60, paddingHorizontal: Spacing.three },
   backButton: { alignItems: 'center', height: 44, justifyContent: 'center', width: 38 },
   backGlyph: { fontFamily: Fonts.sans, fontSize: 35, fontWeight: '300', lineHeight: 38 },
-  headerCopy: { flex: 1, paddingHorizontal: Spacing.two },
-  headerTitle: { fontFamily: Fonts.sans, fontSize: 16, fontWeight: '700' },
-  headerMeta: { fontFamily: Fonts.mono, fontSize: 10, marginTop: 4 },
-  headerStatus: { fontFamily: Fonts.mono, fontSize: 9, maxWidth: 104, textAlign: 'right' },
-  walletBadge: { alignItems: 'center', borderRadius: Radii.pill, borderWidth: 1, flexDirection: 'row', gap: 6, minHeight: 32, paddingHorizontal: 10 },
-  walletDot: { borderRadius: 4, height: 7, width: 7 },
-  walletText: { fontFamily: Fonts.mono, fontSize: 10, fontWeight: '700' },
-  content: { paddingBottom: 28, paddingHorizontal: 20 },
-  identityRow: { alignItems: 'center', flexDirection: 'row', gap: 12 },
-  companyMark: { alignItems: 'center', borderRadius: Radii.control, height: 46, justifyContent: 'center', overflow: 'hidden', width: 46 },
-  companyLogo: { height: 34, width: 34 },
-  companyInitial: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '800' },
-  identityCopy: { flex: 1 },
-  companyName: { fontFamily: Fonts.serif, fontSize: 19, fontWeight: '700' },
-  instrumentMeta: { fontFamily: Fonts.mono, fontSize: 10, marginTop: 3, textTransform: 'uppercase' },
-  referenceCopy: { alignItems: 'flex-end' },
-  referenceLabel: { fontFamily: Fonts.sans, fontSize: 10 },
-  referenceValue: { fontFamily: Fonts.mono, fontSize: 14, fontWeight: '700', marginTop: 3 },
-  segmented: { borderRadius: Radii.control, borderWidth: 1, flexDirection: 'row', overflow: 'hidden', padding: 3 },
-  segment: { alignItems: 'center', borderRadius: 7, flex: 1, justifyContent: 'center', minHeight: 42 },
-  segmentText: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '800' },
-  productTabs: { borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row' },
-  productTab: { alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent', flex: 1, justifyContent: 'center', minHeight: 50 },
-  productTabText: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '800' },
-  directionToggle: { alignSelf: 'center', borderRadius: Radii.pill, flexDirection: 'row', gap: 3, marginTop: 18, padding: 3, width: 176 },
-  directionOption: { alignItems: 'center', borderRadius: Radii.pill, flex: 1, justifyContent: 'center', minHeight: 38 },
-  directionOptionText: { fontFamily: Fonts.sans, fontSize: 12, fontWeight: '800' },
+  headerCopy: { flex: 1, minWidth: 0, paddingHorizontal: 8 },
+  headerTitle: { fontFamily: Fonts.sans, fontSize: 18, fontWeight: '500', letterSpacing: -0.3 },
+  headerMeta: { fontFamily: Fonts.sans, fontSize: 11, marginTop: 2 },
+  headerProductSwitch: { alignItems: 'center', borderRadius: Radii.control, borderWidth: 1, flexDirection: 'row', gap: 7, minHeight: 44, paddingHorizontal: 12 },
+  headerProductText: { fontFamily: Fonts.sans, fontSize: 12 },
+  headerProductChevron: { fontFamily: Fonts.sans, fontSize: 15, lineHeight: 16 },
+  content: { paddingBottom: 28, paddingHorizontal: 18 },
+  directionToggle: { borderRadius: 12, flexDirection: 'row', gap: 4, marginTop: 18, padding: 4 },
+  directionOption: { alignItems: 'center', borderRadius: 9, borderWidth: 1, borderColor: 'transparent', flex: 1, justifyContent: 'center', minHeight: 42 },
+  directionOptionText: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '500' },
   ticketStack: { paddingBottom: 6 },
-  amountStage: { borderBottomWidth: StyleSheet.hairlineWidth, paddingBottom: 22, paddingTop: 30 },
+  amountCard: { marginTop: 22 },
   amountHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  amountLabel: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '700' },
-  amountHint: { fontFamily: Fonts.mono, fontSize: 9 },
-  amountEntry: { alignItems: 'center', flexDirection: 'row', gap: 12, marginTop: 12 },
+  amountLabel: { fontFamily: Fonts.sans, fontSize: 12, lineHeight: 18 },
+  amountHint: { flexShrink: 1, fontFamily: Fonts.sans, fontSize: 11, marginLeft: 12 },
+  amountEntry: { alignItems: 'center', flexDirection: 'row', gap: 12, marginTop: 10 },
   fieldError: { fontFamily: Fonts.sans, fontSize: 10, lineHeight: 15, marginTop: 7 },
-  amountAsset: { fontFamily: Fonts.mono, fontSize: 13, fontWeight: '800' },
-  amountInput: { flex: 1, fontFamily: Fonts.mono, fontSize: 46, fontWeight: '700', letterSpacing: -2, minHeight: 62, padding: 0 },
-  assetUnit: { alignItems: 'center', borderRadius: Radii.pill, justifyContent: 'center', minHeight: 38, maxWidth: 118, paddingHorizontal: 12 },
-  assetUnitText: { fontFamily: Fonts.mono, fontSize: 10, fontWeight: '800' },
-  conversionSpine: { alignItems: 'center', justifyContent: 'center', marginBottom: 21, marginTop: 24 },
-  spineLine: { height: StyleSheet.hairlineWidth, left: 0, position: 'absolute', right: 0 },
-  spineText: { fontFamily: Fonts.mono, fontSize: 9, fontWeight: '700', paddingHorizontal: 12 },
-  receiveBlock: { paddingBottom: 24 },
+  amountInput: { borderBottomWidth: 1, flex: 1, minWidth: 0, fontFamily: Fonts.mono, fontSize: 36, fontWeight: '500', letterSpacing: -1.5, minHeight: 62, paddingVertical: 10, paddingHorizontal: 0 },
+  assetUnit: { alignItems: 'center', borderRadius: 999, borderWidth: 1, flexShrink: 0, justifyContent: 'center', minHeight: 44, maxWidth: 118, paddingHorizontal: 13 },
+  assetUnitText: { fontFamily: Fonts.sans, fontSize: 13 },
+  conversionSpine: { alignItems: 'center', height: 42, justifyContent: 'center', marginVertical: 5 },
+  conversionArrow: { alignItems: 'center', borderRadius: Radii.pill, borderWidth: 1, fontFamily: Fonts.sans, fontSize: 16, height: 30, lineHeight: 27, textAlign: 'center', width: 30 },
+  receiveCard: { borderRadius: 14, borderWidth: 1, padding: 18 },
   receiveLabel: { fontFamily: Fonts.sans, fontSize: 11 },
   receiveValueRow: { alignItems: 'center', flexDirection: 'row', gap: 12, justifyContent: 'space-between', marginTop: 8 },
-  receivePending: { flex: 1, fontFamily: Fonts.mono, fontSize: 19, fontWeight: '700' },
-  executionSummary: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: 'row', justifyContent: 'space-between', minHeight: 50 },
-  executionSummaryText: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '700' },
-  executionSummaryMeta: { fontFamily: Fonts.mono, fontSize: 9, textAlign: 'right' },
-  spine: { alignItems: 'stretch', borderRadius: Radii.card, borderWidth: 1, flexDirection: 'row', minHeight: 82, padding: 10 },
-  assetNode: { flex: 1, justifyContent: 'center' },
-  assetNodeSymbol: { fontFamily: Fonts.mono, fontSize: 17, fontWeight: '800', textAlign: 'center' },
-  assetNodeAction: { fontFamily: Fonts.sans, fontSize: 10, marginTop: 5, textAlign: 'center' },
-  routeNode: { alignItems: 'center', flexDirection: 'row', justifyContent: 'center', width: 108 },
-  routeArrow: { fontFamily: Fonts.mono, fontSize: 14 },
-  routeLabel: { fontFamily: Fonts.mono, fontSize: 8, marginHorizontal: 5 },
+  receivePending: { flex: 1, fontFamily: Fonts.sans, fontSize: 15, fontWeight: '500', lineHeight: 22 },
   contextOnly: { fontFamily: Fonts.sans, fontSize: 11, lineHeight: 17, marginTop: 9 },
-  perpConfig: { alignItems: 'flex-end', borderBottomWidth: StyleSheet.hairlineWidth, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 16, justifyContent: 'space-between', marginTop: 24, paddingVertical: 15 },
-  orderTypeGroup: { flex: 1 },
-  orderTypeOptions: { flexDirection: 'row', gap: 6, marginTop: 8 },
-  orderTypeOption: { alignItems: 'center', borderRadius: 8, borderWidth: 1, flex: 1, justifyContent: 'center', minHeight: 36 },
-  orderTypeOptionText: { fontFamily: Fonts.sans, fontSize: 10, fontWeight: '800' },
-  marginCopy: { alignItems: 'flex-end', minWidth: 88 },
-  marginValue: { fontFamily: Fonts.mono, fontSize: 11, fontWeight: '700', marginTop: 12 },
-  parameterGrid: { flexDirection: 'row', gap: 10 },
-  parameterCard: { borderRadius: Radii.card, borderWidth: 1, flex: 1, padding: 12 },
-  parameterLabel: { fontFamily: Fonts.mono, fontSize: 9, letterSpacing: 0.7 },
-  inlineOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 10 },
-  inlineOption: { borderRadius: 7, minWidth: 46, paddingHorizontal: 8, paddingVertical: 8 },
-  inlineOptionText: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '800', textAlign: 'center' },
-  limitRow: { alignItems: 'center', borderRadius: Radii.card, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', minHeight: 62, paddingHorizontal: 14 },
+  perpConfig: { marginTop: 22 },
+  orderTypeGroup: { alignItems: 'center', flexDirection: 'row', gap: 12, justifyContent: 'space-between' },
+  orderTypeOptions: { flexDirection: 'row', gap: 6 },
+  orderTypeOption: { alignItems: 'center', borderRadius: 10, borderWidth: 1, justifyContent: 'center', minHeight: 44, paddingHorizontal: 14 },
+  orderTypeOptionText: { fontFamily: Fonts.sans, fontSize: 12 },
+  parameterLabel: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '500' },
   limitComposer: { borderBottomWidth: StyleSheet.hairlineWidth, paddingBottom: 18, paddingTop: 20 },
-  limitInput: { flex: 1, fontFamily: Fonts.mono, fontSize: 30, fontWeight: '700', padding: 0 },
+  limitInput: { flex: 1, minWidth: 0, fontFamily: Fonts.mono, fontSize: 25, fontWeight: '500', padding: 0 },
   leverageSection: { marginTop: 22 },
   leverageHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  leverageTitle: { fontFamily: Fonts.sans, fontSize: 12, fontWeight: '700' },
-  leverageMeta: { fontFamily: Fonts.mono, fontSize: 9 },
+  leverageTitle: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '500' },
+  leverageMeta: { fontFamily: Fonts.sans, fontSize: 11 },
   leverageOptions: { flexDirection: 'row', gap: 7, marginTop: 12 },
-  leverageOption: { alignItems: 'center', borderRadius: 8, flex: 1, justifyContent: 'center', minHeight: 40 },
-  leverageOptionText: { fontFamily: Fonts.mono, fontSize: 10, fontWeight: '800' },
-  riskLedger: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: 26 },
-  riskFocus: { borderBottomWidth: StyleSheet.hairlineWidth, paddingBottom: 16, paddingTop: 18 },
+  leverageOption: { alignItems: 'center', borderRadius: 10, borderWidth: 1, flex: 1, justifyContent: 'center', minHeight: 44 },
+  leverageOptionText: { fontFamily: Fonts.mono, fontSize: 13 },
+  riskLedger: { borderTopColor: '#51615C', borderTopWidth: StyleSheet.hairlineWidth, marginTop: 26, paddingTop: 17 },
+  riskFocus: { paddingBottom: 2 },
   riskFocusLabel: { fontFamily: Fonts.sans, fontSize: 11 },
-  riskFocusValue: { fontFamily: Fonts.mono, fontSize: 24, fontWeight: '700', letterSpacing: -0.8, marginTop: 7 },
-  riskFocusMeta: { fontFamily: Fonts.sans, fontSize: 10, lineHeight: 15, marginTop: 7 },
+  riskFocusValue: { fontFamily: Fonts.sans, fontSize: 16, fontWeight: '500', marginTop: 7 },
+  riskFocusMeta: { fontFamily: Fonts.sans, fontSize: 12, lineHeight: 19, marginTop: 13 },
   riskRow: { alignItems: 'center', flexDirection: 'row', gap: 16, justifyContent: 'space-between', minHeight: 44 },
   riskRowLabel: { flex: 1, fontFamily: Fonts.sans, fontSize: 11 },
   riskRowValue: { flex: 1.4, fontFamily: Fonts.mono, fontSize: 10, fontWeight: '700', textAlign: 'right' },
-  riskStrip: { borderRadius: Radii.card, borderWidth: 1, flexDirection: 'row', justifyContent: 'space-between', padding: 14 },
-  riskLabel: { fontFamily: Fonts.mono, fontSize: 8 },
-  riskValue: { fontFamily: Fonts.sans, fontSize: 12, fontWeight: '700', marginTop: 5 },
-  reviewCard: { borderBottomWidth: StyleSheet.hairlineWidth, borderTopWidth: StyleSheet.hairlineWidth, overflow: 'hidden', paddingVertical: 18 },
-  reviewHeading: { alignItems: 'flex-start', flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 12 },
-  reviewEyebrow: { fontFamily: Fonts.mono, fontSize: 9, letterSpacing: 1 },
-  reviewTitle: { fontFamily: Fonts.sans, fontSize: 20, fontWeight: '700', marginTop: 5 },
-  reviewExpiry: { fontFamily: Fonts.mono, fontSize: 9, marginTop: 2 },
-  reviewRiskFocus: { borderRadius: Radii.control, marginBottom: 12, padding: 14 },
+  reviewCard: { overflow: 'hidden', paddingBottom: 5, paddingTop: 3 },
+  reviewHero: { marginBottom: 14, paddingVertical: 4 },
+  reviewHeroLabel: { fontFamily: Fonts.sans, fontSize: 11 },
+  reviewHeroValue: { fontFamily: Fonts.mono, fontSize: 25, fontWeight: '500', letterSpacing: -0.7, marginTop: 7 },
+  reviewHeroMeta: { fontFamily: Fonts.sans, fontSize: 11, lineHeight: 16, marginTop: 4 },
+  reviewReceive: { borderRadius: Radii.card, borderWidth: 1, marginBottom: 14, padding: 16 },
+  reviewReceiveLabel: { fontFamily: Fonts.sans, fontSize: 11 },
+  reviewReceiveValue: { fontFamily: Fonts.mono, fontSize: 24, fontWeight: '500', letterSpacing: -0.6, marginTop: 7 },
+  reviewReceiveMeta: { fontFamily: Fonts.sans, fontSize: 11, marginTop: 5 },
+  reviewLedger: { borderRadius: Radii.card, borderWidth: 1, marginBottom: 14, overflow: 'hidden' },
+  reviewRiskFocus: { borderRadius: Radii.card, borderWidth: 1, marginBottom: 14, padding: 14 },
   reviewRiskValue: { fontFamily: Fonts.mono, fontSize: 28, fontWeight: '700', marginTop: 7 },
-  ledgerRow: { alignItems: 'flex-start', borderTopWidth: StyleSheet.hairlineWidth, flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12 },
+  ledgerRow: { alignItems: 'flex-start', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12 },
   ledgerLabel: { flex: 1, fontFamily: Fonts.sans, fontSize: 12 },
-  ledgerValue: { flex: 1.3, fontFamily: Fonts.mono, fontSize: 12, fontWeight: '700', textAlign: 'right' },
+  ledgerValue: { flex: 1.3, fontFamily: Fonts.sans, fontSize: 12, fontWeight: '500', lineHeight: 18, textAlign: 'right' },
   signatureRail: { alignItems: 'center', borderRadius: Radii.control, flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, padding: 12 },
   signatureRailLabel: { fontFamily: Fonts.mono, fontSize: 9, letterSpacing: 0.8 },
   signatureRailValue: { fontFamily: Fonts.mono, fontSize: 12, fontWeight: '700' },
@@ -1165,24 +1219,36 @@ const styles = StyleSheet.create({
   disclosure: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: 20, paddingTop: 14 },
   disclosureText: { fontFamily: Fonts.sans, fontSize: 11, lineHeight: 17 },
   actionDock: { borderTopWidth: StyleSheet.hairlineWidth, flexShrink: 0, paddingHorizontal: 18, paddingTop: 10 },
-  primaryButton: { alignItems: 'center', borderRadius: Radii.card, justifyContent: 'center', minHeight: 56, paddingHorizontal: 18 },
-  primaryButtonText: { fontFamily: Fonts.sans, fontSize: 15, fontWeight: '800' },
-  reviewActions: { flexDirection: 'row', gap: 10 },
-  editButton: { alignItems: 'center', borderRadius: Radii.card, borderWidth: 1, justifyContent: 'center', minHeight: 56, width: 88 },
-  editButtonText: { fontFamily: Fonts.sans, fontSize: 14, fontWeight: '800' },
-  approveButtonWrap: { flex: 1 },
+  primaryButton: { alignItems: 'center', borderRadius: 12, justifyContent: 'center', minHeight: 49, paddingHorizontal: 18 },
+  primaryButtonText: { fontFamily: Fonts.sans, fontSize: 14, fontWeight: '600' },
+  editButton: { alignItems: 'center', borderRadius: 12, borderWidth: 1, justifyContent: 'center', minHeight: 44, width: 64 },
+  editButtonText: { fontFamily: Fonts.sans, fontSize: 13, fontWeight: '600' },
   pressed: { opacity: 0.78 },
   modalBackdrop: { backgroundColor: 'rgba(0,0,0,0.52)', flex: 1, justifyContent: 'flex-end' },
+  sheetHandle: { alignSelf: 'center', backgroundColor: '#51615C', borderRadius: Radii.pill, height: 4, marginBottom: 8, width: 36 },
+  productSheet: { borderTopLeftRadius: 22, borderTopRightRadius: 22, borderWidth: 1, padding: 16 },
+  productSheetOptions: { gap: 10, paddingBottom: 8, paddingTop: 8 },
+  productChoice: { alignItems: 'center', borderRadius: Radii.card, borderWidth: 1, flexDirection: 'row', minHeight: 72, paddingHorizontal: 14 },
+  productChoiceCopy: { flex: 1 },
+  productChoiceTitle: { fontFamily: Fonts.sans, fontSize: 14, fontWeight: '500' },
+  productChoiceNote: { fontFamily: Fonts.sans, fontSize: 11, lineHeight: 16, marginTop: 4 },
+  productChoiceMark: { fontFamily: Fonts.sans, fontSize: 22, marginLeft: 10 },
+  reviewSheet: { borderTopLeftRadius: 22, borderTopRightRadius: 22, borderWidth: 1, maxHeight: '88%', paddingHorizontal: 18, paddingTop: 9 },
+  reviewSheetHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  reviewSheetTitle: { fontFamily: Fonts.sans, fontSize: 20, fontWeight: '500', marginTop: 4 },
+  reviewSheetContent: { paddingBottom: 8 },
+  reviewSheetFooter: { borderTopWidth: StyleSheet.hairlineWidth, paddingBottom: 12, paddingTop: 11 },
+  reviewSheetHint: { fontFamily: Fonts.sans, fontSize: 11, lineHeight: 16, marginBottom: 9 },
   pickerSheet: { borderTopLeftRadius: 18, borderTopRightRadius: 18, borderWidth: 1, height: '82%', padding: 16 },
   pickerHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  pickerEyebrow: { fontFamily: Fonts.mono, fontSize: 9, letterSpacing: 1 },
-  pickerTitle: { fontFamily: Fonts.serif, fontSize: 22, fontWeight: '700', marginTop: 4 },
-  closeButton: { alignItems: 'center', borderRadius: Radii.pill, borderWidth: 1, height: 38, justifyContent: 'center', width: 38 },
+  pickerEyebrow: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '600', letterSpacing: 0.2 },
+  pickerTitle: { fontFamily: Fonts.sans, fontSize: 20, fontWeight: '500', marginTop: 4 },
+  closeButton: { alignItems: 'center', borderRadius: 12, borderWidth: 1, height: 44, justifyContent: 'center', width: 44 },
   closeGlyph: { fontFamily: Fonts.sans, fontSize: 24, lineHeight: 26 },
   searchInput: { borderRadius: Radii.control, borderWidth: 1, fontFamily: Fonts.sans, fontSize: 15, height: 54, marginTop: 16, paddingHorizontal: 15 },
   pickerLoader: { marginVertical: 12 },
   assetList: { marginTop: 8 },
-  assetRow: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 11, minHeight: 68 },
+  assetRow: { alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 11, minHeight: 73 },
   assetLogo: { alignItems: 'center', borderRadius: 10, height: 40, justifyContent: 'center', overflow: 'hidden', width: 40 },
   assetLogoImage: { height: 40, width: 40 },
   assetLogoText: { fontFamily: Fonts.sans, fontSize: 11, fontWeight: '800' },
@@ -1197,4 +1263,6 @@ const styles = StyleSheet.create({
   stateBack: { marginLeft: 14, marginTop: 8, width: 44 },
   centerState: { alignItems: 'center', flex: 1, gap: 14, justifyContent: 'center', padding: 24 },
   centerStateText: { fontFamily: Fonts.serif, fontSize: 20, textAlign: 'center' },
+  exposureLine: { fontFamily: Fonts.sans, fontSize: 12, lineHeight: 19, marginTop: 15 },
+  directionHelp: { fontFamily: Fonts.sans, fontSize: 12, lineHeight: 18, marginTop: 11 },
 });
